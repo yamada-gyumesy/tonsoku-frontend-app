@@ -13,8 +13,9 @@ import 'package:tonsoku/shared/widgets/optical_center.dart';
 ///
 /// ## gyumesy との違い
 ///
-/// - **小さい版（`prominent: false`）を持たない**（使うのはクーポンの見出しだけ。
-///   ホームの節を入れる時に web の `CoCalendarSection` の寸法で足すこと）
+/// - **小さい版（`prominent: false`）を持たない**（使うのはクーポンの見出しと
+///   記事詳細の「この記事の前後の予定」で、どちらも大きい版。ホームの節を
+///   入れる時に web の `CoCalendarSection` の寸法で足すこと）
 /// - **山形は web と同じ `arrow_back_ios` の向きを返したもの**（10px。gyumesy は
 ///   `chevron_right`）
 class ViewCalendarLink extends StatelessWidget {

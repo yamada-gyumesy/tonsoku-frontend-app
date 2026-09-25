@@ -82,6 +82,7 @@ class AppMessages {
     required this.homeArchiveTitle,
     required this.articleRelated,
     required this.articleSuccessor,
+    required this.articleSchedule,
     required this.articleCharacterComment,
     required this.articleProvisionalTranslation,
     required this.articleTiktokPlay,
@@ -315,6 +316,11 @@ class AppMessages {
   final String articleRelated;
   final String articleSuccessor;
 
+  /// 記事詳細に出す予定の節の見出し（web の `article.schedule`）。**「最近の予定」
+  /// ではない** —— 記事の掲載日を中心にした前後の予定なので、今日基準の言い方に
+  /// しない（gyumesy の注記）。
+  final String articleSchedule;
+
   /// のや子のひとことの見出し。
   final String articleCharacterComment;
 
@@ -542,6 +548,7 @@ class AppMessages {
     homeArchiveTitle: '記事一覧',
     articleRelated: '関連記事',
     articleSuccessor: 'この記事には最新の記事があります',
+    articleSchedule: 'スケジュール',
     articleCharacterComment: '松のやド素人お嬢のひとこと',
     articleProvisionalTranslation: '',
     articleTiktokPlay: '動画を見る',
@@ -730,6 +737,7 @@ class AppMessages {
     homeArchiveTitle: 'All articles',
     articleRelated: 'Related Articles',
     articleSuccessor: 'This article has a newer version',
+    articleSchedule: 'Schedule',
     articleCharacterComment: 'A word from our Matsunoya novice',
     articleProvisionalTranslation: _enReferenceTranslation,
     articleTiktokPlay: 'Watch video',
@@ -925,6 +933,7 @@ class AppMessages {
     homeArchiveTitle: '全部文章',
     articleRelated: '相关报道',
     articleSuccessor: '本文有更新版报道',
+    articleSchedule: '相关日程',
     articleCharacterComment: '松乃家新手小姐的点评',
     articleProvisionalTranslation: _zhReferenceTranslation,
     articleTiktokPlay: '观看视频',
