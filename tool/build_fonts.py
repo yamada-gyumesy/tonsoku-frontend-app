@@ -63,7 +63,12 @@ def main() -> int:
     # ── Noto Sans JP（英語・中国語）──────────────────────
     japanese = set()
     for weight, name in NOTO_WEIGHTS.items():
-        font = TTFont(noto_dir / f"noto-sans-jp-japanese-{weight}-normal.woff2")
+        # **時刻を書き換えない**（`recalcTimestamp=False`）。書き換えると、回すたびに
+        # 中身が同じでもファイルが変わる
+        font = TTFont(
+            noto_dir / f"noto-sans-jp-japanese-{weight}-normal.woff2",
+            recalcTimestamp=False,
+        )
         japanese |= set(font.getBestCmap())
         font.flavor = None  # woff2 の圧縮を外して素の TTF にする
         target = out / f"NotoSansJP-{name}.ttf"
@@ -72,7 +77,7 @@ def main() -> int:
         print(f"{target.name}: {target.stat().st_size // 1024}KB")
 
     # ── Klee One（日本語）───────────────────────────────
-    klee = TTFont(klee_src)
+    klee = TTFont(klee_src, recalcTimestamp=False)
     wanted = (japanese | LATIN) & set(klee.getBestCmap())
     options = subset.Options()
     # **字形の置き換え（縦書き・異体字）と名前表は残す。** 落とすと
