@@ -23,10 +23,15 @@ String _two(int v) => v.toString().padLeft(2, '0');
 ///
 /// **配信データの日付は JST の日付で来る**ので、突き合わせる側も JST で持つ。
 /// 端末のタイムゾーンで数えると、日付をまたぐ前後で今日が前日・翌日にずれる。
-String todayInJst() {
-  final now = _toJst(clock.now());
-  return '${now.year.toString().padLeft(4, '0')}-'
-      '${_two(now.month)}-${_two(now.day)}';
+String todayInJst() => dateInJst(clock.now());
+
+/// その時刻の Asia/Tokyo の暦日（`YYYY-MM-DD`）。
+///
+/// **記事の掲載日を配信の日付（予定の `start_date` など）と突き合わせる時に使う。**
+/// 記事の見出しに出す日時（[formatArticleDateTime]）と同じ日になる。
+String dateInJst(DateTime dateTime) {
+  final t = _toJst(dateTime);
+  return '${t.year.toString().padLeft(4, '0')}-${_two(t.month)}-${_two(t.day)}';
 }
 
 /// 相対表記（「3時間前」）。**web の `relativeFromNow` をそのまま移してある。**

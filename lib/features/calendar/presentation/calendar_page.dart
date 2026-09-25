@@ -41,8 +41,8 @@ import 'package:tonsoku/shared/widgets/back_header.dart';
 ///   持ってこない）。あちらはカレンダーがタブで、**同じ State に導線から何度も
 ///   値が届く**ので URL と画面を揃え続ける必要があった。とん速では**開くたびに
 ///   画面を積む**ので、導線の値は `initState` で 1 度読めば足りる
-/// - **月の指定（`initialMonth`）を持たない。** 渡す導線（記事詳細の「最近の予定」）が
-///   まだ無い。入れる時は gyumesy の `initialMonth` と web の `#month=` を見ること
+/// - **月の指定（[initialMonth]）を読み直さない**（gyumesy は `didUpdateWidget`
+///   で読み直す。上の「URL に写さない」と同じ理由で、積んだ画面に別の値は届かない）
 /// - **月の範囲に下限と上限がある**（`calendarMonthRange`。web と同じ）。最初に出す
 ///   月は範囲の端へ寄せる（gyumesy は範囲外なら今月）
 /// - **記事が無くなった予定はリンクにしない**（`calendarEventsProvider`）
@@ -57,6 +57,7 @@ class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({
     required this.onOpenArticle,
     this.initialCategory,
+    this.initialMonth,
     super.key,
   });
 
@@ -73,6 +74,17 @@ class CalendarPage extends ConsumerStatefulWidget {
   /// `allCats.includes(urlCategory) ? .. : null`。外から URL で来る経路は何でも
   /// 書ける）。
   final String? initialCategory;
+
+  /// 開いた時に出す月（`YYYY-MM`）。**null なら今月**（範囲の外なら端）。
+  ///
+  /// **記事詳細の「カレンダーをみる」が記事の月を渡す**（web は
+  /// `/calendar/#month=2026-09`。ルートは `?month=` で受ける）。
+  ///
+  /// **行ける月の範囲に無い月は無視して既定の月で開く**（web も
+  /// `urlMonth && months.includes(urlMonth) ? urlMonth : buildMonth`。端へ寄せない）。
+  /// 下限より前の記事から来た時に、記事と関係の無い下限の月を「記事の月」の
+  /// ように見せないため。
+  final String? initialMonth;
 
   /// 月を送る最小の移動量。web の `MIN_PX`。
   static const swipeMinPx = 80.0;
@@ -93,7 +105,8 @@ class CalendarPage extends ConsumerStatefulWidget {
 }
 
 class _CalendarPageState extends ConsumerState<CalendarPage> {
-  /// 利用者が選んだ月（`YYYY-MM`）。**選ぶまでは null。**
+  /// 利用者が選んだ月（`YYYY-MM`）。**選ぶまでは null**（導線が月を渡していれば
+  /// [_openingMonth] がそれを出す）。
   ///
   /// **「選んでいない」を null で表す**（ランキングの窓と同じ）。最初に出す月は
   /// 配信の範囲で決まる（`initialCalendarMonth`）が、`initState` の時点では
@@ -376,10 +389,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final range = data == null ? null : calendarMonthRange(data, today);
     final month = range == null
         ? null
-        : _clampMonth(
-            _chosenMonth ?? initialCalendarMonth(range, today),
-            range,
-          );
+        : _clampMonth(_chosenMonth ?? _openingMonth(range, today), range);
     final lineMode = _effectiveLineMode(categories);
 
     Widget? toolbar() => data == null || range == null || month == null
@@ -499,6 +509,22 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         ),
       ),
     );
+  }
+
+  /// 利用者が月を選ぶ前に出す月。**導線が渡した月が範囲にあればそれ**
+  /// （[CalendarPage.initialMonth]）、無ければ既定の月。
+  ///
+  /// **形も確かめる**（外から URL で来る経路は何でも書ける。`2026-9` のように
+  /// 桁が欠けた値は文字列の比較で範囲に入って見えることがある）。
+  String _openingMonth(({String min, String max}) range, String today) {
+    final requested = widget.initialMonth;
+    if (requested != null &&
+        RegExp(r'^\d{4}-(0[1-9]|1[0-2])$').hasMatch(requested) &&
+        requested.compareTo(range.min) >= 0 &&
+        requested.compareTo(range.max) <= 0) {
+      return requested;
+    }
+    return initialCalendarMonth(range, today);
   }
 
   /// 範囲の外に出ていたら端へ寄せる（配信が更新されて範囲が縮んだ時）。

@@ -19,6 +19,8 @@ import 'package:tonsoku/features/article/presentation/widgets/article_markdown.d
 import 'package:tonsoku/features/article/presentation/widgets/article_table.dart';
 import 'package:tonsoku/features/article/presentation/widgets/article_video.dart';
 import 'package:tonsoku/features/article/presentation/widgets/back_to_list.dart';
+import 'package:tonsoku/features/calendar/data/calendar_repository.dart';
+import 'package:tonsoku/features/calendar/presentation/widgets/calendar_section.dart';
 import 'package:tonsoku/features/home/data/article_providers.dart';
 import 'package:tonsoku/features/home/data/article_repository.dart';
 import 'package:tonsoku/features/home/presentation/header_hide_controller.dart';
@@ -38,7 +40,7 @@ import 'package:tonsoku/shared/widgets/section_heading.dart';
 /// 記事詳細。**web の `src/pages/[...locale]/articles/[slug].astro` と同じ並び。**
 ///
 /// ヘッダー（サムネ・表題・日時・分類・共有）→ 仮訳の断り → 後継記事の帯 →
-/// 動画 → TikTok → 本文 → のや子のひとこと → 関連記事。
+/// 動画 → TikTok → 本文 → のや子のひとこと → 関連記事 → この記事の前後の予定。
 ///
 /// **記事本体（`articles/{slug}.json`）だけで組み立てる。** 一覧を経由せずに
 /// 開けるようにするため（関連記事・通知から直接開いた記事）。
@@ -48,8 +50,6 @@ import 'package:tonsoku/shared/widgets/section_heading.dart';
 /// - **広告** … 広告の Issue（#5）。**web の記事 3 枠（`CoAdSlot`）は写さない**
 ///   （アプリは記事への直接の着地が少なく回遊型なので、下タブの上の固定バナーが
 ///   主軸。記事の中は置いても 1 枠。web の広告の選定セッションの回答）
-/// - **この記事の前後の予定**（web の `CoCalendarSection`）… #21（カレンダーの部品を
-///   使う。カレンダー本体は #15 で入った）
 /// - **アプリの案内**（web の `CoAppDownload`）… アプリの中では出さない
 ///   （アプリを入れた人に「アプリを入れよう」と言うことになる）
 /// - **X の返信**（web の `CoXComments`）… 持たない（gyumesy と同じく UGC 判定を避ける）
@@ -57,11 +57,15 @@ class ArticlePage extends ConsumerStatefulWidget {
   const ArticlePage({
     required this.slug,
     required this.onOpenArticle,
+    required this.onOpenCalendar,
     super.key,
   });
 
   final String slug;
   final ValueChanged<String> onOpenArticle;
+
+  /// 「この記事の前後の予定」の「カレンダーをみる」。記事の月（`YYYY-MM`）を渡す。
+  final ValueChanged<String> onOpenCalendar;
 
   @override
   ConsumerState<ArticlePage> createState() => _ArticlePageState();
@@ -121,6 +125,7 @@ class _ArticlePageState extends ConsumerState<ArticlePage> {
         // ヘッダーが縮んだ時にその余白だけが空の帯として残る（gyumesy と同じ）
         topInset: topInset,
         onOpenArticle: widget.onOpenArticle,
+        onOpenCalendar: widget.onOpenCalendar,
       ),
     };
 
@@ -158,11 +163,13 @@ class _Body extends ConsumerStatefulWidget {
     required this.article,
     required this.topInset,
     required this.onOpenArticle,
+    required this.onOpenCalendar,
   });
 
   final Article article;
   final double topInset;
   final ValueChanged<String> onOpenArticle;
+  final ValueChanged<String> onOpenCalendar;
 
   @override
   ConsumerState<_Body> createState() => _BodyState();
@@ -279,6 +286,26 @@ class _BodyState extends ConsumerState<_Body> {
               slugs: related,
               onOpenArticle: widget.onOpenArticle,
             ),
+          // **この記事の前後の予定。** 記事の掲載日を中心に固定する（ホームは今日
+          // 基準）。見出しの格は関連記事と同じ大見出し（web の `prominent`）。
+          //
+          // **中心は JST の暦日**（見出しに出す日時と同じ日）。web は
+          // `created_at.slice(0, 10)` で、配信の `created_at` は `+00:00` なので
+          // **UTC の暦日**を取っている —— JST の 0〜9 時に出た記事だけ 1 日前が
+          // 中心になる。予定の日付は JST の暦日なので、アプリは JST にそろえる。
+          //
+          // **窓に予定が無ければ余白ごと出ない**（`CalendarSection`）
+          CalendarSection(
+            events: ref.watch(calendarEventsProvider).value ?? const [],
+            center: dateInJst(meta.createdAt),
+            heading: t.articleSchedule,
+            categories: categories,
+            tags: tags,
+            onOpenArticle: widget.onOpenArticle,
+            onOpenCalendar: widget.onOpenCalendar,
+            // web の `mt-14 px-4`（56 / 16）の中に、節の `py-4`（16）
+            padding: const EdgeInsets.fromLTRB(16, 56 + 16, 16, 16),
+          ),
         ],
       ),
     );

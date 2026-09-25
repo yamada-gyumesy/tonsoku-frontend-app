@@ -125,9 +125,11 @@ String _iso(DateTime date) =>
 /// 終わり、10/10 の印が金曜の列に出た。PR #22 のレビューで再現）。英語・中国語の
 /// 利用者は海外の端末で開きうる。web も UTC で差を取っている
 int _dayIndex(String from, String to) =>
-    _utcDate(to).difference(_utcDate(from)).inDays;
+    utcDate(to).difference(utcDate(from)).inDays;
 
-DateTime _utcDate(String iso) {
+/// `YYYY-MM-DD` を UTC の 0 時として読む（[_dayIndex] の doc。日を足す計算も
+/// これを通す —— `calendar_window.dart` の `addDays`）。
+DateTime utcDate(String iso) {
   final [y, m, d] = iso.substring(0, 10).split('-').map(int.parse).toList();
   return DateTime.utc(y, m, d);
 }

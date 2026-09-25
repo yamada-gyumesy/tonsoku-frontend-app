@@ -45,12 +45,18 @@ abstract final class AppRoutes {
   /// で、アプリには当たらない。**クエリで持つ**のは、ルートの外（通知・
   /// Universal Links）から来る時にも同じ形で書けるから。
   ///
+  /// [month]（`YYYY-MM`）を渡すとその月を開く（`?month=2026-09`。記事詳細の
+  /// 「カレンダーをみる」が記事の月を渡す。web は `#month=`）。
+  ///
   /// **省略できる引数しか足さない**（メニューの `_openFromMenu` が
   /// `String Function(String prefix)` として受け取る）。
-  static String calendar(String prefix, {String? category}) => Uri(
-    path: '$prefix/calendar',
-    queryParameters: category == null ? null : {'category': category},
-  ).toString();
+  static String calendar(String prefix, {String? category, String? month}) {
+    final query = {'category': ?category, 'month': ?month};
+    return Uri(
+      path: '$prefix/calendar',
+      queryParameters: query.isEmpty ? null : query,
+    ).toString();
+  }
 }
 
 /// 記事詳細のルート。**どのタブの中にも積む**（タブを切り替えても読みかけの記事が
@@ -70,14 +76,16 @@ GoRoute rankingRoute(String prefix) => GoRoute(
 
 /// カレンダーのルート。**どのタブの中にも積む**（[rankingRoute] と同じ理由）。
 ///
-/// **絞るカテゴリは `?category=` で受ける**（[AppRoutes.calendar]）。画面は
-/// 開くたびに積むので、値は画面の `initState` で 1 度読めば足りる
+/// **絞るカテゴリは `?category=`、開く月は `?month=` で受ける**
+/// （[AppRoutes.calendar]）。画面は開くたびに積むので、値は画面の
+/// `initState` で 1 度読めば足りる
 /// （gyumesy はカレンダーがタブで、同じ画面に何度も値が届くので URL と
 /// 画面を揃え続けていた）。
 GoRoute calendarRoute(String prefix) => GoRoute(
   path: 'calendar',
   builder: (context, state) => CalendarPage(
     initialCategory: state.uri.queryParameters['category'],
+    initialMonth: state.uri.queryParameters['month'],
     onOpenArticle: (slug) => context.push('$prefix/articles/$slug'),
   ),
 );
@@ -87,6 +95,10 @@ GoRoute articleRoute(String prefix) => GoRoute(
   builder: (context, state) => ArticlePage(
     slug: state.pathParameters['slug']!,
     onOpenArticle: (next) => context.push('$prefix/articles/$next'),
+    // **カレンダーも記事と同じタブの中に積む**（戻ると記事へ帰る。接頭辞を
+    // 落とすとホームのタブへ飛ばされる。関連記事と同じ理由）
+    onOpenCalendar: (month) =>
+        context.push(AppRoutes.calendar(prefix, month: month)),
   ),
 );
 
