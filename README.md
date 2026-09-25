@@ -115,3 +115,32 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 ## 書体
 
 **日本語は Klee One、英語・中国語は Noto Sans JP**（web と同じ使い分け）。実体は web が npm で持っている配布物から `tool/build_fonts.py` が作る（web 側で `yarn install` 済みであること）。
+
+## アプリアイコン
+
+元は web の `public/icon.svg`（赤い丸＋白い字の 1 枚）。作りは web の `scripts/lib/icons.ts` に揃えてある（iOS は白いタイルに 0.805 の丸、Android は丸い印だけ（アダプティブは赤の地に字）。理由は `pubspec.yaml` の `flutter_launcher_icons:`）。`assets/icon/` の 3 枚を焼いてから `flutter_launcher_icons` で各プラットフォームのアイコンを生成する。
+
+```bash
+# web のリポジトリが隣にある前提
+SVG=../tonsoku-frontend-web/public/icon.svg
+# 丸を落として字だけにする（web の glyphOnly と同じ）
+python3 -c "import re,sys; s=open('$SVG').read(); open('/tmp/glyph.svg','w').write(re.sub(r'<circle\\b[^>]*/>','',s,count=1))"
+# iOS: 白い 1024 の中央に直径 824（0.805）の丸を描き直し、同じ大きさの枠に字を重ねる
+magick -background none -density 300 /tmp/glyph.svg -resize 824x824 /tmp/glyph_ios.png
+magick -size 1024x1024 xc:white -fill '#A7232A' -draw 'circle 512,512 512,100' /tmp/glyph_ios.png -gravity center -composite -alpha off -depth 8 PNG24:assets/icon/icon.png
+# Android（アダプティブ非対応の端末）: 角が透明な丸ごとの印
+magick -background none -density 300 $SVG -resize 1024x1024 -gravity center -extent 1024x1024 PNG32:assets/icon/icon_android.png
+# Android のアダプティブの前景: 透過の地に字だけ（地の赤は設定で敷く）
+magick -background none -density 300 /tmp/glyph.svg -resize 1024x1024 -gravity center -extent 1024x1024 PNG32:assets/icon/icon_foreground.png
+dart run flutter_launcher_icons
+```
+
+**iOS 26 以降のアイコンは `ios/Runner/AppIcon.icon`（Icon Composer の形式）。** 1 枚絵のアイコンだと iOS 26 が既定のガラスの加工を重ね、赤い丸が透けてぼやける。`icon.json` でガラス（`glass`）・透け（`translucency`）・ハイライト（`specular`）・影（`shadow`）を全部切り、地を白で塗って、`Assets/mark.png`（丸と字だけ・透過の地）を 1 枚置いてある。絵を変えた時は `mark.png` も作り直す（`flutter_launcher_icons` はこちらを触らない）。
+
+```bash
+magick -size 1024x1024 xc:none -fill '#A7232A' -draw 'circle 512,512 512,100' /tmp/glyph_ios.png -gravity center -composite PNG32:ios/Runner/AppIcon.icon/Assets/mark.png
+# 見え方の確認（Xcode 同梱の ictool。Dark も同じように出せる）
+"/Applications/Xcode.app/Contents/Applications/Icon Composer.app/Contents/Executables/ictool" ios/Runner/AppIcon.icon --export-image --output-file /tmp/icon.png --platform iOS --rendition Default --width 180 --height 180 --scale 1
+```
+
+**生成したら `ios/Runner.xcodeproj/project.pbxproj` の差分を捨てる。** `flutter_launcher_icons` は `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` まで `AppIcon` に書き換える（アイコン名の設定と取り違えている。本来は `YES`）。
