@@ -19,6 +19,10 @@ class AppConfig {
   /// 「とん速とは」「法務」への遷移先を組み立てるのに使う。
   final String siteBaseUrl;
 
+  /// Web 版のホスト（`ton-soku.com`）。**外から渡された URL（通知の `data.url`）が
+  /// 自分のサイトのものかを見分ける**のに使う（`deepLinkTarget`）。
+  String get siteHost => Uri.parse(siteBaseUrl).host;
+
   static const _cdnOverride = String.fromEnvironment('CDN_BASE_URL');
   static const _siteOverride = String.fromEnvironment('SITE_BASE_URL');
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- APNs の環境。**development のままだと本番のトークンが取れない**が、
+	     App Store / TestFlight 配布時は Xcode が自動で production に差し替える。
+	     ここを production 固定にすると開発ビルドで通知が来なくなる
+	     （gyumesy-frontend-app と同じ）。
+
+	     **ユニバーサルリンク（`com.apple.developer.associated-domains`）はまだ
+	     置かない。** リリース整備の Issue（#9）で、web 側の
+	     apple-app-site-association と対にして足す（片側だけでは成立しない）。
+	     受け口は通知のタップと同じ `deepLinkTarget` に合流させる -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

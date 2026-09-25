@@ -34,6 +34,7 @@
 - **shared_preferences / path_provider** - 設定値とキャッシュ
 - **flutter_map / vector_map_tiles** - マップ（同梱の背景地図をベクターのまま描く）
 - **geolocator** - マップの現在地
+- **firebase_messaging / flutter_local_notifications** - プッシュ通知（下の「プッシュ通知」）
 
 依存は**実際に使う時に足す**（gyumesy と同じ方針）。
 
@@ -74,6 +75,7 @@ flutter run --dart-define=LOCALE=en
 | `dart run build_runner build` | freezed / json_serializable の生成物を更新 |
 | `python3 tool/build_fonts.py` | 同梱書体を web の配布物から作り直す |
 | `tool/build_map.sh` | マップの背景地図と駅（`assets/map/`）を作り直す（下の「マップの背景地図」） |
+| `python3 tool/build_notification_icon.py` | Android の通知の小アイコン（`ic_stat_notification`）を web の `badge.png` から作り直す（下の「プッシュ通知」） |
 | `python3 tool/build_licenses.py` | ライセンス表記から外すパッケージ（配布物に入らないもの）の一覧を作り直す。依存を変えたら回す（CI が差分を見る） |
 
 **生成物（`*.freezed.dart` / `*.g.dart`）はリポジトリにコミットする。** CI が生成し直して差分が出ないことを確認する。
@@ -115,6 +117,16 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 **形は gyumesy とほぼ同じ**だが、記事本体の置き場（gyumesy は `articles/{slug}/index.md`）と、`null` を出す鍵がある点が違う（`lib/shared/models/article_meta.dart`）。
 
 **配信データの形は CDN の実物を見る**（`curl -s https://cdn.ton-soku.com/articles/feed.json | head`）。`tonsoku-backend-batch/output/` は R2 配信が始まる前の古い形なので見ないこと（web の CLAUDE.md と同じ注意）。
+
+## プッシュ通知
+
+作りは gyumesy-frontend-app のまま（FCM のトピック購読・通知設定の画面・タップで記事を開く）。
+
+- **トピックは `tonsoku.category.<slug>`**（`<slug>` は `categories.json` と同じ。ロケールは入れない）。**送る側（tonsoku-backend-batch の `app/notify/push.py`）と web の購読口（tonsoku-frontend-web の `functions/api/fcm/topics.ts`）と同じ名前でないと、購読できるのに届かない。** アプリは web の購読口を通さず、SDK の `subscribeToTopic` で直接購読する（`lib/features/notifications/data/messaging_service.dart`）
+- **Firebase の設定ファイル**（`android/app/google-services.json` / `ios/Runner/GoogleService-Info.plist`）は公開値なのでコミットする（gyumesy と同じ）。作り手は tonsoku-infra-terraform（Firebase プロジェクト `tonsoku`）。APNs の鍵は Firebase に登録済み
+- **Android の通知の小アイコンは白＋透明の専用の絵**（`ic_stat_notification`）。ランチャーアイコンを指すと白い四角になる。web の `public/badge.png` を `assets/icon/notification_icon.png` に写して `python3 tool/build_notification_icon.py` で作る
+- **通知のタップの行き先は `deepLinkTarget` の 1 本で決める**（`lib/features/notifications/domain/deep_link.dart`）。アプリに無い面は外部ブラウザで開く。ユニバーサルリンク / App Links を足す時も同じ入口に合流させる
+- iOS の最低対応は **15.0**（firebase-core / firebase-messaging が要求する。gyumesy と同じ）
 
 ## 書体
 

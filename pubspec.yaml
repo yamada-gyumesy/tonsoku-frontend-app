@@ -89,6 +89,16 @@ dependencies:
   # 現在地（牛めしレーダーと同じ）
   geolocator: ^14.0.3
 
+  # プッシュ通知（FCM のトピック購読）。**版は gyumesy-frontend-app と揃える**
+  # （あちらでストア審査まで通った組）。
+  # - flutter_local_notifications … Android で**前面に居る間の通知**を出す
+  #   （FCM は前面では出さない。`push_bootstrap.dart`）
+  # - app_settings … 拒否された時に端末の通知設定を直接開く
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
+  flutter_local_notifications: ^22.3.1
+  app_settings: ^9.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -119,6 +129,10 @@ flutter:
     # 作り方は tool/build_map.sh（README の「マップの背景地図」）
     - assets/map/japan.pmtiles
     - assets/map/stations.json
+    # 通知設定の見本（ライト / ダーク × 5）。web がとん速のぶんを焼いたもの
+    # （`tonsoku-frontend-web/public/images/notifications/`。作り方は web の
+    # `docs/notification-samples.md`）。**gyumesy の絵を流用しない**（中身が松屋側）
+    - assets/notifications/
 
   fonts:
     # **日本語は Klee One の SemiBold 1 つで描く**（web と同じ。本文も太字も）。

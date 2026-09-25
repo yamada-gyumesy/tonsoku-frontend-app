@@ -36,13 +36,14 @@ import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
 ///   クーポン / メニュー。ユーザーの指定）
 /// - **並びは「とん速とは → カレンダー → ランキング → 通知設定 → 外観 → 言語」**
 ///   （ユーザーの指定）。web のメニューとも gyumesy とも違う
-/// - **通知設定の行は通知の Issue（#6）で足す**（web は常に出すが、アプリはまだ
-///   受け口が無い。**行き先の無い行は置かない**）。足す場所はランキングの下
+/// - **通知設定の行は常に出す**（web と同じ。配信の有無に依らない面なので、
+///   カレンダー・ランキングのように中身で閉じる対象ではない）
 class MenuSheet extends ConsumerStatefulWidget {
   const MenuSheet({
     required this.onClose,
     required this.onOpenCalendar,
     required this.onOpenRanking,
+    required this.onOpenNotifications,
     super.key,
   });
 
@@ -54,6 +55,9 @@ class MenuSheet extends ConsumerStatefulWidget {
   /// ランキングを開く。**積むのは [AppShell] の仕事**（どのタブに積むかを
   /// 知っているのはあちら）。
   final VoidCallback onOpenRanking;
+
+  /// 通知設定を開く。**積むのは [AppShell] の仕事**（ランキングと同じ）。
+  final VoidCallback onOpenNotifications;
 
   @override
   ConsumerState<MenuSheet> createState() => MenuSheetState();
@@ -368,6 +372,13 @@ class MenuSheetState extends ConsumerState<MenuSheet>
         ),
         _divider(colors),
       ],
+      MenuListRow(
+        label: t.navNotifications,
+        // web の `CmListRow icon="notifications"`
+        icon: Icons.notifications_outlined,
+        onTap: widget.onOpenNotifications,
+      ),
+      _divider(colors),
       MenuListRow(
         label: t.themeLabel,
         icon: Icons.contrast,

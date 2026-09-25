@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#A7232A</color>
+
+    <!-- 通知の小アイコンに乗る色。**Android は小アイコンをアルファのマスクとして
+         単色で塗る**ので、指定しないと端末既定（灰）になる。とん速のロゴの赤
+         （web の `brand-primary` トークン。`lib/core/theme/app_colors.dart` の
+         `primary`）。**Dart 側の `push_bootstrap.dart` の `_accent` と同じ値**
+         （前面の通知はそちらが出す）。暗いシェードでは OS がコントラストを
+         取れる明るさへ寄せて描く -->
+    <color name="notification_color">#A7232A</color>
 </resources>

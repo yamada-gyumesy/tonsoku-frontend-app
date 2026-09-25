@@ -58,6 +58,7 @@ void main() {
                       key: key,
                       onOpenCalendar: () {},
                       onOpenRanking: () {},
+                      onOpenNotifications: () {},
                       onClose: () => setState(() => open = false),
                     ),
                 ],
@@ -85,16 +86,16 @@ void main() {
     // **特商法は置かない。** アプリ内に有償の取引が無いので対象にならない
     expect(find.text('特定商取引法に基づく表記'), findsNothing);
 
-    // **通知設定の行はまだ無い**（通知の Issue #6 で足す。受け口の無い行を置かない）
-    expect(find.widgetWithText(MenuListRow, '通知設定'), findsNothing);
+    // **通知設定の行は常に出す**（web と同じ。配信の有無に依らない面）
+    expect(find.widgetWithText(MenuListRow, '通知設定'), findsOneWidget);
   });
 
   /// **並びはユーザーの指定。** web とも gyumesy とも違うので、写し直した時に
-  /// 黙って戻らないよう固定する（通知設定は通知の Issue でランキングの下に入る）。
-  testWidgets('並びは とん速とは → カレンダー → ランキング → 外観 → 言語', (tester) async {
+  /// 黙って戻らないよう固定する。
+  testWidgets('並びは とん速とは → カレンダー → ランキング → 通知設定 → 外観 → 言語', (tester) async {
     await pumpSheet(tester);
 
-    final labels = ['とん速とは', 'カレンダー', 'ランキング', '外観モード', '言語'];
+    final labels = ['とん速とは', 'カレンダー', 'ランキング', '通知設定', '外観モード', '言語'];
     final tops = [
       for (final label in labels)
         tester.getTopLeft(find.widgetWithText(MenuListRow, label)).dy,
@@ -185,6 +186,7 @@ void main() {
                 onClose: () {},
                 onOpenCalendar: () => opened++,
                 onOpenRanking: () {},
+                onOpenNotifications: () {},
               ),
             ),
           ),
@@ -315,6 +317,7 @@ void main() {
                   onClose: () {},
                   onOpenCalendar: () {},
                   onOpenRanking: () {},
+                  onOpenNotifications: () {},
                 ),
               ],
             ),
@@ -468,6 +471,7 @@ void main() {
                       onClose: () {},
                       onOpenCalendar: () {},
                       onOpenRanking: () {},
+                      onOpenNotifications: () {},
                     ),
                 ],
               ),

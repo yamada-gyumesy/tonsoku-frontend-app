@@ -55,6 +55,25 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- **プッシュ通知を背面でも受け取る**（firebase_messaging の手順が求める
+	     Background Modes の「Remote notifications」）。gyumesy には無いが、
+	     送る側（tonsoku-backend-batch の `app/notify/push.py`）は `apns` に表示用の
+	     `alert` を載せるだけなので、無くても通知は出る。**置くのは、背面で
+	     データを受け取る処理（`onBackgroundMessage`）を後から足した時に
+	     黙って届かない形を作らないため**で、いまは何も起こさない -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- **Flutter 自身のディープリンク処理を切る**（gyumesy と同じ。経緯は
+	     gyumesy の Info.plist の同じキーの注記）。既定は有効で、開かれた URL を
+	     **そのまま go_router へ渡す**。アプリは受け口を `deepLinkTarget` に
+	     一本化している（`app.dart`）ので、両方が動くと 1 本のリンクが 2 回
+	     処理され、ロケール付きの URL が「Page Not Found」で行き止まりになる。
+	     **Android 側の同じ設定は `AndroidManifest.xml`。** 片方だけ切ると
+	     OS で挙動が割れる -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

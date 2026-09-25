@@ -9,6 +9,7 @@ import 'package:tonsoku/features/ranking/presentation/ranking_page.dart';
 import 'package:tonsoku/features/home/presentation/article_list_page.dart';
 import 'package:tonsoku/features/home/presentation/home_page.dart';
 import 'package:tonsoku/features/map/presentation/map_page.dart';
+import 'package:tonsoku/features/notifications/presentation/notification_settings_page.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
 
 /// ルート定義。
@@ -50,6 +51,15 @@ abstract final class AppRoutes {
   ///
   /// **省略できる引数しか足さない**（メニューの `_openFromMenu` が
   /// `String Function(String prefix)` として受け取る）。
+  /// 通知設定（web の `/notifications/`）。[prefix] は [branchPrefixes] の 1 つ。
+  ///
+  /// **ランキング・カレンダーと同じくメニューから開く画面**で、今のタブの中に
+  /// 積み、タブを移ったら畳む（`AppShell` の `_openFromMenu`）。gyumesy は
+  /// 名前付きの `MaterialPageRoute` をナビゲータへ直に積んでいたが、とん速は
+  /// メニューの画面を全部 go_router の行き先で持っているので揃えた（畳み方が
+  /// 1 つで済み、通知のタップからも同じ行き先で開ける）。
+  static String notifications(String prefix) => '$prefix/notifications';
+
   static String calendar(String prefix, {String? category, String? month}) {
     final query = {'category': ?category, 'month': ?month};
     return Uri(
@@ -88,6 +98,12 @@ GoRoute calendarRoute(String prefix) => GoRoute(
     initialMonth: state.uri.queryParameters['month'],
     onOpenArticle: (slug) => context.push('$prefix/articles/$slug'),
   ),
+);
+
+/// 通知設定のルート。**どのタブの中にも積む**（[rankingRoute] と同じ理由）。
+GoRoute notificationsRoute() => GoRoute(
+  path: 'notifications',
+  builder: (context, state) => const NotificationSettingsPage(),
 );
 
 GoRoute articleRoute(String prefix) => GoRoute(
@@ -150,6 +166,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   articleRoute(''),
                   calendarRoute(''),
                   rankingRoute(''),
+                  notificationsRoute(),
                 ],
               ),
             ],
@@ -170,6 +187,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   articleRoute(AppRoutes.map),
                   calendarRoute(AppRoutes.map),
                   rankingRoute(AppRoutes.map),
+                  notificationsRoute(),
                 ],
               ),
             ],
@@ -194,6 +212,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   articleRoute(AppRoutes.coupon),
                   calendarRoute(AppRoutes.coupon),
                   rankingRoute(AppRoutes.coupon),
+                  notificationsRoute(),
                 ],
               ),
             ],

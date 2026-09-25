@@ -6,6 +6,9 @@ import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/router/app_router.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/menu/presentation/menu_sheet.dart';
+import 'package:tonsoku/features/notifications/domain/deep_link.dart';
+import 'package:tonsoku/features/notifications/presentation/notification_settings_controller.dart';
+import 'package:tonsoku/features/shell/presentation/menu_screen_request.dart';
 import 'package:tonsoku/features/shell/presentation/widgets/nav_item.dart';
 
 /// 画面下に固定するグローバルナビ。
@@ -38,6 +41,86 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   StatefulNavigationShell get navigationShell => widget.navigationShell;
 
+  @override
+  void initState() {
+    super.initState();
+    // **設定アプリから戻ってきたら通知設定へ戻す**（gyumesy と同じ）。
+    //
+    // Android は**実行時権限を取り消されるとアプリのプロセスを殺す**ので、
+    // 通知を切って戻るとコールドスタートになり、初期ルート（ホーム）から
+    // 始まってしまう。送り出す時に付けた印をここで見る
+    // （`NotificationStore.readReturning` に経緯を書いてある）。
+    //
+    // **最初のフレームより後に積む。** ブランチのナビゲータはまだ組み上がって
+    // いない
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _restoreNotifications(),
+    );
+    // **外から来た URL（通知のタップ）からもメニューの画面を積む。** 逆に、
+    // 別の面へ移った時は畳む。行き先ではなく要求で受けている理由は
+    // [menuScreenRequest]
+    menuScreenRequest.addListener(_consumeScreenRequest);
+    // **購読より前に積まれた要求も拾う。** 終了状態から通知で起動すると、
+    // 画面が組み上がるより先に要求だけが置かれていることがある
+    // （`pushedLink` を `TonsokuApp` が同じ形で拾っているのと同じ理由）
+    _consumeScreenRequest();
+  }
+
+  @override
+  void dispose() {
+    menuScreenRequest.removeListener(_consumeScreenRequest);
+    super.dispose();
+  }
+
+  /// 見ていない要求。**回数で見る**（同じ通知を続けて開いた時も積み直せるように、
+  /// 要求側は値を増やすだけ。[menuScreenRequest]）。
+  int _seenScreenRequests = 0;
+
+  /// 見ていない要求があれば実行する。
+  ///
+  /// **次のフレームで動かす。** 終了状態からの起動では、ブランチのナビゲータが
+  /// まだ組み上がっていない。畳む側は、`go` による行き先の組み替えより後に
+  /// 動かす必要がある（いま居るタブを `go` の後の値で見るため）。
+  void _consumeScreenRequest() {
+    final request = menuScreenRequest.value;
+    if (request == null || request.seq == _seenScreenRequests) return;
+    _seenScreenRequests = request.seq;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = request.target;
+      if (target == null) {
+        _foldMenuScreens();
+      } else {
+        _openFromMenu(target.location);
+      }
+    });
+    // **フレームを起こす。** 要求は画面の外（通知のタップ）から来るので、
+    // 何も描き直す予定が無いと、上のコールバックが次に何かが動くまで走らない
+    // （テストで踏んだ: 要求を置いても通知設定が積まれなかった）
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  /// メニューから開いた画面を、**いま居るタブ以外**は次に戻った時に畳む。
+  ///
+  /// いま居るタブは `go` で積み直されているので、印を消すだけでよい（残すと、
+  /// 通知から開いた記事までタブを移った時に畳まれる）。
+  void _foldMenuScreens() {
+    final current = navigationShell.currentIndex;
+    for (final branch in _menuScreenBranches.toList()) {
+      _menuScreenBranches.remove(branch);
+      if (branch != current) _foldOnReturn.add(branch);
+    }
+  }
+
+  void _restoreNotifications() {
+    if (!mounted) return;
+    final store = ref.read(notificationStoreProvider);
+    if (!store.readReturning()) return;
+    // **見たら消す。** 残すと次に普通に起動した時にも開く
+    store.writeReturning(value: false);
+    _openFromMenu(const MenuScreenTarget(MenuScreen.notifications).location);
+  }
+
   void _toggleSheet() {
     // 開いている時にもう一度押したら閉じる（web と同じ）
     if (_sheetOpen) {
@@ -64,13 +147,20 @@ class _AppShellState extends ConsumerState<AppShell> {
   /// 属さないので、積んだタブに残すと、別のタブへ移って戻った時に出てくる
   /// （ユーザーの指摘: ホーム → ランキング → クーポン → ホームでランキングが
   /// 出た。gyumesy が通知設定を畳むのと同じ理由）。
+  ///
+  /// **いま一番上に同じ画面が出ていたら積まない**（gyumesy の通知設定と同じ）。
+  /// 通知のタップやメニューから同じ画面を開き直すたびに積むと 2 枚重なり、
+  /// 戻るを押しても見た目が変わらないので「戻るが効かない」に見える。
   Future<void> _openFromMenu(String Function(String prefix) location) async {
     _sheetKey.currentState?.close();
     final branch = navigationShell.currentIndex;
+    final router = GoRouter.of(context);
+    final next = location(AppRoutes.branchPrefixes[branch]);
+    if (router.state.uri.toString() == next) {
+      return;
+    }
     _menuScreenBranches.add(branch);
-    await GoRouter.of(
-      context,
-    ).push<void>(location(AppRoutes.branchPrefixes[branch]));
+    await router.push<void>(next);
     // 戻るで閉じた。**畳む印を消す**（残すと、そのあと同じタブに積んだ記事まで
     // タブを移った時に畳まれる）
     _menuScreenBranches.remove(branch);
@@ -127,6 +217,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               onClose: () => setState(() => _sheetOpen = false),
               onOpenCalendar: () => _openFromMenu(AppRoutes.calendar),
               onOpenRanking: () => _openFromMenu(AppRoutes.ranking),
+              onOpenNotifications: () => _openFromMenu(AppRoutes.notifications),
             ),
         ],
       ),
