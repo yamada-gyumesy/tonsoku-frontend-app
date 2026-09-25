@@ -113,4 +113,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('記事'), findsOneWidget);
   });
+
+  /// **印はタブごとに持つ**（1 つだけだと上書きされ、ホームにランキングが
+  /// 残った。PR #20 のレビューで再現）。
+  testWidgets('2 つのタブでメニューの画面を開いても、どちらも畳まれる', (tester) async {
+    await pump(tester);
+    await openRanking(tester);
+
+    await tester.tap(find.text('クーポン'));
+    await tester.pumpAndSettle();
+    await openRanking(tester);
+
+    await tester.tap(find.text('ホーム'));
+    await tester.pumpAndSettle();
+    expect(find.text('ランキング画面'), findsNothing);
+    expect(find.text('root /'), findsOneWidget);
+
+    await tester.tap(find.text('クーポン'));
+    await tester.pumpAndSettle();
+    expect(find.text('ランキング画面'), findsNothing);
+    expect(find.text('root /coupon'), findsOneWidget);
+  });
 }
