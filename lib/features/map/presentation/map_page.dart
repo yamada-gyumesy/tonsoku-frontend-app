@@ -11,6 +11,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/lifecycle/app_resume.dart';
@@ -581,103 +583,107 @@ class _MapPageState extends ConsumerState<MapPage> {
       ],
     );
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: Column(
-        children: [
-          const TonsokuAppBar(hidden: 0),
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(child: map),
-                // **並び（ユーザーの指定）**: 上に横いっぱいの検索（店の数はバーの
-                // 右端）と絞り込み、右下に上からコンパス・現在地、左下に著作権
-                // 表記、下の真ん中に縮尺（地図の層。`FlutterMap` の子）
-                // 右下に上からコンパス・現在地（ユーザーの指定）
-                Positioned(
-                  right: 8,
-                  bottom: 8,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // コンパスは現在地の上（ユーザーの指定）
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: _CompassButton(
-                          label: _headingUp ? t.mapHeadingUp : t.mapNorthUp,
-                          headingUp: _headingUp,
-                          rotation: _rotation,
-                          onTap: _toggleHeading,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: _LocateButton(
-                          label: t.mapMyLocation,
-                          busy: _locating,
-                          onTap: _locate,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // 店を取れなかった（キャッシュも無い初回）。地図は見せたまま、
-                // 検索の下に重ねる
-                if (shops.hasError && !shops.hasValue)
+    return TrackScreen(
+      screen: ScreenPath.map(locale, t),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: Column(
+          children: [
+            const TonsokuAppBar(hidden: 0),
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(child: map),
+                  // **並び（ユーザーの指定）**: 上に横いっぱいの検索（店の数はバーの
+                  // 右端）と絞り込み、右下に上からコンパス・現在地、左下に著作権
+                  // 表記、下の真ん中に縮尺（地図の層。`FlutterMap` の子）
+                  // 右下に上からコンパス・現在地（ユーザーの指定）
                   Positioned(
-                    top: 64,
+                    right: 8,
+                    bottom: 8,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // コンパスは現在地の上（ユーザーの指定）
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: _CompassButton(
+                            label: _headingUp ? t.mapHeadingUp : t.mapNorthUp,
+                            headingUp: _headingUp,
+                            rotation: _rotation,
+                            onTap: _toggleHeading,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: _LocateButton(
+                            label: t.mapMyLocation,
+                            busy: _locating,
+                            onTap: _locate,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 店を取れなかった（キャッシュも無い初回）。地図は見せたまま、
+                  // 検索の下に重ねる
+                  if (shops.hasError && !shops.hasValue)
+                    Positioned(
+                      top: 64,
+                      left: 12,
+                      right: 12,
+                      child: _LoadFailed(
+                        message: t.commonError,
+                        retry: t.commonRetry,
+                        onRetry: () => ref.invalidate(shopsProvider),
+                      ),
+                    ),
+                  // 検索は最後に重ねる（候補の一覧が他の部品より上に出るように）
+                  Positioned(
+                    top: 12,
                     left: 12,
+                    // 横いっぱい（ユーザーの指定。コンパスは右下へ移した）
                     right: 12,
-                    child: _LoadFailed(
-                      message: t.commonError,
-                      retry: t.commonRetry,
-                      onRetry: () => ref.invalidate(shopsProvider),
+                    child: MapSearch(
+                      // 探すのは地図に出している店（牛めしレーダーと同じ）
+                      shops: [for (final e in entries) e.shop],
+                      resetKey: _filter,
+                      count: shops.hasValue ? entries.length : null,
+                      filter: MapFilterButton(
+                        open: _brandsOpen,
+                        active: _filter.standalone || _filter.brands.isNotEmpty,
+                        onTap: () => setState(() => _brandsOpen = !_brandsOpen),
+                      ),
+                      onShop: (shop) {
+                        _follow = false;
+                        _controller.move(
+                          LatLng(shop.lat, shop.lon),
+                          math.max(_controller.camera.zoom, MapPage.locateZoom),
+                        );
+                        _openShop(shop);
+                      },
+                      below: MapFilters(
+                        filter: _filter,
+                        showBrands: _brandsOpen,
+                        menus: menus,
+                        onChanged: (f) => setState(() => _filter = f),
+                        notice: showNotice
+                            ? MapUnlockNotice(
+                                busy:
+                                    unlock.busy ||
+                                    gate == MapLimitedGate.waiting,
+                                onTap: _watchVideo,
+                              )
+                            : null,
+                      ),
                     ),
                   ),
-                // 検索は最後に重ねる（候補の一覧が他の部品より上に出るように）
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  // 横いっぱい（ユーザーの指定。コンパスは右下へ移した）
-                  right: 12,
-                  child: MapSearch(
-                    // 探すのは地図に出している店（牛めしレーダーと同じ）
-                    shops: [for (final e in entries) e.shop],
-                    resetKey: _filter,
-                    count: shops.hasValue ? entries.length : null,
-                    filter: MapFilterButton(
-                      open: _brandsOpen,
-                      active: _filter.standalone || _filter.brands.isNotEmpty,
-                      onTap: () => setState(() => _brandsOpen = !_brandsOpen),
-                    ),
-                    onShop: (shop) {
-                      _follow = false;
-                      _controller.move(
-                        LatLng(shop.lat, shop.lon),
-                        math.max(_controller.camera.zoom, MapPage.locateZoom),
-                      );
-                      _openShop(shop);
-                    },
-                    below: MapFilters(
-                      filter: _filter,
-                      showBrands: _brandsOpen,
-                      menus: menus,
-                      onChanged: (f) => setState(() => _filter = f),
-                      notice: showNotice
-                          ? MapUnlockNotice(
-                              busy:
-                                  unlock.busy || gate == MapLimitedGate.waiting,
-                              onTap: _watchVideo,
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

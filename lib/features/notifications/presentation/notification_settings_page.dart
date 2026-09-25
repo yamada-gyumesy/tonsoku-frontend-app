@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/config/app_config_provider.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
@@ -39,7 +41,6 @@ import 'package:tonsoku/shared/widgets/back_header.dart';
 ///   絵は web がとん速のぶんを焼いたもの（`assets/notifications/`）
 /// - RSS は**そのロケールのフィードに記事がある時だけ**そのロケールの URL を写す
 ///   （web の `hasLocaleFeed`。無いロケールの `feed.xml` は 404）
-/// - 計測（`TrackScreen`）はまだ無い（リリース整備の Issue）
 class NotificationSettingsPage extends ConsumerWidget {
   const NotificationSettingsPage({super.key});
 
@@ -88,100 +89,106 @@ class NotificationSettingsPage extends ConsumerWidget {
       controller.clearReturning();
     });
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              BackHeader(onBack: () => backFromArticle(context)),
-              Expanded(
-                child: RefreshIndicator(
-                  // **カテゴリは配信から引いている**ので取り直せる必要がある。
-                  // 権限も一緒に見直す（設定アプリで変えて戻った時のため）
-                  // **温めた後に貼り直す**（理由は [pullToRefresh]）
-                  onRefresh: () => pullToRefresh(
-                    context,
-                    warm: (c) =>
-                        c.read(articleRepositoryProvider).refreshCategories(),
-                    reattach: (c) {
-                      c.invalidate(categoriesProvider);
-                      // **画面を閉じた後でも安全** —— 容れ物越しなので `ref` の
-                      // 生き死にに依らない
-                      unawaited(
-                        c
-                            .read(
-                              notificationSettingsControllerProvider.notifier,
-                            )
-                            .refresh(),
-                      );
-                    },
-                  ),
-                  child: ListView(
-                    // **左右は空けない。** 罫線を画面いっぱいに引くため。
-                    // 文字の内側の余白は各要素が持つ（[inset]）。
-                    //
-                    // web の `pt-4 pb-8`。**下はシステムバーのぶんを足す** ——
-                    // Android のナビゲーションバーが最後の行に重なって押せなくなる
-                    // （gyumesy が実機で踏んだ）
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      0,
-                      16,
-                      0,
-                      32 + MediaQuery.paddingOf(context).bottom,
+    return TrackScreen(
+      screen: ScreenPath.notifications(ref.watch(localeControllerProvider), t),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                BackHeader(onBack: () => backFromArticle(context)),
+                Expanded(
+                  child: RefreshIndicator(
+                    // **カテゴリは配信から引いている**ので取り直せる必要がある。
+                    // 権限も一緒に見直す（設定アプリで変えて戻った時のため）
+                    // **温めた後に貼り直す**（理由は [pullToRefresh]）
+                    onRefresh: () => pullToRefresh(
+                      context,
+                      warm: (c) =>
+                          c.read(articleRepositoryProvider).refreshCategories(),
+                      reattach: (c) {
+                        c.invalidate(categoriesProvider);
+                        // **画面を閉じた後でも安全** —— 容れ物越しなので `ref` の
+                        // 生き死にに依らない
+                        unawaited(
+                          c
+                              .read(
+                                notificationSettingsControllerProvider.notifier,
+                              )
+                              .refresh(),
+                        );
+                      },
                     ),
-                    children: [
-                      inset(const _Heading()),
-                      // web の見出しの `mb-6`
-                      const SizedBox(height: 24),
-                      inset(const _Intro()),
-                      // web の説明の箱の `mb-8`
-                      const SizedBox(height: 32),
-                      inset(
-                        Text(
-                          t.notificationsSampleLabel,
-                          // web の `mb-2 text-xs text-brand-text-sub`
-                          style: TextStyle(fontSize: 12, color: colors.textSub),
-                        ),
+                    child: ListView(
+                      // **左右は空けない。** 罫線を画面いっぱいに引くため。
+                      // 文字の内側の余白は各要素が持つ（[inset]）。
+                      //
+                      // web の `pt-4 pb-8`。**下はシステムバーのぶんを足す** ——
+                      // Android のナビゲーションバーが最後の行に重なって押せなくなる
+                      // （gyumesy が実機で踏んだ）
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        0,
+                        16,
+                        0,
+                        32 + MediaQuery.paddingOf(context).bottom,
                       ),
-                      const SizedBox(height: 8),
-                      inset(
-                        AutoSlider(
-                          images: _samplesFor(Theme.of(context).brightness),
-                          alt: t.notificationsSampleAlt,
-                          aspectRatio: _sampleAspect,
-                          // web の `visibleCount={2.7} visibleCountSp={1} gap={16}`
-                          visibleCount: 2.7,
-                          visibleCountSp: 1,
-                          gap: 16,
+                      children: [
+                        inset(const _Heading()),
+                        // web の見出しの `mb-6`
+                        const SizedBox(height: 24),
+                        inset(const _Intro()),
+                        // web の説明の箱の `mb-8`
+                        const SizedBox(height: 32),
+                        inset(
+                          Text(
+                            t.notificationsSampleLabel,
+                            // web の `mb-2 text-xs text-brand-text-sub`
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textSub,
+                            ),
+                          ),
                         ),
-                      ),
-                      // web のサンプルの `mb-8`
-                      const SizedBox(height: 32),
-                      _Panel(state: state, categories: categories),
-                    ],
+                        const SizedBox(height: 8),
+                        inset(
+                          AutoSlider(
+                            images: _samplesFor(Theme.of(context).brightness),
+                            alt: t.notificationsSampleAlt,
+                            aspectRatio: _sampleAspect,
+                            // web の `visibleCount={2.7} visibleCountSp={1} gap={16}`
+                            visibleCount: 2.7,
+                            visibleCountSp: 1,
+                            gap: 16,
+                          ),
+                        ),
+                        // web のサンプルの `mb-8`
+                        const SizedBox(height: 32),
+                        _Panel(state: state, categories: categories),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // web の `CaLoading`（`fixed inset-0 bg-black/30`）。
+            // **マスターを操作している間だけ**出す（カテゴリの反映は行ごとに
+            // 見せるので全画面を覆わない）。
+            // **下の操作を通さない** —— `ColoredBox` は子の外を素通りさせる。
+            // **開いた直後の読み込みでは出さない**（権限を読むだけの一瞬で、
+            // 暗幕が点滅して見える。その間は `_Panel` が「読み込み中」を出す）
+            if (state.loading && state.permission != null)
+              const Positioned.fill(
+                child: AbsorbPointer(
+                  child: ColoredBox(
+                    color: Color(0x4D000000),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
               ),
-            ],
-          ),
-          // web の `CaLoading`（`fixed inset-0 bg-black/30`）。
-          // **マスターを操作している間だけ**出す（カテゴリの反映は行ごとに
-          // 見せるので全画面を覆わない）。
-          // **下の操作を通さない** —— `ColoredBox` は子の外を素通りさせる。
-          // **開いた直後の読み込みでは出さない**（権限を読むだけの一瞬で、
-          // 暗幕が点滅して見える。その間は `_Panel` が「読み込み中」を出す）
-          if (state.loading && state.permission != null)
-            const Positioned.fill(
-              child: AbsorbPointer(
-                child: ColoredBox(
-                  color: Color(0x4D000000),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

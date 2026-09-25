@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/config/app_config.dart';
 import 'package:tonsoku/core/config/app_config_provider.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
@@ -117,61 +119,67 @@ class _CouponPageState extends ConsumerState<CouponPage> {
     final topInset = MediaQuery.paddingOf(context).top + TonsokuAppBar.height;
     final coupon = ref.watch(couponProvider);
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: NotificationListener<ScrollUpdateNotification>(
-        onNotification: _headerHidden.handleScroll,
-        child: Stack(
-          children: [
-            RefreshIndicator(
-              edgeOffset: topInset,
-              onRefresh: _reload,
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  // ヘッダーに潜り込ませるぶんの余白 ＋ web の `pt-4`
-                  SliverToBoxAdapter(child: SizedBox(height: topInset + 16)),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                      CouponPage.pageInset,
-                      0,
-                      CouponPage.pageInset,
-                      32,
+    return TrackScreen(
+      screen: ScreenPath.coupon(
+        ref.watch(localeControllerProvider),
+        ref.watch(messagesProvider),
+      ),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: NotificationListener<ScrollUpdateNotification>(
+          onNotification: _headerHidden.handleScroll,
+          child: Stack(
+            children: [
+              RefreshIndicator(
+                edgeOffset: topInset,
+                onRefresh: _reload,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    // ヘッダーに潜り込ませるぶんの余白 ＋ web の `pt-4`
+                    SliverToBoxAdapter(child: SizedBox(height: topInset + 16)),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        CouponPage.pageInset,
+                        0,
+                        CouponPage.pageInset,
+                        32,
+                      ),
+                      sliver: SliverToBoxAdapter(
+                        // **失敗を「空」に潰さない。** 前回の値がある間は出したまま
+                        // 差し替え、値が 1 度も無い時だけ失敗を出す
+                        child: switch (coupon) {
+                          AsyncValue(:final value?) => _Body(
+                            coupon: value,
+                            onOpenArticle: widget.onOpenArticle,
+                            onOpenCalendar: widget.onOpenCalendar,
+                          ),
+                          AsyncValue(hasValue: true) => _Body(
+                            coupon: null,
+                            onOpenArticle: widget.onOpenArticle,
+                            onOpenCalendar: widget.onOpenCalendar,
+                          ),
+                          AsyncError() => LoadFailure(
+                            onRetry: () => ref.invalidate(couponProvider),
+                          ),
+                          _ => const InitialLoading(),
+                        },
+                      ),
                     ),
-                    sliver: SliverToBoxAdapter(
-                      // **失敗を「空」に潰さない。** 前回の値がある間は出したまま
-                      // 差し替え、値が 1 度も無い時だけ失敗を出す
-                      child: switch (coupon) {
-                        AsyncValue(:final value?) => _Body(
-                          coupon: value,
-                          onOpenArticle: widget.onOpenArticle,
-                          onOpenCalendar: widget.onOpenCalendar,
-                        ),
-                        AsyncValue(hasValue: true) => _Body(
-                          coupon: null,
-                          onOpenArticle: widget.onOpenArticle,
-                          onOpenCalendar: widget.onOpenCalendar,
-                        ),
-                        AsyncError() => LoadFailure(
-                          onRetry: () => ref.invalidate(couponProvider),
-                        ),
-                        _ => const InitialLoading(),
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            ValueListenableBuilder<double>(
-              valueListenable: _headerHidden,
-              builder: (context, hidden, _) => Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: TonsokuAppBar(hidden: hidden),
+              ValueListenableBuilder<double>(
+                valueListenable: _headerHidden,
+                builder: (context, hidden, _) => Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: TonsokuAppBar(hidden: hidden),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

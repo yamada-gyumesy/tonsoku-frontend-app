@@ -14,6 +14,7 @@ import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/core/theme/theme_mode_controller.dart';
 import 'package:tonsoku/features/notifications/data/push_bootstrap.dart';
 import 'package:tonsoku/features/notifications/domain/deep_link.dart';
+import 'package:tonsoku/features/onboarding/presentation/onboarding_overlay.dart';
 import 'package:tonsoku/features/shell/presentation/menu_screen_request.dart';
 
 class TonsokuApp extends ConsumerStatefulWidget {
@@ -174,10 +175,11 @@ class _TonsokuAppState extends ConsumerState<TonsokuApp>
   Widget build(BuildContext context) {
     final locale = ref.watch(localeControllerProvider);
 
+    final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
       title: ref.watch(messagesProvider).appName,
       debugShowCheckedModeBanner: false,
-      routerConfig: ref.watch(appRouterProvider),
+      routerConfig: router,
       // **書体はロケールで変わる**（日本語は Klee One。[AppTheme]）
       theme: AppTheme.light(locale),
       darkTheme: AppTheme.dark(locale),
@@ -191,6 +193,14 @@ class _TonsokuAppState extends ConsumerState<TonsokuApp>
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // 初回だけオンボーディングを重ねる（重ねる形にした理由は
+      // [OnboardingOverlay]。gyumesy と同じ置き場）
+      // 戻る操作はルーターの受け口から先に取る（[OnboardingPage] の注記）
+      builder: (context, child) => OnboardingOverlay(
+        backButtonDispatcher: router.backButtonDispatcher,
+        canPopUnderneath: router.canPop,
+        child: child,
+      ),
     );
   }
 }

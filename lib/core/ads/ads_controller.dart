@@ -26,8 +26,9 @@ enum AdsStatus {
 /// 広告の SDK を始める（同意 → ATT → 初期化）。**画面はこの状態が [AdsStatus.ready]
 /// になってから広告を読み込む。**
 ///
-/// **始める合図は `main.dart` の 1 か所だけ**（最初のフレームの後）。オンボーディング
-/// （#7）で ATT を聞く場所が決まったら、そこへ [start] の呼び出しを移す。
+/// **始める合図は `main.dart` の 1 か所だけ**（最初のフレームの後。初回起動は
+/// オンボーディングを閉じた後 ―― `startAdsAfterOnboarding`。ATT をオンボーディングと
+/// 通知の許可に重ねないため）。
 /// **ATT は同意（UMP）の後**に聞く（UMP が ATT の説明を出す設定の時に、
 /// 二重に聞かないため。`GoogleAdGateway.requestTracking`）。
 ///

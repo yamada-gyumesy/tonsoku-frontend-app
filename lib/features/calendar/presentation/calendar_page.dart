@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/utils/article_date.dart';
@@ -52,7 +54,6 @@ import 'package:tonsoku/shared/widgets/back_header.dart';
 ///   web には `calendar-celebrate.ts` が写してあるが、鳴る経路が無い。配信が
 ///   松のやの記念日を出すようになったら、gyumesy の `celebrate.dart` と
 ///   `isAnniversary` を写すこと
-/// - **画面の計測（`TrackScreen`）を持たない**（GA4 は後の Issue）
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({
     required this.onOpenArticle,
@@ -418,93 +419,99 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             }),
           );
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: NotificationListener<ScrollMetricsNotification>(
-        onNotification: _onMetrics,
-        child: NotificationListener<ScrollUpdateNotification>(
-          onNotification: _onScroll,
-          child: Stack(
-            key: _stack,
-            children: [
-              RefreshIndicator(
-                // 引っ張って更新の輪はヘッダーの下から出す
-                edgeOffset: topInset,
-                onRefresh: _reload,
-                child: CustomScrollView(
-                  // 中身が短くても引っ張って更新できるようにする
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    // **ヘッダーぶんの余白はスクロールする側が持つ**（ランキングと
-                    // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
-                    SliverToBoxAdapter(child: SizedBox(height: topInset)),
-                    const SliverToBoxAdapter(child: CalendarHeader()),
-                    SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
-                    if (toolbar() case final bar?)
-                      SliverToBoxAdapter(child: bar),
-                    ..._body(
-                      events: events,
-                      today: today,
-                      month: month,
-                      range: range,
-                      lineMode: lineMode,
-                      categories: categories,
-                      tags: tags,
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: MediaQuery.paddingOf(context).bottom + 24,
+    return TrackScreen(
+      screen: ScreenPath.calendar(
+        ref.watch(localeControllerProvider),
+        ref.watch(messagesProvider),
+      ),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: NotificationListener<ScrollMetricsNotification>(
+          onNotification: _onMetrics,
+          child: NotificationListener<ScrollUpdateNotification>(
+            onNotification: _onScroll,
+            child: Stack(
+              key: _stack,
+              children: [
+                RefreshIndicator(
+                  // 引っ張って更新の輪はヘッダーの下から出す
+                  edgeOffset: topInset,
+                  onRefresh: _reload,
+                  child: CustomScrollView(
+                    // 中身が短くても引っ張って更新できるようにする
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      // **ヘッダーぶんの余白はスクロールする側が持つ**（ランキングと
+                      // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
+                      SliverToBoxAdapter(child: SizedBox(height: topInset)),
+                      const SliverToBoxAdapter(child: CalendarHeader()),
+                      SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
+                      if (toolbar() case final bar?)
+                        SliverToBoxAdapter(child: bar),
+                      ..._body(
+                        events: events,
+                        today: today,
+                        month: month,
+                        range: range,
+                        lineMode: lineMode,
+                        categories: categories,
+                        tags: tags,
+                      ),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: MediaQuery.paddingOf(context).bottom + 24,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // **貼り付いた帯は、ヘッダーのすぐ下に重ねて出す**（ランキングの
+                // 期間タブと同じ作り。スクロールの中で `pinned` にすると、貼り付く先が
+                // 画面の上端＝ヘッダーの裏になって隠れる）。**一覧の中の帯はそのまま
+                // 流し**、見出しの帯の裏まで来たら同じ帯をこちらに出す。
+                //
+                // 同じ帯を 2 つ組むので、**カテゴリの行を横に送った位置だけは
+                // 2 つで別々**になる（貼り付いた側で送っても、戻った時の一覧の中の
+                // 帯は元の位置）。選んでいるものは同じ State から描くので食い違わない
+                AnimatedBuilder(
+                  animation: Listenable.merge([_headerHidden, _stuck]),
+                  builder: (context, _) => switch ((_stuck.value, toolbar())) {
+                    (true, final bar?) => Positioned(
+                      top: _headerBottom,
+                      left: 0,
+                      right: 0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          // **貼り付いた時の線は紙面の端から端まで**（web の
+                          // `.sticky-band`）。外側に描いて高さを変えない
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.border,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: bar,
                       ),
                     ),
-                  ],
+                    _ => const SizedBox.shrink(),
+                  },
                 ),
-              ),
-              // **貼り付いた帯は、ヘッダーのすぐ下に重ねて出す**（ランキングの
-              // 期間タブと同じ作り。スクロールの中で `pinned` にすると、貼り付く先が
-              // 画面の上端＝ヘッダーの裏になって隠れる）。**一覧の中の帯はそのまま
-              // 流し**、見出しの帯の裏まで来たら同じ帯をこちらに出す。
-              //
-              // 同じ帯を 2 つ組むので、**カテゴリの行を横に送った位置だけは
-              // 2 つで別々**になる（貼り付いた側で送っても、戻った時の一覧の中の
-              // 帯は元の位置）。選んでいるものは同じ State から描くので食い違わない
-              AnimatedBuilder(
-                animation: Listenable.merge([_headerHidden, _stuck]),
-                builder: (context, _) => switch ((_stuck.value, toolbar())) {
-                  (true, final bar?) => Positioned(
-                    top: _headerBottom,
+                ValueListenableBuilder<double>(
+                  valueListenable: _headerHidden,
+                  builder: (context, hidden, _) => Positioned(
+                    top: 0,
                     left: 0,
                     right: 0,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        // **貼り付いた時の線は紙面の端から端まで**（web の
-                        // `.sticky-band`）。外側に描いて高さを変えない
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.border,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: bar,
+                    child: BackHeader(
+                      hidden: hidden,
+                      onBack: () => backFromArticle(context),
                     ),
                   ),
-                  _ => const SizedBox.shrink(),
-                },
-              ),
-              ValueListenableBuilder<double>(
-                valueListenable: _headerHidden,
-                builder: (context, hidden, _) => Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: BackHeader(
-                    hidden: hidden,
-                    onBack: () => backFromArticle(context),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

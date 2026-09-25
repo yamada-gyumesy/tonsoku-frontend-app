@@ -30,6 +30,14 @@
 	     開いただけでは求めない（lib/features/map/data/location_repository.dart） -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>近くの松のやを地図で探すために、現在地を使います。</string>
+	<!-- **自動の `screen_view` を切る。** Flutter は ViewController が 1 つしか
+	     無いので、自動収集は全画面を `FlutterViewController` の 1 行に潰して
+	     しまう（GA4 の「ページパスとスクリーン クラス」がそれで埋まる）。
+	     **画面は `Analytics.screen` が `screen_view` で送る**
+	     （`lib/core/analytics/analytics.dart`。web と同じパス・題にして並べる。
+	     Android の AndroidManifest.xml と対。gyumesy と同じ） -->
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
 	<!-- AdMob のアプリ ID。**いまは Google 公式のテスト用の値**
 	     （https://developers.google.com/admob/ios/test-ads ）。**リリース前に
 	     AdMob で作った iOS アプリの ID（ca-app-pub-…~…）に差し替える。**

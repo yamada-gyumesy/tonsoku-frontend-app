@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/ads/ad_banner.dart';
 import 'package:tonsoku/core/config/ad_config.dart';
 import 'package:tonsoku/core/config/app_config.dart';
@@ -131,29 +133,41 @@ class _ArticlePageState extends ConsumerState<ArticlePage> {
       ),
     };
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: NotificationListener<ScrollUpdateNotification>(
-        onNotification: _headerHidden.handleScroll,
-        child: Stack(
-          children: [
-            // **本文は選べるようにする**（引用して人に送る・検索する、が読み物では
-            // 普通に起きる。`SelectionArea` なら見出し・表・引用まで通しで選べて、
-            // リンクはそのまま押せる。gyumesy と同じ）
-            SelectionArea(child: content),
-            ValueListenableBuilder<double>(
-              valueListenable: _headerHidden,
-              builder: (context, hidden, _) => Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: BackHeader(
-                  hidden: hidden,
-                  onBack: () => backFromArticle(context),
+    return TrackScreen(
+      // **表題が決まるまで送らない。** 取得前に送ると、同じ記事が
+      // 「表題の無いページ」として別に数えられる（gyumesy と同じ）
+      screen: value == null
+          ? null
+          : ScreenPath.article(
+              ref.watch(localeControllerProvider),
+              ref.watch(messagesProvider),
+              slug: widget.slug,
+              articleTitle: value.meta.title,
+            ),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: NotificationListener<ScrollUpdateNotification>(
+          onNotification: _headerHidden.handleScroll,
+          child: Stack(
+            children: [
+              // **本文は選べるようにする**（引用して人に送る・検索する、が読み物では
+              // 普通に起きる。`SelectionArea` なら見出し・表・引用まで通しで選べて、
+              // リンクはそのまま押せる。gyumesy と同じ）
+              SelectionArea(child: content),
+              ValueListenableBuilder<double>(
+                valueListenable: _headerHidden,
+                builder: (context, hidden, _) => Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: BackHeader(
+                    hidden: hidden,
+                    onBack: () => backFromArticle(context),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

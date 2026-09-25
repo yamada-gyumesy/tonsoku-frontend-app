@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/article/presentation/widgets/back_to_list.dart';
@@ -103,66 +105,76 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage> {
     final tags = ref.watch(tagsProvider).value ?? const <Tag>[];
     final items = articles.value;
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: Column(
-        children: [
-          BackHeader(onBack: () => backFromArticle(context)),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _reload,
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _onScroll,
-                child: CustomScrollView(
-                  key: _viewport,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        // web の `px-4 pt-4`。**下の余白は持たない** —— 帯が
-                        // 上に 16px 持つ（貼り付いても同じ余白感にするため）
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: SectionHeading(label: t.homeArchiveTitle),
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
-                    // **カテゴリが取れないと絞り込みが成立しないので、帯は
-                    // 両方揃ってから出す**（gyumesy のホームがカテゴリの失敗を
-                    // 記事の失敗と同じに扱っているのと同じ理由）
-                    if (items != null && categories != null)
-                      _FilterBand(
-                        stuck: _stuck,
-                        categories: ArticleFilter.presentCategories(
-                          items,
-                          categories,
+    return TrackScreen(
+      screen: ScreenPath.articles(
+        ref.watch(localeControllerProvider),
+        ref.watch(messagesProvider),
+      ),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: Column(
+          children: [
+            BackHeader(onBack: () => backFromArticle(context)),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _reload,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _onScroll,
+                  child: CustomScrollView(
+                    key: _viewport,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          // web の `px-4 pt-4`。**下の余白は持たない** —— 帯が
+                          // 上に 16px 持つ（貼り付いても同じ余白感にするため）
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          child: SectionHeading(label: t.homeArchiveTitle),
                         ),
-                        childTags: _category == null
-                            ? const []
-                            : ArticleFilter.childTags(items, tags, _category!),
-                        category: _category,
-                        selectedTags: _selectedTags,
-                        allLabel: t.filterAll,
-                        onSelectCategory: _selectCategory,
-                        onToggleTag: _toggleTag,
                       ),
-                    ..._body(
-                      articles: articles,
-                      categoriesAsync: categoriesAsync,
-                      categories: categories ?? const [],
-                      tags: tags,
-                      noArticles: t.commonNoArticles,
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: MediaQuery.paddingOf(context).bottom + 24,
+                      SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
+                      // **カテゴリが取れないと絞り込みが成立しないので、帯は
+                      // 両方揃ってから出す**（gyumesy のホームがカテゴリの失敗を
+                      // 記事の失敗と同じに扱っているのと同じ理由）
+                      if (items != null && categories != null)
+                        _FilterBand(
+                          stuck: _stuck,
+                          categories: ArticleFilter.presentCategories(
+                            items,
+                            categories,
+                          ),
+                          childTags: _category == null
+                              ? const []
+                              : ArticleFilter.childTags(
+                                  items,
+                                  tags,
+                                  _category!,
+                                ),
+                          category: _category,
+                          selectedTags: _selectedTags,
+                          allLabel: t.filterAll,
+                          onSelectCategory: _selectCategory,
+                          onToggleTag: _toggleTag,
+                        ),
+                      ..._body(
+                        articles: articles,
+                        categoriesAsync: categoriesAsync,
+                        categories: categories ?? const [],
+                        tags: tags,
+                        noArticles: t.commonNoArticles,
                       ),
-                    ),
-                  ],
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: MediaQuery.paddingOf(context).bottom + 24,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -19,6 +19,15 @@ class AppMessages {
   const AppMessages({
     required this.appName,
     required this.tagline,
+    required this.siteTitleSuffix,
+    required this.siteDefaultTitle,
+    required this.onboardingIntroTitle,
+    required this.onboardingIntroBody,
+    required this.onboardingNotifyTitle,
+    required this.onboardingNotifyBody,
+    required this.onboardingNext,
+    required this.onboardingAllow,
+    required this.onboardingSkip,
     required this.navLabel,
     required this.navHome,
     required this.navMap,
@@ -196,6 +205,40 @@ class AppMessages {
 
   /// ロゴの右に出す短い説明（web の `site.tagline`）。
   final String tagline;
+
+  /// 題の接尾辞（web の `site.titleSuffix`。`{ページ名} | とん速`）。
+  /// **GA4 のスクリーン名を web の `<title>` と揃えるのに使う**（`ScreenPath`）。
+  /// **中国語は `豚速`**（[appName] と同じく web の値。`とん速` ではない）。
+  final String siteTitleSuffix;
+
+  /// ホームの題（web の `site.defaultTitle`）。GA4 のスクリーン名（`ScreenPath.home`）。
+  final String siteDefaultTitle;
+
+  // ---- オンボーディング（アプリ独自。web には無い）----
+  //
+  // **web のカタログから写した**（web の CLAUDE.md「画面に出す文言」。新しく
+  // 作らない）。gyumesy の宣伝文（「割とどうでもいい通知が届く」など）は
+  // ギュメシーの web の文言なので持ち込まない。web に無いのは「次へ」「あとで」だけ
+  // （gyumesy の訳を写した）。
+
+  /// 1 枚目。**何のアプリかを伝える。** 見出しは web の `site.tagline`、
+  /// 本文は `site.defaultDescription`。
+  final String onboardingIntroTitle;
+  final String onboardingIntroBody;
+
+  /// 2 枚目。**通知の価値を伝えてから OS の許可を求める。**
+  /// 一度拒否されると設定アプリへ行かない限り戻せないので、出し方が効く。
+  /// 見出しは web の `notifications.title`、本文は `notifications.intro1`。
+  final String onboardingNotifyTitle;
+  final String onboardingNotifyBody;
+
+  final String onboardingNext;
+
+  /// OS の許可を求めるボタン（web の `notifications.enable`）。
+  final String onboardingAllow;
+
+  /// **許可しなくても使える**ことを示す。
+  final String onboardingSkip;
 
   /// 下タブ全体の読み上げ名（web の `nav.label`）。
   final String navLabel;
@@ -548,6 +591,15 @@ class AppMessages {
   static final ja = AppMessages(
     appName: 'とん速',
     tagline: '松のや速報',
+    siteTitleSuffix: 'とん速',
+    siteDefaultTitle: 'とん速 | 松のや速報',
+    onboardingIntroTitle: '松のや速報',
+    onboardingIntroBody: '松のやの新メニュー、店舗限定メニュー、キャンペーン、店舗の動きをまとめています。',
+    onboardingNotifyTitle: '通知設定',
+    onboardingNotifyBody: 'とん速はわりとどうでもいい通知まで配信する可能性があります。',
+    onboardingNext: '次へ',
+    onboardingAllow: '通知を有効にする',
+    onboardingSkip: 'あとで',
     navLabel: 'メインメニュー',
     navHome: 'ホーム',
     navMap: 'マップ',
@@ -748,6 +800,18 @@ class AppMessages {
   static final en = AppMessages(
     appName: 'Tonsoku',
     tagline: 'Matsunoya News',
+    siteTitleSuffix: 'Tonsoku',
+    siteDefaultTitle: 'Tonsoku | Matsunoya News',
+    onboardingIntroTitle: 'Matsunoya News',
+    onboardingIntroBody:
+        'A news site about Matsunoya, covering everything from the useful '
+        'to the utterly trivial.',
+    onboardingNotifyTitle: 'Notifications',
+    onboardingNotifyBody:
+        'Tonsoku may send you notifications about fairly trivial things.',
+    onboardingNext: 'Next',
+    onboardingAllow: 'Enable notifications',
+    onboardingSkip: 'Not now',
     navLabel: 'Main navigation',
     navHome: 'Home',
     navMap: 'Map',
@@ -963,6 +1027,15 @@ class AppMessages {
   static final zh = AppMessages(
     appName: '豚速',
     tagline: '松乃家快报',
+    siteTitleSuffix: '豚速',
+    siteDefaultTitle: '豚速 | 松乃家新闻媒体',
+    onboardingIntroTitle: '松乃家快报',
+    onboardingIntroBody: '一个报道松乃家的新闻媒体，从有用的消息到无关紧要的琐事都会送到你面前。',
+    onboardingNotifyTitle: '通知设置',
+    onboardingNotifyBody: '豚速有可能连相当无关紧要的消息也推送给你。',
+    onboardingNext: '下一步',
+    onboardingAllow: '开启通知',
+    onboardingSkip: '以后再说',
     navLabel: '主导航',
     navHome: '首页',
     navMap: '地图',
