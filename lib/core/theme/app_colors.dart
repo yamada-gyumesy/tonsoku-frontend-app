@@ -373,6 +373,7 @@ class MapPalette {
     required this.labelHalo,
     required this.shop,
     required this.annexMatsuya,
+    required this.soldOut,
     required this.me,
   });
 
@@ -413,6 +414,11 @@ class MapPalette {
   /// 地に溶けた）、ダークは `#F2C94C`（10.8）。
   final Color annexMatsuya;
 
+  /// **売り切れの印の塗り**（白★を載せる）。押せないボタンのような薄い灰
+  /// （ユーザーの指定。一時的に止まっているだけという意味）。★との差は
+  /// わざと小さい（読ませる字ではなく、沈んで見えることが目的）。
+  final Color soldOut;
+
   /// **現在地の印**と向きの扇。地図アプリで定番の青（ユーザーの判断。店の緑・
   /// 店舗限定の赤と取り違えない）。地との比（計算値）: ライト `#1A73E8` 4.22 /
   /// ダーク `#4C8DF6` 5.26。
@@ -430,6 +436,7 @@ class MapPalette {
     labelHalo: Color(0xFFFAF7F3),
     shop: Color(0xFF1E8A4C),
     annexMatsuya: Color(0xFFB58500),
+    soldOut: Color(0xFFCFC8C2),
     me: Color(0xFF1A73E8),
   );
 
@@ -445,6 +452,7 @@ class MapPalette {
     labelHalo: Color(0xFF211A17),
     shop: Color(0xFF3DBE7A),
     annexMatsuya: Color(0xFFF2C94C),
+    soldOut: Color(0xFF5A504A),
     me: Color(0xFF4C8DF6),
   );
 

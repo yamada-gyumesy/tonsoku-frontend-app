@@ -13,8 +13,8 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 /// - **店舗限定の店** … 一回り大きな丸にアイコン。状態で塗りを変える:
 ///   - 販売中 … **赤の塗り（`primary`）に白**。唯一の塗りなので一番目立つ
 ///   - 発売前 … 面色の地に赤（`primaryText`）の縁とアイコン
-///   - 売り切れ … 灰（副テキスト）の塗りに白★。一時的な状態なので形は販売中の
-///     まま、色だけ止まった見た目にする
+///   - 売り切れ … 薄い灰（`MapPalette.soldOut`）の塗りに白★。一時的な状態なので
+///     形は販売中のまま、押せないボタンのように沈める
 ///   - 終売 … 同じ地に×（形で売り切れと分ける）
 ///
 /// **塗りの赤（`primary`）は白を載せる塗りにだけ使う。** 地図の上に直接置く赤
@@ -97,10 +97,10 @@ class LimitedMark extends StatelessWidget {
         colors.primaryText,
         colors.primaryText,
       ),
-      // 灰の塗りに白★（ユーザーの指定。販売中の赤の塗りを灰にした形で、
-      // 押せない・止まっている見た目にする）
+      // 薄い灰の塗りに白★（ユーザーの指定。販売中の赤の塗りを、押せない
+      // ボタンのような薄い灰にした形。一時的に止まっているだけという意味）
       LimitedAvailability.soldOut => (
-        colors.textSub,
+        MapPalette.of(colors).soldOut,
         colors.surface,
         colors.surface,
       ),

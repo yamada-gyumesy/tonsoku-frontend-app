@@ -21,7 +21,7 @@ class MapScaleBar extends StatelessWidget {
 
   /// 棒の長さの上限（pt）。
   /// **凡例と右下の著作権表記の間に収める**（長いと「© OpenStreetMap」に重なる）。
-  static const maxWidth = 80.0;
+  static const maxWidth = 110.0;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +88,7 @@ String formatDistance(double meters) => meters >= 1000
     ? '${(meters / 1000).toStringAsFixed(meters % 1000 == 0 ? 0 : 1)} km'
     : '${meters.round()} m';
 
-/// 棒（両端と真ん中に縦の印。真ん中は短い）。線の下に面色の縁を敷いて、地図の
+/// 棒（下端の横線と、上へ立つ両端と真ん中の目盛り。真ん中は短い）。線の下に面色の縁を敷いて、地図の
 /// 上で読めるようにする。
 class _BarPainter extends CustomPainter {
   const _BarPainter({required this.ink, required this.halo});
@@ -98,6 +98,7 @@ class _BarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 下端の横線と、両端・真ん中から上へ立つ目盛り（真ん中は短い）
     final path = Path()
       ..moveTo(1, 0)
       ..lineTo(1, size.height - 1)

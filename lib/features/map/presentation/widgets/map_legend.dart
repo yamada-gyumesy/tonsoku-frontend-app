@@ -11,8 +11,8 @@ import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 /// 印の凡例。**地図の左下に常に出す**（押して開く形にすると見られない。
 /// web の店舗限定の説明を「？」に隠さなかったのと同じ判断）。
 ///
-/// 並べるのは**いま地図にある状態だけ**（[present]）。発売前の品はほとんど
-/// 無いので、常に並べると使われない行が 1 つ増える。
+/// **店舗限定・売り切れ・終売は常に並べる**（ユーザーの指定）。発売前の品は
+/// ほとんど無いので、地図にある時だけ（[present]）。
 ///
 /// - 販売中の印は**「店舗限定」**と書く（ユーザーの判断。この印が何の印かを言う）
 /// - **普通の店の点は並べない**（ユーザーの判断。見れば店だと分かる）
@@ -27,7 +27,9 @@ class MapLegend extends ConsumerWidget {
     final t = ref.watch(messagesProvider);
     final entries = <(Widget, String)>[
       for (final a in LimitedAvailability.values)
-        if (present.contains(a))
+        // 店舗限定・売り切れ・終売は常に出す（ユーザーの指定）。発売前は
+        // ほとんど無いので、地図にある時だけ
+        if (a != LimitedAvailability.upcoming || present.contains(a))
           (
             LimitedMark(availability: a, size: 14),
             switch (a) {
@@ -38,25 +40,28 @@ class MapLegend extends ConsumerWidget {
             },
           ),
     ];
-    // 店舗限定の印が 1 つも無い（絞り込みで消えた・品が無い週）なら板ごと出さない
-    if (entries.isEmpty) return const SizedBox.shrink();
-
     return Semantics(
       container: true,
       label: t.mapLegendLabel,
       child: _Plate(
-        // 並びは 1 行（状態は多くて 3 つ）。折り返さないので Wrap にしない
-        child: Row(
+        // **縦に並べる**（ユーザーの指定。横に並べると隣の縮尺にかぶる）
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final (i, (mark, label)) in entries.indexed) ...[
-              if (i > 0) const SizedBox(width: 8),
-              SizedBox(width: 14, height: 14, child: Center(child: mark)),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                softWrap: false,
-                style: TextStyle(fontSize: 11, color: colors.text),
+              if (i > 0) const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: 14, height: 14, child: Center(child: mark)),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    softWrap: false,
+                    style: TextStyle(fontSize: 11, color: colors.text),
+                  ),
+                ],
               ),
             ],
           ],
@@ -122,9 +127,10 @@ class _Plate extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: 0.94),
+        // 地図が透けるくらいに薄く（ユーザーの指定）
+        color: colors.surface.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.border),
+        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
       ),
       child: child,
     );

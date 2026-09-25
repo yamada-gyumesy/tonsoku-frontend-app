@@ -198,16 +198,15 @@ class _StationLabel extends StatelessWidget {
 
 /// 現在地の印。**緑の点**（差し色。店の赤・茶と取り違えない）。
 class MyLocationMarker extends StatefulWidget {
-  const MyLocationMarker({this.heading, this.rotation = 0, super.key});
+  const MyLocationMarker({this.heading, super.key});
 
   /// 端末の向き（度。0 = 北、時計回り）。**分からなければ null**（扇を出さない。
   /// 方位のセンサーが無い端末・シミュレータ）。
+  ///
+  /// **地図の回転は足さない。** `MarkerLayer` は層ごと地図と一緒に回り、
+  /// `rotate: false` の印は逆回転されない（印の上は地図の北）。回転を足すと
+  /// 二重にかかり、進行方向が上で東を向くと扇が左に出る（レビューで確認）。
   final double? heading;
-
-  /// 地図の回転（度。`MapCamera.rotation`）。印は回らない層に立つので、扇の
-  /// 向きは「北が画面でどちらにあるか」を足して求める（牛めしレーダーの
-  /// `user_marker_painter.dart` と同じ式）。
-  final double rotation;
 
   /// 印の大きさ（扇が収まる大きさ）。
   static const size = 64.0;
@@ -248,7 +247,7 @@ class _MyLocationMarkerState extends State<MyLocationMarker>
               size: const Size.square(MyLocationMarker.size),
               painter: _HeadingCone(
                 color: color,
-                angle: (heading + widget.rotation) * math.pi / 180,
+                angle: heading * math.pi / 180,
               ),
             ),
           if (still)

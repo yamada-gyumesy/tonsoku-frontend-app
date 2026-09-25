@@ -212,11 +212,33 @@ class _MapPageState extends ConsumerState<MapPage> {
     unawaited(_locate());
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // **マップのタブが見えていない間は方位のセンサーを止める**（下タブは
+    // indexedStack で、裏のタブもこの画面は生きたまま。止めないと別のタブに
+    // いる間も Android は約 50Hz でセンサーと setState が回り続ける）。
+    // 裏のタブは go_router が TickerMode を切るので、それを合図にする
+    _tabActive = TickerMode.valuesOf(context).enabled;
+    if (!_tabActive) {
+      _stopCompass();
+    } else if (_me != null || _headingUp) {
+      _listenCompass();
+    }
+  }
+
+  bool _tabActive = true;
+
+  void _stopCompass() {
+    unawaited(_compass?.cancel());
+    _compass = null;
+  }
+
   /// 方位のセンサーを聞き始める（既に聞いていれば何もしない）。**現在地が
   /// 分かってから**聞く（現在地の扇と、進行方向が上のモードに使う）。
   /// 聞いている間だけセンサーが動く（`CompassRepository`）。
   void _listenCompass() {
-    if (_compass != null) return;
+    if (_compass != null || !_tabActive) return;
     _compass = ref.read(compassRepositoryProvider).headingStream().listen(
       (heading) {
         if (!mounted) return;
@@ -430,46 +452,37 @@ class _MapPageState extends ConsumerState<MapPage> {
                 width: MyLocationMarker.size,
                 height: MyLocationMarker.size,
                 child: IgnorePointer(
-                  child: MyLocationMarker(
-                    heading: _heading,
-                    rotation: _rotation,
-                  ),
+                  child: MyLocationMarker(heading: _heading),
                 ),
               ),
             ],
           ),
-        // **左下に凡例、その横に縮尺**（ユーザーの指定）。縮尺は地図の位置と
-        // 倍率を読む（`MapCamera.of`）ので、並べる行ごと地図の層として置く
+        // **左下に凡例**（ユーザーの指定）
         Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            // 右は著作権表記（〜100）を空ける
-            padding: const EdgeInsets.fromLTRB(8, 0, 104, 8),
-            // 狭い画面では縮尺を凡例の上へ折り返す（はみ出させない）
-            child: Wrap(
-              // 縮尺は凡例の縦の中心に揃える（下端に揃えると持ち上がって見える。
-              // ユーザーの指摘）
-              crossAxisAlignment: WrapCrossAlignment.center,
-              verticalDirection: VerticalDirection.up,
-              children: [
-                // ── 動画広告（リワード。#5）─────────────────────
-                // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
-                // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
-                // 入れるので、ここには何も置かない
-                MapLegend(present: present),
-                // 凡例から離して置く（ユーザーの指摘。くっつくと凡例の一部に見える）
-                const Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: MapScaleBar(),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.only(left: 8, bottom: 8),
+            // ── 動画広告（リワード。#5）─────────────────────
+            // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
+            // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
+            // 入れるので、ここには何も置かない
+            child: MapLegend(present: present),
+          ),
+        ),
+        // **縮尺は下の真ん中**（ユーザーの指定）。地図の位置と倍率を読む
+        // （`MapCamera.of`）ので地図の層として置く。下端は右下の著作権表記と
+        // 同じ高さ
+        const Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: MapScaleBar(),
           ),
         ),
         // 画面の外の**店舗限定の店**の数（方角ごと。普通の店は数えない ――
         // ユーザーの指定。このマップの主役は店舗限定の店）。**縁の余白は
-        // 検索・品・ボタン・凡例を避ける**: 下は凡例・縮尺・現在地・著作権表記
-        // （〜84）、左右は札の半分の幅（〜44）
+        // 検索・品・ボタン・凡例を避ける**: 下は凡例・縮尺・コンパス・現在地・
+        // 著作権表記（〜140）、左右は札の半分の幅（〜44）
         OffscreenCounts(
           points: [
             for (final e in entries)
@@ -487,7 +500,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                 (_filter.menuIds.isEmpty ? 0 : 42) +
                 16,
             44,
-            84,
+            140,
           ),
           onTap: (p) {
             _follow = false;
@@ -506,31 +519,28 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: Stack(
               children: [
                 Positioned.fill(child: map),
-                // **並び（ユーザーの指定）**: 左上に検索（店の数はバーの右端）と
-                // 絞り込み、右上にコンパス、右下に現在地と著作権表記、左下に凡例と縮尺
+                // **並び（ユーザーの指定）**: 上に横いっぱいの検索（店の数はバーの
+                // 右端）と絞り込み、右下に上からコンパス・現在地・著作権表記、
+                // 左下に凡例と縮尺
                 // （凡例と縮尺は地図の層。`FlutterMap` の子）
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _CompassButton(
-                        label: _headingUp ? t.mapHeadingUp : t.mapNorthUp,
-                        headingUp: _headingUp,
-                        rotation: _rotation,
-                        onTap: _toggleHeading,
-                      ),
-                    ],
-                  ),
-                ),
-                // 右下に著作権表記、その上に現在地（ユーザーの指定）
+                // 右下に上からコンパス・現在地・著作権表記（ユーザーの指定）
                 Positioned(
                   right: 8,
                   bottom: 8,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      // コンパスは現在地の上（ユーザーの指定）
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: _CompassButton(
+                          label: _headingUp ? t.mapHeadingUp : t.mapNorthUp,
+                          headingUp: _headingUp,
+                          rotation: _rotation,
+                          onTap: _toggleHeading,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Padding(
                         padding: const EdgeInsets.only(right: 4),
                         child: _LocateButton(
@@ -561,7 +571,8 @@ class _MapPageState extends ConsumerState<MapPage> {
                 Positioned(
                   top: 12,
                   left: 12,
-                  right: 12 + 44 + 10,
+                  // 横いっぱい（ユーザーの指定。コンパスは右下へ移した）
+                  right: 12,
                   child: MapSearch(
                     // 探すのは地図に出している店（牛めしレーダーと同じ）
                     shops: [for (final e in entries) e.shop],
