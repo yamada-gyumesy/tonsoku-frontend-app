@@ -171,6 +171,19 @@ class _MapPageState extends ConsumerState<MapPage> {
       return;
     }
     final me = LatLng(position.latitude, position.longitude);
+    // **日本の外にいる時は寄せない。** 地図は日本の範囲しか持たず、中心は
+    // [MapPage.mapArea] に縛ってあるので、寄せると範囲の端に張り付いた
+    // 何も無い画面になる（海外から開いた人・既定の位置が米国のシミュレータ）
+    if (!MapPage.mapArea.contains(me)) {
+      if (!quiet) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(ref.read(messagesProvider).mapLocationUnavailable),
+          ),
+        );
+      }
+      return;
+    }
     setState(() => _me = me);
     _controller.move(me, MapPage.locateZoom);
   }

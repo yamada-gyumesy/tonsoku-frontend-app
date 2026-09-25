@@ -12,9 +12,9 @@ import 'package:tonsoku/shared/widgets/cdn_image.dart';
 /// マップの上に貼る絞り込みの帯。**記事一覧の絞り込み（web の `.sticky-band`）と
 /// 同じ見た目**: 面色の地に、横に流すチップの段を重ねる。
 ///
-/// - 上の段 … **店舗限定の品**（写真つき。複数選べる）と、その下に
-///   **「終売の店も含める」**（品を選ぶまでは押せない。選ぶまで隠すと、この
-///   絞り込みがあることに気づけない）。品が 1 つも無い週はどちらも出さない
+/// - 上の段 … **店舗限定の品**（写真つき。複数選べる）。品が 1 つも無い週は段ごと出さない
+/// - 品を選んだ時だけ、品の段の直下に … **「終売の店も含める」**（品を選んでいない
+///   時は意味を持たないので出さない）
 /// - 下の段 … **松のや専門店と併設**（記事一覧のタグと同じトグル）と、出している店の数
 class MapFilterBand extends ConsumerWidget {
   const MapFilterBand({
@@ -68,19 +68,19 @@ class MapFilterBand extends ConsumerWidget {
                     ),
                 ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, right: 16),
-                child: _IncludeInactive(
-                  label: t.mapIncludeInactive,
-                  value: filter.includeInactive,
-                  // 品を選ぶまでは意味を持たないので押せない（出してはおく。
-                  // 選ぶまで隠すと、この絞り込みがあることに気づけない）
-                  onChanged: filter.menuIds.isEmpty
-                      ? null
-                      : (v) => onChanged(filter.copyWith(includeInactive: v)),
+              // 品を選んだ時だけ出す（選んでいない時は意味を持たない）
+              if (filter.menuIds.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+                  child: _IncludeInactive(
+                    label: t.mapIncludeInactive,
+                    value: filter.includeInactive,
+                    onChanged: (v) =>
+                        onChanged(filter.copyWith(includeInactive: v)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
+              // 押す場所の上下の余白（6）を含めて、段の間を 8 に揃える
+              SizedBox(height: filter.menuIds.isEmpty ? 8 : 2),
             ],
             Row(
               children: [
@@ -227,41 +227,44 @@ class _IncludeInactive extends StatelessWidget {
   final String label;
   final bool value;
 
-  /// null なら押せない（品を選んでいない時）。
-  final ValueChanged<bool>? onChanged;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final change = onChanged;
     return MergeSemantics(
       child: InkWell(
-        onTap: change == null ? null : () => change(!value),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Checkbox(
-              value: value,
-              onChanged: change == null ? null : (v) => change(v ?? false),
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              // 印は地の上に置くので `primaryText`（テーマの `colorScheme.primary` と同じ）
-              activeColor: colors.primaryText,
-              checkColor: colors.isDark ? colors.bg : colors.onPrimary,
-              side: BorderSide(color: colors.textSub, width: 1.5),
-            ),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: change == null
-                      ? colors.textSub.withValues(alpha: 0.5)
-                      : colors.textSub,
+        onTap: () => onChanged(!value),
+        // 押す場所の上下の余白（印を 18 に詰めたぶんをここで持つ）
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // **印の左端をチップの左端（段の余白 16）に揃える。** Checkbox は
+              // 18 の印の周りに押す場所の余白を持つので、印の大きさに詰めて置く
+              SizedBox.square(
+                dimension: 18,
+                child: Checkbox(
+                  value: value,
+                  onChanged: (v) => onChanged(v ?? false),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  // 印は地の上に置くので `primaryText`（テーマの `colorScheme.primary` と同じ）
+                  activeColor: colors.primaryText,
+                  checkColor: colors.isDark ? colors.bg : colors.onPrimary,
+                  side: BorderSide(color: colors.textSub, width: 1.5),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: colors.textSub),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

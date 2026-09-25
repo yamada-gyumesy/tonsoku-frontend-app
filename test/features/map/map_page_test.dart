@@ -65,9 +65,8 @@ void main() {
     expect(find.text('681店舗'), findsOneWidget);
     expect(find.byType(MapLegend), findsOneWidget);
     expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
-    // 「含める」は出しておくが、品を選ぶまでは押せない
-    expect(find.text('終売の店も含める'), findsOneWidget);
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).onChanged, isNull);
+    // 品を選ぶまでは「含める」を出さない
+    expect(find.text('終売の店も含める'), findsNothing);
 
     await tester.tap(find.text('松のや専門店'));
     await tester.pump();
@@ -85,7 +84,7 @@ void main() {
     await tester.tap(find.text('たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'));
     await tester.pump();
     expect(find.text('15店舗'), findsOneWidget);
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).onChanged, isNotNull);
+    expect(find.text('終売の店も含める'), findsOneWidget);
 
     // 全店で終売した品はチップごと出さない（行き先が無い）
     expect(find.text('“極厚”肩ロース定食'), findsNothing);
