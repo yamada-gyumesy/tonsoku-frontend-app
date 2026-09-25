@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -154,6 +155,49 @@ void main() {
       await pumpInline(tester, gateway);
       expect(find.byKey(FakeBanner.viewKey), findsNothing);
       expect(tester.getTopLeft(find.byKey(_navKey)).dy, 0);
+    });
+
+    testWidgets('一覧の先読みの外へ出て戻っても読み込み直さない', (tester) async {
+      final gateway = FakeAdGateway(bannerSize: const Size(358, 280));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            adConfigProvider.overrideWithValue(
+              const AdConfig(units: AdConfig.testIos),
+            ),
+            adGatewayProvider.overrideWithValue(gateway),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(AppLocale.ja),
+            // 記事と同じく ListView(children:)。先読みを 0 にして外へ出す
+            home: Scaffold(
+              body: ListView(
+                scrollCacheExtent: const ScrollCacheExtent.pixels(0),
+                children: [
+                  const InlineAdSlot(slot: AdSlot.articleInline),
+                  const SizedBox(key: _navKey, height: 3000),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.byKey(_navKey)),
+      );
+      await container.read(adsControllerProvider.notifier).start();
+      await tester.pump();
+      await tester.pump();
+      final loads = gateway.calls.length;
+      expect(find.byKey(FakeBanner.viewKey), findsOneWidget);
+
+      await tester.drag(find.byType(ListView), const Offset(0, -2500));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, 2500));
+      await tester.pumpAndSettle();
+
+      expect(gateway.calls.length, loads);
+      expect(tester.getSize(find.byKey(FakeBanner.viewKey)).height, 280);
     });
 
     testWidgets('本番の ID が空なら枠も取らない', (tester) async {

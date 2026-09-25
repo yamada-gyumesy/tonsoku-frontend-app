@@ -146,13 +146,22 @@ class InlineAdSlot extends ConsumerStatefulWidget {
 }
 
 class _InlineAdSlotState extends ConsumerState<InlineAdSlot>
-    with _BannerLoader {
+    with _BannerLoader, AutomaticKeepAliveClientMixin {
+  /// **先読みの範囲の外へ出ても State を捨てない。** 記事は
+  /// `ListView(children:)` なので、関連記事まで下ると枠が破棄され、上へ戻る
+  /// たびに広告を要求し直す。読み込み中の 250 を取り直してから縮むので紙面が
+  /// 跳び、入らなければ 250 まるごと空く（レビューで判明）。1 記事に 1 枠だけ
+  /// なので、持ち続けても重くない
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Future<BannerHandle?> load(AdGateway gateway, String unitId, int width) =>
       gateway.loadInlineBanner(unitId, width, InlineAdSlot.maxHeight);
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final unitId = ref.watch(adUnitProvider(widget.slot));
     if (unitId == null || failed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
