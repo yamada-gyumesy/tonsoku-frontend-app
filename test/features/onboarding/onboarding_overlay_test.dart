@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -208,5 +209,78 @@ void main() {
     expect(find.text('次へ'), findsOneWidget);
     expect(find.byType(OnboardingPage), findsOneWidget);
     expect(router.routerDelegate.currentConfiguration.uri.path, '/articles/x');
+  });
+
+  // Android 16 の予測型「戻る」は `setFrameworkHandlesBack(true)` の間しか
+  // アプリに届かない。`handlePopRoute` はこの判定を迂回するので、**OS へ送った
+  // 値そのもの**を見る（レビューで判明）
+  testWidgets('出ている間は戻るを受けると伝え、閉じたら下の本体の値に戻す', (tester) async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'ja'});
+    final prefs = await SharedPreferences.getInstance();
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    // 既定の受け手は、アプリの状態が決まるまで OS へ送らない
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+
+    final sent = <bool>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'SystemNavigator.setFrameworkHandlesBack') {
+          sent.add(call.arguments as bool);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+
+    // 下はルート（戻れる画面が無い）
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Scaffold(body: Text('ホーム')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          messagingServiceProvider.overrideWithValue(messaging),
+          categoriesProvider.overrideWith((ref) => Stream.value(categories)),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(AppLocale.ja),
+          routerConfig: router,
+          builder: (context, child) => OnboardingOverlay(
+            backButtonDispatcher: router.backButtonDispatcher,
+            canPopUnderneath: router.canPop,
+            child: child,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('次へ'));
+    await tester.pumpAndSettle();
+    // 2 枚目の時点で、最後に送った値は true
+    expect(sent, isNotEmpty);
+    expect(sent.last, isTrue);
+
+    // 閉じたら、下の本体（ルート）の値＝ false に戻す
+    await tester.tap(find.text('あとで'));
+    await tester.pumpAndSettle();
+    expect(find.byType(OnboardingPage), findsNothing);
+    expect(sent.last, isFalse);
   });
 }

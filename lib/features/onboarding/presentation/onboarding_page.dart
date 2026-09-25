@@ -99,6 +99,25 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     }
   }
 
+  /// **出ている間は「アプリが戻るを受ける」と OS に伝え続ける。**
+  ///
+  /// Android 16 の予測型「戻る」は、`SystemNavigator.setFrameworkHandlesBack(true)`
+  /// が送られている間しか戻る操作をアプリに届けない。送るのは下のナビゲータの
+  /// `NavigationNotification` で、ルートに居れば false のまま —— オンボーディングは
+  /// ナビゲータの外に居てこれに関わらないので、**2 枚目で戻るとアプリを抜ける**
+  /// （レビューで判明。`AppShell` の `PopScope` が #17 で踏んだのと同じ仕組み）。
+  /// 1 枚目でも true でよい: 受けた [_onBack] がアプリを抜ける。
+  ///
+  /// **組むたびに送る**（下のナビゲータが後から false を送っても上書きし直す）。
+  /// 閉じた時に本来の値へ戻すのは [OnboardingOverlay]。
+  void _claimBack() {
+    if (_back == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      const NavigationNotification(canHandlePop: true).dispatch(context);
+    });
+  }
+
   @override
   void dispose() {
     if (_back case final back?) {
@@ -199,6 +218,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    _claimBack();
     final t = ref.watch(messagesProvider);
     final locale = ref.watch(localeControllerProvider);
     // **ここで購読しておく。** 押された時に読むだけだと、その場から取得が

@@ -198,6 +198,7 @@ class _TonsokuAppState extends ConsumerState<TonsokuApp>
       // 戻る操作はルーターの受け口から先に取る（[OnboardingPage] の注記）
       builder: (context, child) => OnboardingOverlay(
         backButtonDispatcher: router.backButtonDispatcher,
+        canPopUnderneath: router.canPop,
         child: child,
       ),
     );

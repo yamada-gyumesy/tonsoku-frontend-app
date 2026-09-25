@@ -15,6 +15,7 @@ class OnboardingOverlay extends ConsumerStatefulWidget {
   const OnboardingOverlay({
     required this.child,
     this.backButtonDispatcher,
+    this.canPopUnderneath,
     super.key,
   });
 
@@ -22,6 +23,11 @@ class OnboardingOverlay extends ConsumerStatefulWidget {
 
   /// ルーターの戻るの受け口。[OnboardingPage] へ渡す（戻るを先に取るため）。
   final BackButtonDispatcher? backButtonDispatcher;
+
+  /// 下の本体で戻れる画面があるか（`GoRouter.canPop`）。閉じた時に、出ている間
+  /// true に上書きしていた「アプリが戻るを受ける」を本来の値へ戻す
+  /// （[OnboardingPage] の `_claimBack`）。
+  final bool Function()? canPopUnderneath;
 
   @override
   ConsumerState<OnboardingOverlay> createState() => _OnboardingOverlayState();
@@ -54,6 +60,14 @@ class _OnboardingOverlayState extends ConsumerState<OnboardingOverlay> {
             // ここで広告の SDK も始まる（`waitForOnboarding`）
             ref.read(onboardingDoneProvider.notifier).markDone();
             setState(() => _show = false);
+            if (widget.canPopUnderneath case final canPop?) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                NavigationNotification(
+                  canHandlePop: canPop(),
+                ).dispatch(context);
+              });
+            }
           },
         ),
       ],
