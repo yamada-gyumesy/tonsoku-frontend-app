@@ -318,6 +318,17 @@ class MenuSheetState extends ConsumerState<MenuSheet>
           tooltip: t.menuOther,
         ),
       ),
+      MenuListRow(
+        label: t.navAbout,
+        // web の `CmListRow icon="info"`
+        icon: Icons.info_outline,
+        external: true,
+        onTap: () => _openOnWeb('/about/'),
+      ),
+      _divider(colors),
+      // **並びはユーザーの指定**: とん速とは → カレンダー → ランキング →
+      // 通知設定 → 外観 → 言語（web の `CoMenuSheet` はとん速とは・通知設定・
+      // 外観・言語。web で下タブにあるカレンダー・ランキングをここへ詰めた）
       // **ランキングはここに詰める**（web は下タブに置いているが、とん速の
       // アプリの下タブには入らない。ユーザーの指定）。**中身が無い言語では行ごと
       // 出さない**（空の画面へ行ける入口を残さない。web の `hasRanking`）。
@@ -333,14 +344,6 @@ class MenuSheetState extends ConsumerState<MenuSheet>
         ),
         _divider(colors),
       ],
-      MenuListRow(
-        label: t.navAbout,
-        // web の `CmListRow icon="info"`
-        icon: Icons.info_outline,
-        external: true,
-        onTap: () => _openOnWeb('/about/'),
-      ),
-      _divider(colors),
       MenuListRow(
         label: t.themeLabel,
         icon: Icons.contrast,

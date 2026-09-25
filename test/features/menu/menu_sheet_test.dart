@@ -82,6 +82,18 @@ void main() {
     expect(find.widgetWithText(MenuListRow, '通知設定'), findsNothing);
   });
 
+  /// **並びはユーザーの指定**: とん速とは → カレンダー → ランキング → 通知設定 →
+  /// 外観 → 言語（カレンダー・通知設定はそれぞれの PR で足す）。
+  testWidgets('メニューの並びはユーザーの指定どおり', (tester) async {
+    await pumpSheet(tester);
+    final labels = tester
+        .widgetList<MenuListRow>(find.byType(MenuListRow))
+        .map((row) => row.label)
+        .take(4)
+        .toList();
+    expect(labels, ['とん速とは', 'ランキング', '外観モード', '言語']);
+  });
+
   testWidgets('暗幕を押すと閉じる', (tester) async {
     await pumpSheet(tester);
     expect(find.byType(MenuSheet), findsOneWidget);
