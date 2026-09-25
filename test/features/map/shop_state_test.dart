@@ -131,5 +131,30 @@ void main() {
       );
       expect((state as ShopTemporarilyClosed).until, '2026-09-28');
     });
+
+    test('一時閉店の初日は closing_date の時刻まで営業（本番の幕張インター店の形）', () {
+      final makuhari = shop(
+        closing: '2026-10-04 15:00',
+        opening: '2026-10-09 15:00',
+        temp: const TempClosed(startDate: '2026-10-04', endDate: '2026-10-09'),
+      );
+      final morning = shopStateOf(makuhari, now: at('2026-10-04 09:00'));
+      expect(morning, isA<ShopOpen>());
+      // これからの一時閉店として添える
+      expect((morning as ShopOpen).tempClosedFrom, '2026-10-04');
+      expect(
+        shopStateOf(makuhari, now: at('2026-10-04 15:00')),
+        isA<ShopTemporarilyClosed>(),
+      );
+      // 再開日は opening_date の時刻から
+      expect(
+        shopStateOf(makuhari, now: at('2026-10-09 09:00')),
+        isA<ShopTemporarilyClosed>(),
+      );
+      expect(
+        shopStateOf(makuhari, now: at('2026-10-09 15:00')),
+        isA<ShopOpen>(),
+      );
+    });
   });
 }

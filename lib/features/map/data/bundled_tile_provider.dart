@@ -25,6 +25,10 @@ class BundledTileProvider extends VectorTileProvider {
 
   final PmTiles _archive;
 
+  /// 地図の版（[PmTiles.fingerprint]）。描いたタイルの置き場の鍵に入れる
+  /// （`buildMapTheme` の `dataVersion`）。
+  String get dataVersion => _archive.fingerprint;
+
   @override
   int get maximumZoom => _archive.header.maxZoom;
 

@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/painting.dart';
 import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
 
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
+import 'package:tonsoku/features/map/data/pmtiles.dart';
 
 /// 背景地図のタイルの出どころの名前（テーマの `source` と `TileProviders` の鍵）。
 const mapTileSource = 'protomaps';
@@ -28,7 +31,20 @@ const mapTileSource = 'protomaps';
 /// 日本語は `name:ja`、英語は `name:en`。**中国語は `name`（日本語の表記）**
 /// ―― 地図に中国語名は入れていない（容量を増やしてまで入れる価値が薄い。
 /// 地名の漢字は中国語の話者にもおおむね読める）。無ければどれも `name` に落とす。
-vtr.Theme buildMapTheme(AppColors colors, AppLocale locale) {
+///
+/// ## 版（`metadata.version`）
+///
+/// **描き方と地図の版を入れる。** `vector_map_tiles` は描いたタイルを一時領域に
+/// `'{id}-v{version}-z-x-y.png'` で 30 日残す（9.0.0-beta.13 の
+/// `raster/storage_image_cache.dart`）。版を入れないと常に `none` になり、配色を
+/// 変えた版や地図を作り直した版を出しても、**前に見た区画だけが古いまま出る**。
+/// 描き方の版はこの JSON 自体のハッシュ（色・層を変えれば自動で変わる）、
+/// 地図の版は [dataVersion]（`BundledTileProvider.dataVersion`）。
+vtr.Theme buildMapTheme(
+  AppColors colors,
+  AppLocale locale, {
+  required String dataVersion,
+}) {
   final p = MapPalette.of(colors);
   final font = [AppTheme.fontFamilyFor(locale)];
   final name = switch (locale) {
@@ -253,5 +269,7 @@ vtr.Theme buildMapTheme(AppColors colors, AppLocale locale) {
       ),
     ],
   };
+  final style = fnv1a(utf8.encode(jsonEncode(json)));
+  json['metadata'] = {'version': '$style-$dataVersion'};
   return vtr.ThemeReader().read(json);
 }

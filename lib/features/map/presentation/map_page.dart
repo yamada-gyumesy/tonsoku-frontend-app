@@ -19,11 +19,13 @@ import 'package:tonsoku/features/map/data/location_repository.dart';
 import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 import 'package:tonsoku/features/map/domain/limited_status.dart';
+import 'package:tonsoku/features/map/domain/next_change.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
 import 'package:tonsoku/features/map/domain/shop_state.dart';
 import 'package:tonsoku/features/map/presentation/map_layers.dart';
 import 'package:tonsoku/features/map/presentation/map_theme.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_filter_band.dart';
+import 'package:tonsoku/shared/models/limited_menu.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_legend.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_sheet.dart';
 import 'package:tonsoku/features/shell/presentation/widgets/tonsoku_app_bar.dart';
@@ -95,6 +97,10 @@ class _MapPageState extends ConsumerState<MapPage> {
   bool _locating = false;
   Timer? _saveCamera;
 
+  /// 時刻だけで印が変わる瞬間（発売・閉店・再開）に組み直す（[_scheduleTick]）。
+  Timer? _tick;
+  DateTime? _tickAt;
+
   /// 最後に見ていた位置（開いた時に戻す）。無ければ日本全体。
   late final ({LatLng center, double zoom})? _saved = _readSavedCamera();
 
@@ -116,6 +122,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   @override
   void dispose() {
     _saveCamera?.cancel();
+    _tick?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -189,8 +196,10 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 
   /// アクティブ復帰で取り直す。**売り切れは 15 分ごとに変わる**ので、店先で
-  /// 開き直した時に古いまま出さない。変わっていなければ貼り直さない
-  /// （`MapRepository.refreshIfChanged`）。
+  /// 開き直した時に古いまま出さない。配信が変わっていなければ貼り直さない
+  /// （`MapRepository.refreshIfChanged`）が、**画面は必ず組み直す** ―― 発売前 →
+  /// 販売中のように時刻だけで変わる印は、裏にいた間の時刻を拾えていない
+  /// （裏ではタイマーも止まる）。
   Future<void> _refresh() async {
     final container = ProviderScope.containerOf(context, listen: false);
     try {
@@ -202,18 +211,45 @@ class _MapPageState extends ConsumerState<MapPage> {
     } on Object {
       // 取れなければ前の値のまま（ホームの復帰と同じ）
     }
+    if (mounted) setState(() {});
   }
 
-  vtr.Theme _themeFor(AppColors colors, AppLocale locale) {
+  /// 次に時刻だけで印が変わる瞬間（[nextChangeAfter]）に組み直すよう仕掛ける。
+  /// 同じ瞬間を既に待っていれば仕掛け直さない（build のたびに呼ぶため）。
+  void _scheduleTick(DateTime? at) {
+    if (at == _tickAt) return;
+    _tick?.cancel();
+    _tickAt = at;
+    if (at == null) return;
+    // 境目ちょうどに組むと判定が前の側に落ちうるので、少しだけ後にする
+    final wait = at.difference(clock.now()) + const Duration(seconds: 1);
+    _tick = Timer(wait.isNegative ? Duration.zero : wait, () {
+      _tickAt = null;
+      if (mounted) setState(() {});
+    });
+  }
+
+  vtr.Theme _themeFor(
+    AppColors colors,
+    AppLocale locale,
+    BundledTileProvider tiles,
+  ) {
     final key = (colors.isDark, locale);
     if (_theme == null || _themeKey != key) {
-      _theme = buildMapTheme(colors, locale);
+      _theme = buildMapTheme(colors, locale, dataVersion: tiles.dataVersion);
       _themeKey = key;
     }
     return _theme!;
   }
 
   void _openShop(ShopEntry entry) {
+    // **開く時点の時刻で求め直す**（`entry` は最後に組んだ時のもの。
+    // 印の組み直しを待たずに、押した時の状態を出す）
+    final now = clock.now();
+    final state = shopStateOf(entry.shop, now: now);
+    final limited = ref
+        .read(limitedIndexProvider)
+        .at(entry.shop.code, now: now);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -225,8 +261,8 @@ class _MapPageState extends ConsumerState<MapPage> {
       ),
       builder: (sheetContext) => ShopSheet(
         shop: entry.shop,
-        state: entry.state,
-        limited: entry.limited,
+        state: state,
+        limited: limited,
         onOpenArticle: (slug) {
           Navigator.of(sheetContext).pop();
           widget.onOpenArticle(slug);
@@ -246,9 +282,16 @@ class _MapPageState extends ConsumerState<MapPage> {
     final stations = ref.watch(stationsProvider).value ?? const [];
     final shops = ref.watch(shopsProvider);
     final index = ref.watch(limitedIndexProvider);
-    final menus = ref.watch(limitedMenusProvider).value ?? const [];
+    final menusValue = ref.watch(limitedMenusProvider).value;
+    final menus = menusValue ?? const <LimitedMenu>[];
+    // 配信から消えた品の選択を外す（`ShopFilter.retainMenus`）。取れる前は触らない。
+    // 同じ build の中で使うだけなので setState は要らない
+    if (menusValue != null) {
+      _filter = _filter.retainMenus({for (final m in menusValue) m.campaignId});
+    }
 
     final entries = _entries(shops.value ?? const [], index);
+    _scheduleTick(nextChangeAfter(clock.now(), shops.value ?? const [], menus));
     final present = {for (final e in entries) ?e.availability};
 
     final saved = _saved;
@@ -280,7 +323,7 @@ class _MapPageState extends ConsumerState<MapPage> {
       children: [
         if (tiles != null)
           VectorTileLayer(
-            theme: _themeFor(colors, locale),
+            theme: _themeFor(colors, locale, tiles),
             tileProviders: TileProviders({mapTileSource: tiles}),
             // **描いたタイル（画像）の置き場は 20MB まで。** タイルの元は同梱なので
             // 置かなくても描けるが、描き直しは重い（地名の配置まで毎回やる）。

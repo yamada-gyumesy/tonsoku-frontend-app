@@ -74,13 +74,14 @@ extension ShopStateX on ShopState {
 /// - **`temp_closed` を先に見る。** カレンダーの「一時閉店」と同じ答えで、
 ///   `closing_date` / `opening_date` を持たない店にも入る（本番で板橋区役所前店）。
 ///   日付だけなので、その日の 0:00（JST）から再開日の 0:00 までを閉店中とみなす
-///   （再開日の朝から開く。カレンダーと同じ読み方）
+///   （再開日の朝から開く。カレンダーと同じ読み方）。**ただし `closing_date` が
+///   同じ日にあれば、閉店の起点はその時刻**（[_tempClosedFrom]）
 ShopState shopStateOf(Shop shop, {DateTime? now}) {
   final at = now ?? clock.now();
 
   final temp = shop.tempClosed;
   if (temp != null) {
-    final from = parseJst(temp.startDate);
+    final from = _tempClosedFrom(shop, temp);
     final until = parseJst(temp.endDate);
     if (from != null &&
         !at.isBefore(from) &&
@@ -94,7 +95,7 @@ ShopState shopStateOf(Shop shop, {DateTime? now}) {
 
   // これからの一時閉店（期間がまだ来ていないもの）は、営業中の店に添えて出す
   final upcomingTemp =
-      temp != null && (parseJst(temp.startDate)?.isAfter(at) ?? false)
+      temp != null && (_tempClosedFrom(shop, temp)?.isAfter(at) ?? false)
       ? temp
       : null;
 
@@ -133,4 +134,18 @@ ShopState shopStateOf(Shop shop, {DateTime? now}) {
     return closing.isBefore(opening) ? open() : ShopNotYetOpen(opening);
   }
   return closing != null ? open() : ShopNotYetOpen(opening!);
+}
+
+/// 一時閉店の始まり。`temp_closed.start_date` は日付だけなので、**同じ日に
+/// `closing_date` があればその時刻から**（本番の一時閉店の多くは「15 時より
+/// 一時閉店」で、`closing_date` が同じ日の 15:00 を持つ）。無ければその日の 0:00。
+///
+/// 再開の側は直さなくてよい: 再開日の 0:00 に一時閉店を抜けたあと、同じ日の
+/// `opening_date`（再開の時刻）の判定に落ちる。
+DateTime? _tempClosedFrom(Shop shop, TempClosed temp) {
+  final closing = shop.closingDate;
+  if (closing != null && closing.trim().startsWith(temp.startDate.trim())) {
+    return parseJst(closing) ?? parseJst(temp.startDate);
+  }
+  return parseJst(temp.startDate);
 }

@@ -67,6 +67,16 @@ class ShopFilter {
     includeInactive: includeInactive ?? this.includeInactive,
   );
 
+  /// 選んだ品を、**いま配信にある品（[available]）だけに絞り直す。**
+  ///
+  /// 品は全店終売から 14 日で配信から消える。選んだまま消えるとチップも消えて
+  /// 外す手段が無くなり、地図が 0 店のまま戻れなくなる（タブの状態はアプリを
+  /// 終えるまで残る）。変わらなければ自身を返す。
+  ShopFilter retainMenus(Set<String> available) {
+    if (menuIds.every(available.contains)) return this;
+    return copyWith(menuIds: menuIds.where(available.contains).toSet());
+  }
+
   /// [shop] を出すか。[limited] はその店の品と状態（`LimitedIndex.at`）。
   bool matches(Shop shop, List<ShopLimited> limited) {
     if (standalone || brands.isNotEmpty) {

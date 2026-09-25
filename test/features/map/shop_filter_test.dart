@@ -93,4 +93,14 @@ void main() {
     ).relevant(limited);
     expect(strongest(onlyX), LimitedAvailability.ended);
   });
+
+  test('配信から消えた品の選択は外す（消えなければそのまま）', () {
+    const f = ShopFilter(menuIds: {'x', 'gone'}, includeInactive: true);
+    final kept = f.retainMenus({'x', 'y'});
+    expect(kept.menuIds, {'x'});
+    expect(kept.includeInactive, isTrue);
+    expect(identical(f.retainMenus({'x', 'gone'}), f), isTrue);
+    // 全部消えたら品の絞り込みは無くなる（全店に戻る）
+    expect(f.retainMenus(const {}).menuIds, isEmpty);
+  });
 }

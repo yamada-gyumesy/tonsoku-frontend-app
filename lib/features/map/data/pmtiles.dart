@@ -35,6 +35,18 @@ class PmTiles {
   final Uint8List _bytes;
   final PmTilesHeader header;
 
+  /// 地図の中身の指紋（作り直したら変わる値）。**全体の大きさと、ヘッダ・
+  /// ルートディレクトリのバイト**から作る（30MB 全部は読まない。ルートには
+  /// 全タイルの位置が畳み込まれているので、中身が変われば変わる）。
+  String get fingerprint {
+    final root = Uint8List.sublistView(
+      _bytes,
+      0,
+      header.rootDirOffset + header.rootDirLength,
+    );
+    return '${_bytes.length.toRadixString(16)}-${fnv1a(root)}';
+  }
+
   /// 読み解いたディレクトリ（位置 → 項目）。**葉のディレクトリは数百あり、
   /// 同じものを何度も引く**ので、一度解いたものは持っておく。
   final _directories = <int, List<PmTilesEntry>>{};
@@ -224,4 +236,15 @@ int zxyToTileId(int z, int x, int y) {
     }
   }
   return acc + d;
+}
+
+/// FNV-1a（32 ビット）を 16 進で。**実行ごと・版ごとに変わらない**ハッシュが要る
+/// ところで使う（`String.hashCode` / `Object.hash` は実行ごとに変わってよい決まり）。
+String fnv1a(List<int> bytes) {
+  var h = 0x811c9dc5;
+  for (final b in bytes) {
+    h ^= b & 0xff;
+    h = (h * 0x01000193) & 0xffffffff;
+  }
+  return h.toRadixString(16).padLeft(8, '0');
 }

@@ -8,6 +8,7 @@ import 'package:tonsoku/features/map/domain/map_format.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
 import 'package:tonsoku/shared/widgets/cdn_image.dart';
+import 'package:tonsoku/shared/widgets/optical_center.dart';
 
 /// マップの上に貼る絞り込みの帯。**記事一覧の絞り込み（web の `.sticky-band`）と
 /// 同じ見た目**: 面色の地に、横に流すチップの段を重ねる。
@@ -257,10 +258,20 @@ class _IncludeInactive extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              // **字面を印の中心に揃える**（行の中央に置くだけだと字が沈んで見える。
+              // ユーザーの指摘）。OpticalCenter だけでは、12pt の Klee One で
+              // 印より 0.5pt 低いまま残った（iPhone 17 Pro の実測。印と
+              // 「終売の店も含める」の字面の縦の中心の差）ので、その分を足す
               Flexible(
-                child: Text(
-                  label,
-                  style: TextStyle(fontSize: 12, color: colors.textSub),
+                child: Transform.translate(
+                  offset: const Offset(0, -0.5),
+                  child: OpticalCenter(
+                    fontSize: 12,
+                    child: Text(
+                      label,
+                      style: TextStyle(fontSize: 12, color: colors.textSub),
+                    ),
+                  ),
                 ),
               ),
             ],
