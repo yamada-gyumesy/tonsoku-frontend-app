@@ -22,7 +22,7 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 /// 届かない）。
 ///
 /// **色だけに頼らない**（色覚の差・ダークでの見え方）。状態ごとにアイコンの形を
-/// 変え、凡例（[MapLegend]）で同じ印を並べて説明する。
+/// 変え、品のチップの内訳（`MenuChip`）で同じ印を並べて説明する。
 ///
 /// 営業していない店（一時閉店・開店前・閉店）は**薄く描く**（[dimmed]）。
 class ShopMarker extends StatelessWidget {
@@ -66,7 +66,7 @@ class ShopMarker extends StatelessWidget {
       ShopDot(colors: ShopDot.colorsFor(brands, colors), size: small ? 8 : 12);
 }
 
-/// 店舗限定の印（丸とアイコン）。凡例でも同じものを使う。
+/// 店舗限定の印（丸とアイコン）。品のチップの内訳・画面外の吹き出しでも同じものを使う。
 class LimitedMark extends StatelessWidget {
   const LimitedMark({required this.availability, this.size = 26, super.key});
 

@@ -33,7 +33,7 @@ import 'package:tonsoku/features/map/presentation/widgets/map_scale_bar.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 import 'package:tonsoku/features/map/presentation/widgets/offscreen_counts.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
-import 'package:tonsoku/features/map/presentation/widgets/map_legend.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_attribution.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_sheet.dart';
 import 'package:tonsoku/features/shell/presentation/widgets/tonsoku_app_bar.dart';
 import 'package:tonsoku/shared/models/shop.dart';
@@ -397,7 +397,6 @@ class _MapPageState extends ConsumerState<MapPage> {
 
     final entries = _entries(shops.value ?? const [], index);
     _scheduleTick(nextChangeAfter(clock.now(), shops.value ?? const [], menus));
-    final present = {for (final e in entries) ?e.availability};
 
     final saved = _saved;
     final map = FlutterMap(
@@ -457,32 +456,34 @@ class _MapPageState extends ConsumerState<MapPage> {
               ),
             ],
           ),
-        // **左下に凡例、下の真ん中に縮尺**（ユーザーの指定）。縮尺は地図の
-        // 位置と倍率を読む（`MapCamera.of`）ので地図の層として置く。**狭い
-        // 端末で凡例とぶつかる時は、縮尺を凡例の右へずらす**（英語の凡例は
-        // 幅が広い。[_BottomBarDelegate]）
+        // **縮尺は下の真ん中、著作権表記は左下**（ユーザーの指定）。縮尺は地図の
+        // 位置と倍率を読む（`MapCamera.of`）ので地図の層として置く。**凡例は置かない**（ユーザーの指定。印の意味は品のチップの
+        // 内訳が兼ねる。`MenuChip`）
+        // ── 動画広告（リワード。#5）─────────────────────
+        // **視聴のボタンは左下に置く**予定。視聴と報酬の対応を画面に明示する
+        // （Issue #8 のユーザーの指定）。広告の SDK は #5 で入れるので、ここには
+        // 何も置かない
+        // 左下の著作権表記と一緒に置く（[_BottomDelegate]。著作権表記の実際の
+        // 幅を見て、縮尺をそれに重ならない範囲の真ん中に収める）
         CustomMultiChildLayout(
-          delegate: _BottomBarDelegate(),
+          delegate: _BottomDelegate(),
           children: [
             LayoutId(
-              id: _BottomBarDelegate.legend,
-              // ── 動画広告（リワード。#5）─────────────────────
-              // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
-              // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
-              // 入れるので、ここには何も置かない
-              child: MapLegend(present: present),
+              id: _BottomDelegate.attribution,
+              child: const MapAttribution(),
             ),
-            LayoutId(id: _BottomBarDelegate.scale, child: const MapScaleBar()),
+            LayoutId(id: _BottomDelegate.scale, child: const MapScaleBar()),
           ],
         ),
         // 画面の外の**店舗限定の店**の数（方角ごと。普通の店は数えない ――
         // ユーザーの指定。このマップの主役は店舗限定の店）。**縁の余白は
-        // 検索・品・ボタン・凡例を避ける**: 下は凡例・縮尺・コンパス・現在地・
-        // 著作権表記（〜140）、左右は札の半分の幅（〜44）
+        // 検索・品・ボタンを避ける**: 下は縮尺・コンパス・現在地・著作権表記
+        // （〜140）、左右は札の半分の幅（〜44）
         OffscreenCounts(
           points: [
             for (final e in entries)
-              if (e.availability != null) LatLng(e.shop.lat, e.shop.lon),
+              if (e.availability case final a?)
+                OffscreenPoint(LatLng(e.shop.lat, e.shop.lon), a),
           ],
           // 上は左上の検索と絞り込みの列の下（品の数と「含める」で高さが変わる。
           // 目安の高さ: 検索 44・併設 40（開いた時だけ）・品 1 つ 52・「含める」42）
@@ -516,10 +517,9 @@ class _MapPageState extends ConsumerState<MapPage> {
               children: [
                 Positioned.fill(child: map),
                 // **並び（ユーザーの指定）**: 上に横いっぱいの検索（店の数はバーの
-                // 右端）と絞り込み、右下に上からコンパス・現在地・著作権表記、
-                // 左下に凡例と縮尺
-                // （凡例と縮尺は地図の層。`FlutterMap` の子）
-                // 右下に上からコンパス・現在地・著作権表記（ユーザーの指定）
+                // 右端）と絞り込み、右下に上からコンパス・現在地、左下に著作権
+                // 表記、下の真ん中に縮尺（地図の層。`FlutterMap` の子）
+                // 右下に上からコンパス・現在地（ユーザーの指定）
                 Positioned(
                   right: 8,
                   bottom: 8,
@@ -545,8 +545,6 @@ class _MapPageState extends ConsumerState<MapPage> {
                           onTap: _locate,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const MapAttribution(),
                     ],
                   ),
                 ),
@@ -797,50 +795,40 @@ class _NeedlePainter extends CustomPainter {
       old.north != north || old.south != south;
 }
 
-/// 左下の凡例と、下の真ん中の縮尺の置き場。**縮尺は真ん中を基本に、凡例と
-/// 右下の著作権表記の間に収まるようにずらす**。間に入らない時（狭い端末の
-/// 英語）は凡例の上に置く。
-class _BottomBarDelegate extends MultiChildLayoutDelegate {
-  static const legend = 'legend';
+/// 左下の著作権表記と、下の真ん中の縮尺の置き場。
+///
+/// **縮尺は画面の真ん中に置き、左右を著作権表記の幅ぶん空けた範囲に収める**
+/// （範囲が狭ければ縮尺が棒を縮める。`MapScaleBar`）。左右を同じだけ空けるので
+/// 真ん中は保たれ、右下のボタンにもかからない。
+class _BottomDelegate extends MultiChildLayoutDelegate {
+  static const attribution = 'attribution';
   static const scale = 'scale';
 
   /// 端からの余白。
   static const inset = 8.0;
 
-  /// 縮尺の下端（右下の著作権表記と同じ高さ）。
-  static const scaleBottom = 10.0;
-
-  /// 凡例との間。
-  static const gap = 12.0;
-
-  /// 右下の著作権表記の幅（縮尺をここまで寄せない）。
-  static const attributionWidth = 104.0;
+  /// 著作権表記との間。
+  static const gap = 8.0;
 
   @override
   void performLayout(Size size) {
-    final loose = BoxConstraints.loose(size);
-    final l = layoutChild(legend, loose);
-    positionChild(legend, Offset(inset, size.height - inset - l.height));
-    final sc = layoutChild(scale, loose);
-    final centered = (size.width - sc.width) / 2;
-    final minX = inset + l.width + gap;
-    final maxX = size.width - attributionWidth - sc.width;
-    if (minX > maxX) {
-      // 凡例と著作権表記の間に入らない（英語の凡例は幅が広い）。凡例の上に置く
-      positionChild(
-        scale,
-        Offset(inset, size.height - inset - l.height - 6 - sc.height),
-      );
-      return;
-    }
+    final a = layoutChild(attribution, BoxConstraints.loose(size));
+    positionChild(attribution, Offset(inset, size.height - inset - a.height));
+    final side = inset + a.width + gap;
+    final sc = layoutChild(
+      scale,
+      BoxConstraints.loose(
+        Size(math.max(0, size.width - side * 2), size.height),
+      ),
+    );
     positionChild(
       scale,
-      Offset(math.max(centered, minX), size.height - scaleBottom - sc.height),
+      Offset((size.width - sc.width) / 2, size.height - inset - sc.height),
     );
   }
 
   @override
-  bool shouldRelayout(_BottomBarDelegate old) => false;
+  bool shouldRelayout(_BottomDelegate old) => false;
 }
 
 class _LoadFailed extends StatelessWidget {

@@ -3,12 +3,13 @@ import 'package:tonsoku/features/map/presentation/widgets/map_scale_bar.dart';
 
 /// 縮尺のメーター。**棒全体が書いた距離**になる（目盛りで割らない）。
 void main() {
-  test('切りのよい距離（1・2・5 × 10ⁿ）で上限を超えない', () {
+  test('切りのよい距離（1・2・3・5 × 10ⁿ）で上限を超えない', () {
     expect(niceDistance(730), 500);
     expect(niceDistance(1999), 1000);
     expect(niceDistance(2000), 2000);
-    expect(niceDistance(4999), 2000);
+    expect(niceDistance(4999), 3000);
     expect(niceDistance(9), 5);
+    expect(niceDistance(350), 300);
   });
 
   test('1000 m からは km', () {

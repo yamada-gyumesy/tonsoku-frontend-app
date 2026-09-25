@@ -1,6 +1,7 @@
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:tonsoku/features/map/domain/limited_status.dart';
 import 'package:tonsoku/features/map/presentation/widgets/offscreen_counts.dart';
 
 /// 画面の外の店を方角ごとにまとめる。**画面の座標で分ける**（地図の回転は
@@ -10,7 +11,11 @@ void main() {
 
   // 緯度経度を、そのまま画面の座標として使う（lon → x、lat → y）
   Offset toScreen(LatLng p) => Offset(p.longitude, p.latitude);
-  LatLng at(double x, double y) => LatLng(y, x);
+  OffscreenPoint at(
+    double x,
+    double y, [
+    LimitedAvailability kind = LimitedAvailability.selling,
+  ]) => OffscreenPoint(LatLng(y, x), kind);
 
   test('画面の中の店は数えない', () {
     expect(
@@ -27,7 +32,7 @@ void main() {
     final groups = groupOffscreen(
       [
         at(200, -50), // 上
-        at(210, -500), // 上（遠い）
+        at(210, -500, LimitedAvailability.soldOut), // 上（遠い。売り切れ）
         at(600, 300), // 右
         at(-100, 900), // 左下
       ],
@@ -37,7 +42,12 @@ void main() {
     final bySector = {for (final g in groups) g.sector: g};
     expect(bySector.keys.toSet(), {0, 2, 5});
     expect(bySector[0]!.count, 2);
-    expect(bySector[0]!.nearest, at(200, -50));
+    // 吹き出しに並べる印は、その方角にある状態の全部
+    expect(bySector[0]!.kinds, {
+      LimitedAvailability.selling,
+      LimitedAvailability.soldOut,
+    });
+    expect(bySector[0]!.nearest, const LatLng(-50, 200));
     expect(bySector[2]!.count, 1);
     expect(bySector[5]!.count, 1);
   });

@@ -1,9 +1,12 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
+import 'package:tonsoku/features/map/domain/limited_status.dart';
 import 'package:tonsoku/features/map/domain/map_format.dart';
+import 'package:tonsoku/features/map/domain/jst.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
@@ -225,9 +228,10 @@ class _BrandChip extends StatelessWidget {
 /// 指定。丸い端のピルにしない）。選ばれていなければ面色の地に罫線、選ばれたら
 /// 地の上の赤（`primaryText`）で文字と枠、地はその 6% を面色に重ねる。
 ///
-/// 店の数は**終売・売り切れの店も含めた数**で、あれば「（終売: X件・売り切れ: Y件）」
-/// を添える（ユーザーの指定）。[LimitedMenu] の `shops` は売り切れの店も含むので、
-/// 合計は `shops` ＋ `ended_shops`。
+/// 2 行目に**店の数（終売・売り切れも含めた合計）と、状態ごとの内訳**を地図と
+/// 同じ印で並べる（ユーザーの指定）。**これが凡例を兼ねる**（地図に凡例は
+/// 置かない）。[LimitedMenu] の `shops` は売り切れの店も含むので、合計は
+/// `shops` ＋ `ended_shops`。
 class MenuChip extends ConsumerWidget {
   const MenuChip({
     required this.menu,
@@ -246,9 +250,16 @@ class MenuChip extends ConsumerWidget {
     final t = ref.watch(messagesProvider);
     final line = colors.primaryText;
     final image = menu.thumbnailUrl ?? menu.imageUrl ?? '';
+    // 内訳。`shops` は売り切れの店も含む。発売前の品は、売り切れていない
+    // 取扱店が全部発売前
     final total = menu.shops.length + menu.endedShops.length;
     final ended = menu.endedShops.length;
     final soldOut = menu.soldOutShops.length;
+    final start = parseJst(menu.startDate);
+    final notYet = start != null && start.isAfter(clock.now());
+    final active = menu.shops.length - soldOut;
+    final upcoming = notYet ? active : 0;
+    final selling = notYet ? 0 : active;
     final radius = BorderRadius.circular(8);
 
     return Semantics(
@@ -295,17 +306,39 @@ class MenuChip extends ConsumerWidget {
                             color: selected ? line : colors.text,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          t.mapMenuShops(total, ended, soldOut),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            height: 1.2,
-                            color: colors.textSub,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
+                        const SizedBox(height: 3),
+                        // 店の数と内訳（ユーザーの指定。**凡例を兼ねる** ――
+                        // 地図と同じ印で状態を名指しする）。文ではなく印と数を
+                        // 並べる（括弧・スラッシュで幅を取らない。同）
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 2,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              t.homeLimitedShops(total),
+                              style: TextStyle(
+                                fontSize: 11,
+                                height: 1.2,
+                                color: colors.textSub,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                            for (final (a, n) in [
+                              (LimitedAvailability.selling, selling),
+                              if (upcoming > 0)
+                                (LimitedAvailability.upcoming, upcoming),
+                              (LimitedAvailability.soldOut, soldOut),
+                              (LimitedAvailability.ended, ended),
+                            ])
+                              _Breakdown(
+                                availability: a,
+                                label: availabilityName(a, t),
+                                count: n,
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -316,6 +349,40 @@ class MenuChip extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 品のチップの内訳 1 つ（印・状態の名前・数）。
+class _Breakdown extends StatelessWidget {
+  const _Breakdown({
+    required this.availability,
+    required this.label,
+    required this.count,
+  });
+
+  final LimitedAvailability availability;
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LimitedMark(availability: availability, size: 13),
+        const SizedBox(width: 3),
+        Text(
+          '$label $count',
+          style: TextStyle(
+            fontSize: 11,
+            height: 1.2,
+            color: colors.textSub,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }

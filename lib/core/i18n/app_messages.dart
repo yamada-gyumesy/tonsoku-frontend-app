@@ -153,12 +153,10 @@ class AppMessages {
     required this.mapSelling,
     required this.mapUpcoming,
     required this.mapSoldOut,
-    required this.mapLegendLabel,
     required this.mapMyLocation,
     required this.mapNorthUp,
     required this.mapSearchHint,
     required this.mapFilter,
-    required this.mapMenuShops,
     required this.mapHeadingUp,
     required this.mapLocationUnavailable,
     required this.mapOpenInGoogleMaps,
@@ -427,15 +425,12 @@ class AppMessages {
   /// 品のチップの下に出すチェック（品を選ぶまでは押せない）。
   final String mapIncludeInactive;
 
-  /// 店ごとの品の状態（店の詳細の各行）。**終売は [homeLimitedEnded] を使う**
-  /// （web の週カードの判子と同じ語）。凡例の販売中の印は「販売中」ではなく
-  /// [homeLimitedHeading]（「店舗限定」。ユーザーの判断）。
+  /// 品の状態（店の詳細の各行と、品のチップの内訳）。**終売は [homeLimitedEnded]
+  /// を使う**（web の週カードの判子と同じ語）。
   final String mapSelling;
   final String mapUpcoming;
   final String mapSoldOut;
 
-  /// 凡例全体の読み上げ名。
-  final String mapLegendLabel;
   final String mapMyLocation;
 
   /// 地図の向きのボタン（読み上げ）。いまの向きを言う。
@@ -447,9 +442,6 @@ class AppMessages {
   /// 検索バーの右のフィルタのボタン（読み上げ）。
   final String mapFilter;
 
-  /// 店舗限定の品のチップの店の数（終売・売り切れを含めた合計と、それぞれの数。
-  /// 0 の方は出さない。ユーザーの指定の文言「（終売: X件）」に売り切れを並べた）。
-  final String Function(int total, int ended, int soldOut) mapMenuShops;
   final String mapHeadingUp;
   final String mapLocationUnavailable;
   final String mapOpenInGoogleMaps;
@@ -645,18 +637,10 @@ class AppMessages {
     mapSelling: '販売中',
     mapUpcoming: '発売前',
     mapSoldOut: '売り切れ',
-    mapLegendLabel: '凡例',
     mapMyLocation: '現在地',
     mapNorthUp: '北が上',
     mapSearchHint: '店舗を探す',
     mapFilter: '絞り込み',
-    mapMenuShops: (total, ended, soldOut) {
-      final parts = [
-        if (ended > 0) '終売: $ended件',
-        if (soldOut > 0) '売り切れ: $soldOut件',
-      ];
-      return parts.isEmpty ? '$total店舗' : '$total店舗（${parts.join('・')}）';
-    },
     mapHeadingUp: '進行方向が上',
     mapLocationUnavailable: '現在地を取得できません',
     mapOpenInGoogleMaps: 'Google マップで開く',
@@ -850,20 +834,10 @@ class AppMessages {
     mapSelling: 'Available',
     mapUpcoming: 'Coming soon',
     mapSoldOut: 'Sold out',
-    mapLegendLabel: 'Legend',
     mapMyLocation: 'My location',
     mapNorthUp: 'North up',
     mapSearchHint: 'Search stores',
     mapFilter: 'Filter',
-    mapMenuShops: (total, ended, soldOut) {
-      final parts = [
-        if (ended > 0) '$ended ended',
-        if (soldOut > 0) '$soldOut sold out',
-      ];
-      return parts.isEmpty
-          ? '$total stores'
-          : '$total stores (${parts.join(', ')})';
-    },
     mapHeadingUp: 'Heading up',
     mapLocationUnavailable: 'Your location is unavailable',
     mapOpenInGoogleMaps: 'Open in Google Maps',
@@ -1046,18 +1020,10 @@ class AppMessages {
     mapSelling: '销售中',
     mapUpcoming: '即将发售',
     mapSoldOut: '已售罄',
-    mapLegendLabel: '图例',
     mapMyLocation: '当前位置',
     mapNorthUp: '北方朝上',
     mapSearchHint: '搜索门店',
     mapFilter: '筛选',
-    mapMenuShops: (total, ended, soldOut) {
-      final parts = [
-        if (ended > 0) '已停售: $ended家',
-        if (soldOut > 0) '已售罄: $soldOut家',
-      ];
-      return parts.isEmpty ? '$total家门店' : '$total家门店（${parts.join('・')}）';
-    },
     mapHeadingUp: '前进方向朝上',
     mapLocationUnavailable: '无法获取当前位置',
     mapOpenInGoogleMaps: '在 Google 地图中打开',

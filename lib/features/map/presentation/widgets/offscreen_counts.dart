@@ -12,8 +12,8 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 
 /// 画面の外にある店の数を、**方角ごとにまとめて画面の縁に出す**（不動産の地図
-/// ―― SUUMO など ―― でよくある表記。ユーザーの指定）。見た目は「★ の丸 ＋ 数」の
-/// 吹き出しで、尻尾が店のある方角を指す（[_Badge]）。
+/// ―― SUUMO など ―― でよくある表記。ユーザーの指定）。見た目は「その方角にある
+/// 印（★・☆・×）＋ 合計の数」の吹き出しで、尻尾が店のある方角を指す（[_Badge]）。
 ///
 /// - 数えるのは呼ぶ側が渡した店。マップは**店舗限定の印がある店だけ**を渡す
 ///   （ユーザーの指定。絞っていれば絞った店のうちの店舗限定の店）
@@ -32,13 +32,13 @@ class OffscreenCounts extends StatelessWidget {
     super.key,
   });
 
-  /// 数える店の位置（マップは店舗限定の印がある店だけ）。
-  final List<LatLng> points;
+  /// 数える店（位置と印の状態。マップは店舗限定の印がある店だけ）。
+  final List<OffscreenPoint> points;
 
   /// 札を押した時（その方角で一番近い店の位置）。
   final ValueChanged<LatLng> onTap;
 
-  /// 札を置かない縁の余白（凡例・ボタンと重ねない）。
+  /// 札を置かない縁の余白（検索・ボタン・縮尺と重ねない）。
   final EdgeInsets padding;
 
   @override
@@ -61,6 +61,7 @@ class OffscreenCounts extends StatelessWidget {
             child: _Badge(
               sector: g.sector,
               count: g.count,
+              kinds: g.kinds,
               onTap: () => onTap(g.nearest),
             ),
           ),
@@ -69,12 +70,21 @@ class OffscreenCounts extends StatelessWidget {
   }
 }
 
+/// 数える店 1 軒（位置と、印の状態）。
+class OffscreenPoint {
+  const OffscreenPoint(this.at, this.kind);
+
+  final LatLng at;
+  final LimitedAvailability kind;
+}
+
 /// 1 つの方角にまとめた画面外の店。
 class OffscreenGroup {
   const OffscreenGroup({
     required this.sector,
     required this.count,
     required this.nearest,
+    this.kinds = const {},
   });
 
   /// 方角（0 = 上、時計回りに 45 度ずつ。0〜7）。
@@ -83,12 +93,15 @@ class OffscreenGroup {
 
   /// この方角で画面の中心に一番近い店。
   final LatLng nearest;
+
+  /// この方角にある印の状態（吹き出しに並べる。数は [count] の合計だけ）。
+  final Set<LimitedAvailability> kinds;
 }
 
 /// 画面の外にある店を方角ごとにまとめる（[OffscreenCounts]）。**画面の中の店は
 /// 数えない。** [toScreen] は緯度経度を画面の座標にするもの（地図の回転込み）。
 List<OffscreenGroup> groupOffscreen(
-  List<LatLng> points, {
+  List<OffscreenPoint> points, {
   required Size size,
   required Offset Function(LatLng) toScreen,
 }) {
@@ -97,12 +110,15 @@ List<OffscreenGroup> groupOffscreen(
   final counts = List<int>.filled(8, 0);
   final nearest = List<LatLng?>.filled(8, null);
   final nearestDist = List<double>.filled(8, double.infinity);
-  for (final p in points) {
+  final kinds = List.generate(8, (_) => <LimitedAvailability>{});
+  for (final point in points) {
+    final p = point.at;
     final o = toScreen(p);
     if (screen.contains(o)) continue;
     final d = o - center;
     final s = sectorOf(d);
     counts[s]++;
+    kinds[s].add(point.kind);
     final dist = d.distanceSquared;
     if (dist < nearestDist[s]) {
       nearestDist[s] = dist;
@@ -112,7 +128,12 @@ List<OffscreenGroup> groupOffscreen(
   return [
     for (var s = 0; s < 8; s++)
       if (counts[s] > 0)
-        OffscreenGroup(sector: s, count: counts[s], nearest: nearest[s]!),
+        OffscreenGroup(
+          sector: s,
+          count: counts[s],
+          nearest: nearest[s]!,
+          kinds: kinds[s],
+        ),
   ];
 }
 
@@ -170,11 +191,15 @@ class _Badge extends ConsumerWidget {
   const _Badge({
     required this.sector,
     required this.count,
+    required this.kinds,
     required this.onTap,
   });
 
   final int sector;
   final int count;
+
+  /// 並べる印（強い順。ユーザーの指定: 売り切れ・終売がある方角は ★☆ 3 のように）。
+  final Set<LimitedAvailability> kinds;
   final VoidCallback onTap;
 
   @override
@@ -200,11 +225,12 @@ class _Badge extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const LimitedMark(
-                    availability: LimitedAvailability.selling,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 5),
+                  for (final a in LimitedAvailability.values)
+                    if (kinds.contains(a)) ...[
+                      LimitedMark(availability: a, size: 18),
+                      const SizedBox(width: 2),
+                    ],
+                  const SizedBox(width: 3),
                   Text(
                     '$count',
                     style: TextStyle(

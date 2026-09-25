@@ -6,12 +6,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 
-/// 縮尺のメーター（左下、凡例の横）。**棒を真ん中の目盛りで 2 つに割り、棒の
-/// 右端にその長さの距離を書く**（ユーザーの指定）。`flutter_map` の `Scalebar` は
+/// 縮尺のメーター（下の真ん中）。**大きめに出す**（ユーザーの指定。凡例を
+/// やめて空いた）。**棒を真ん中の目盛りで 2 つに割り、棒の右端の上にその長さの
+/// 距離を書く**（ユーザーの指定）。`flutter_map` の `Scalebar` は
 /// 距離を棒の上の中央に書くので、「500 m」が棒全体なのか 1 目盛りなのか分から
 /// なかった（ユーザーの指摘。短すぎるとも言われた）。
 ///
-/// - 棒の長さは [maxWidth] 以下で一番長くなる**切りのよい距離**（1・2・5 × 10ⁿ）
+/// - 棒の長さは置き場（最大 [maxWidth]）に入る一番長い**切りのよい距離**（1・2・3・5 × 10ⁿ）
 /// - 距離は 1000 m 未満なら m、以上なら km
 /// - 地図の模様に紛れないよう、線の下に面色の縁を敷く
 ///
@@ -20,31 +21,39 @@ class MapScaleBar extends StatelessWidget {
   const MapScaleBar({super.key});
 
   /// 棒の長さの上限（pt）。
-  /// **凡例と右下の著作権表記の間に収める**（長いと「© OpenStreetMap」に重なる）。
-  static const maxWidth = 110.0;
+  /// 棒の長さの上限（置き場が広い時）。
+  static const maxWidth = 180.0;
+
+  /// 置き場の幅の下限（これより狭ければ出さない）。
+  static const minWidth = 56.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    // **置き場が狭ければ棒を縮める**（狭い端末で左下の著作権表記にかからない
+    // よう、呼ぶ側が左右を空けた範囲に収める）
+    // 距離の字（最長「1000 km」）も入らないほど狭ければ出さない
+    builder: (context, constraints) => constraints.maxWidth < minWidth
+        ? const SizedBox.shrink()
+        : _bar(context, math.min(maxWidth, constraints.maxWidth)),
+  );
+
+  Widget _bar(BuildContext context, double limit) {
     final camera = MapCamera.of(context);
     final colors = context.colors;
     final perPoint = metersPerPoint(camera.center.latitude, camera.zoom);
-    final meters = niceDistance(perPoint * maxWidth);
+    final meters = niceDistance(perPoint * math.max(limit, 1));
     final width = meters / perPoint;
     return ExcludeSemantics(
-      child: Row(
+      // **距離は棒の右端の上に載せる**（ユーザーの指定。横に並べると幅を取る。
+      // 右端なので「棒の終わりがその距離」と読める）
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          CustomPaint(
-            size: Size(width, 8),
-            painter: _BarPainter(ink: colors.text, halo: colors.surface),
-          ),
-          const SizedBox(width: 4),
-          // 距離は棒の右端に（ユーザーの指定。棒の終わりがその距離だと読める）
           Text(
             formatDistance(meters),
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 13,
               height: 1,
               fontWeight: FontWeight.w700,
               color: colors.text,
@@ -60,6 +69,11 @@ class MapScaleBar extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 2),
+          CustomPaint(
+            size: Size(width, 10),
+            painter: _BarPainter(ink: colors.text, halo: colors.surface),
+          ),
         ],
       ),
     );
@@ -73,11 +87,13 @@ double metersPerPoint(double latitude, double zoom) =>
     math.cos(latitude * math.pi / 180) /
     (256 * math.pow(2, zoom));
 
-/// [max] 以下で一番大きい、切りのよい距離（1・2・5 × 10ⁿ m）。
+/// [max] 以下で一番大きい、切りのよい距離（1・2・3・5 × 10ⁿ m）。**3 を入れる**
+/// ―― 1・2・5 だけだと、上限を少し超えただけで棒が半分以下に縮む（1 km が
+/// 入らず 500 m になる。短すぎると言われた）。
 double niceDistance(double max) {
   if (max <= 0) return 0;
   final exp = math.pow(10, (math.log(max) / math.ln10).floor()).toDouble();
-  for (final f in const [5, 2, 1]) {
+  for (final f in const [5, 3, 2, 1]) {
     if (f * exp <= max) return f * exp;
   }
   return exp;
@@ -112,7 +128,7 @@ class _BarPainter extends CustomPainter {
         Paint()
           ..color = halo
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 4
+          ..strokeWidth = 5
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       )
@@ -121,7 +137,7 @@ class _BarPainter extends CustomPainter {
         Paint()
           ..color = ink
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
+          ..strokeWidth = 2.5
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
