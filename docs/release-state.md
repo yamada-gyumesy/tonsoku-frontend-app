@@ -47,8 +47,16 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
    SHA-256（Play でアプリを作った後に出る）を
    - tonsoku-infra-terraform のセッションへ（Firebase の Android アプリ。**Console で入れない**）
    - tonsoku-frontend-web のセッションへ（`assetlinks.json`。`docs/deep-links.md`）
-8. **AdMob にアプリを登録し、広告ユニットを作る**（iOS / Android。枠ごとに分ける）。
-   ID は Issue #5 の実装が読む。発行者 ID は web の `app-ads.txt` に載せる
+8. **AdMob にアプリを登録し、広告ユニットを作り、ID を差し替える**（iOS / Android。枠ごと）。
+   **いまのリポジトリは本番の ID が全部空で、release ビルドは広告を 1 つも出さない**（Issue #5）。
+   **このまま出すと、広告の出ない版を「広告あり」で申告することになる**ので、審査に出す前に必ず:
+   - アプリ ID 2 つ: `ios/Runner/Info.plist` の `GADApplicationIdentifier` と
+     `android/app/src/main/AndroidManifest.xml` の `com.google.android.gms.ads.APPLICATION_ID`
+     （いまは Google のテスト用）
+   - 広告ユニット ID 6 つ（アンカー / 記事 / マップのリワード × iOS / Android）:
+     `lib/core/config/ad_config.dart` の `productionIos` / `productionAndroid`（いまは空）
+   - **アプリ ID だけ・ユニット ID だけでは配信されない**（両方そろえる）
+   - 発行者 ID を web の `app-ads.txt` に載せる（web の作業）
 9. **初回のテスト配信**: `release-1.0.0` を切って
    `cd android && mise exec -- bundle exec fastlane android alpha draft:true`（**初回だけ draft**）→
    `cd ios && mise exec -- bundle exec fastlane ios beta`
@@ -74,7 +82,8 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
   - **見出しに「松のや」を入れない**（gyumesy は 1 枚目・4 枚目の見出しの「松屋」で 4.1(a)）
   - マップの見本はユーザーの手元の 2 枚（`~/Desktop/map_20260926_005048.png` /
     `~/Desktop/map_20260926_005124.png`。web でも使う予定のもの）を参考にできる
-- **広告（Issue #5）。** 審査メモ・`rating_config.json`・App Privacy は広告が入る前提で書いてある。
-  **広告の入っていないビルドを審査に出すなら、3 つとも直す**
-- **iOS の ATT（トラッキングの許可）。** 広告の Issue で決める。出すなら `Info.plist` の
-  `NSUserTrackingUsageDescription` と App Privacy の「トラッキング」が要る
+- **広告の本番 ID（上の 8）。** 実装（Issue #5）は入っているが、本番の ID が空なので release は
+  広告を出さない。審査メモ・`rating_config.json`・App Privacy は広告が出る前提で書いてある。
+  **ID を入れずに出すなら、3 つとも「広告なし」に直す**（申告と中身を食い違わせない）
+- **iOS の ATT（トラッキングの許可）。** Issue #5 で入れた（`NSUserTrackingUsageDescription` は
+  `Info.plist` にある）。App Privacy で「トラッキング」を申告する
