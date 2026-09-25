@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:tonsoku/core/theme/app_theme.dart';
+
 /// 字面（インク）の中心を器の中心に寄せる。web の `optical-center`（とん速の web も同じ値。gyumesy-frontend-app から写した）
 /// （`main.css` の `@utility optical-center { translate: 0 -0.04em }`）。
 ///
@@ -22,14 +24,32 @@ class OpticalCenter extends StatelessWidget {
 
   final Widget child;
 
-  /// web の `-0.04em`。
+  /// web の `-0.04em`（Noto Sans JP で測った値。英語・中国語はこれ）。
   static const ratio = -0.04;
+
+  /// **日本語（Klee One）の量。** Klee One は Noto Sans JP より字面が沈む
+  /// （行ボックスの中の字の位置が低い）ので、`-0.04em` では足りない。
+  ///
+  /// 実測（iPhone 17 Pro、15px、メニューの行。字面と記号の縦の中心の差）:
+  ///
+  /// | 量 | 「利用規約」と外へ出る記号 | 「とん速とは」と外へ出る記号 |
+  /// |---|---|---|
+  /// | `-0.04em` | 文字が 0.5pt 低い（記号が浮いて見えた。ユーザーの指摘） | ― |
+  /// | `-0.08em` | ― | 文字が 0.33pt 高い（行き過ぎ） |
+  /// | `-0.06em` | 0.17pt | 0.17pt |
+  ///
+  /// **字面の中心は字で揺れる**（かなと漢字で違う）ので、1 行だけで決めないこと。
+  /// web は書体によらず `-0.04em` だが、**あちらの記号はアイコンの書体の字**で
+  /// 文字と同じ行の中に座るので、この差が表に出ない。
+  static const kleeRatio = -0.06;
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: Offset(0, fontSize * ratio),
-      child: child,
-    );
+    // 効いている書体で量を変える（言語で書体が替わる。`AppTheme.fontFamilyFor`）
+    final family =
+        DefaultTextStyle.of(context).style.fontFamily ??
+        Theme.of(context).textTheme.bodyMedium?.fontFamily;
+    final r = family == AppTheme.jaFontFamily ? kleeRatio : ratio;
+    return Transform.translate(offset: Offset(0, fontSize * r), child: child);
   }
 }

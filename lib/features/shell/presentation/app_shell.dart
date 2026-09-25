@@ -73,71 +73,80 @@ class _AppShellState extends ConsumerState<AppShell> {
       (icon: Icons.menu, label: t.navMenu, branch: null),
     ];
 
-    return PopScope(
-      // シートが開いている間は戻るを横取りする（言語・その他を開いていれば
-      // メニューへ、メニューなら閉じる。web が履歴を 2 段積んでいるのと同じ）
-      canPop: !_sheetOpen,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        _sheetKey.currentState?.handleBack();
-      },
-      child: Scaffold(
-        body: Stack(
-          children: [
-            // **暗幕の下は読み上げからも外す。** 暗くしてタップを止めるだけだと、
-            // スクリーンリーダーの activate は `SemanticsAction.tap` を直に送るので
-            // **ヒットテストを迂回して発火し**、シートが開いたまま記事へ飛べる
-            // （gyumesy の注記。web も暗幕の下を `inert` にしている）
-            ExcludeSemantics(excluding: _sheetOpen, child: navigationShell),
-            if (_sheetOpen)
-              MenuSheet(
-                key: _sheetKey,
-                onClose: () => setState(() => _sheetOpen = false),
-              ),
-          ],
-        ),
-        // **`NavigationBar` を使わない。** 既定の高さ（80px）と余白が web
-        // （56px・アイコン 22px・ラベル 10px・間隔 4px）と合わず、画面下が
-        // そのぶん狭くなる（gyumesy-frontend-app と同じ判断）
-        bottomNavigationBar: Semantics(
-          container: true,
-          label: t.navLabel,
-          child: Container(
-            // **地は生成り（`bg`）。** web の `CoBottomNav` はヘッダーと同じ地色で、
-            // 上罫を残している（本文の面と色が違っても、線が無いと境目が弱い）
-            decoration: BoxDecoration(
-              color: colors.bg,
-              border: Border(top: BorderSide(color: colors.border)),
+    final scaffold = Scaffold(
+      body: Stack(
+        children: [
+          // **暗幕の下は読み上げからも外す。** 暗くしてタップを止めるだけだと、
+          // スクリーンリーダーの activate は `SemanticsAction.tap` を直に送るので
+          // **ヒットテストを迂回して発火し**、シートが開いたまま記事へ飛べる
+          // （gyumesy の注記。web も暗幕の下を `inert` にしている）
+          ExcludeSemantics(excluding: _sheetOpen, child: navigationShell),
+          if (_sheetOpen)
+            MenuSheet(
+              key: _sheetKey,
+              onClose: () => setState(() => _sheetOpen = false),
             ),
-            // ホームバーのぶんは器が持つ（中身の高さは web と同じに保つ）
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: AppShell._height,
-                child: Row(
-                  children: [
-                    for (final item in items)
-                      Expanded(
-                        child: NavItem(
-                          icon: item.icon,
-                          label: item.label,
-                          // **シートを開いても現在地は消さない。** どのタブに
-                          // いたかは変わっていないので、消すと戻り先を見失う
-                          isActive: item.branch == null
-                              ? _sheetOpen
-                              : navigationShell.currentIndex == item.branch,
-                          onTap: item.branch == null
-                              ? _toggleSheet
-                              : () => _goBranch(item.branch!),
-                        ),
+        ],
+      ),
+      // **`NavigationBar` を使わない。** 既定の高さ（80px）と余白が web
+      // （56px・アイコン 22px・ラベル 10px・間隔 4px）と合わず、画面下が
+      // そのぶん狭くなる（gyumesy-frontend-app と同じ判断）
+      bottomNavigationBar: Semantics(
+        container: true,
+        label: t.navLabel,
+        child: Container(
+          // **地は生成り（`bg`）。** web の `CoBottomNav` はヘッダーと同じ地色で、
+          // 上罫を残している（本文の面と色が違っても、線が無いと境目が弱い）
+          decoration: BoxDecoration(
+            color: colors.bg,
+            border: Border(top: BorderSide(color: colors.border)),
+          ),
+          // ホームバーのぶんは器が持つ（中身の高さは web と同じに保つ）
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: AppShell._height,
+              child: Row(
+                children: [
+                  for (final item in items)
+                    Expanded(
+                      child: NavItem(
+                        icon: item.icon,
+                        label: item.label,
+                        // **シートを開いても現在地は消さない。** どのタブに
+                        // いたかは変わっていないので、消すと戻り先を見失う
+                        isActive: item.branch == null
+                            ? _sheetOpen
+                            : navigationShell.currentIndex == item.branch,
+                        onTap: item.branch == null
+                            ? _toggleSheet
+                            : () => _goBranch(item.branch!),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),
         ),
       ),
+    );
+
+    // シートが開いている間は、**戻る操作を横取りする**（言語・その他を開いて
+    // いればメニューへ、メニューなら閉じる。web が履歴を 2 段積んでいるのと同じ）。
+    //
+    // **`PopScope` では止まらない。** go_router は戻る操作を深い側のナビゲータ
+    // （タブの中）から処理するので、タブに記事を積んでいるとそこで消費され、
+    // シェルの `PopScope` まで届かない ―― **シートは開いたまま、見えないところで
+    // 記事が閉じた**（PR #17 のレビューで再現。gyumesy も同じ作りで同じ挙動）。
+    // `BackButtonListener` は Router の戻るボタンの受け口に、**置いた時点で
+    // 優先権を取って**加わるので、タブのナビゲータより先に受け取れる
+    if (!_sheetOpen) return scaffold;
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        _sheetKey.currentState?.handleBack();
+        return true;
+      },
+      child: scaffold,
     );
   }
 }
