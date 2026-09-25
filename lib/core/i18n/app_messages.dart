@@ -290,6 +290,7 @@ class AppMessages {
   /// 写した後に出す知らせ。
   final String notificationsRssCopied;
   final String notificationsIntro1;
+
   /// web は保存ボタンがあるので「設定を保存してください」まで言うが、アプリは
   /// トグルを切り替えた時点で購読する（保存ボタンが無い）ので、その部分は言わない。
   final String notificationsIntro2;
