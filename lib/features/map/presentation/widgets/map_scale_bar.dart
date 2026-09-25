@@ -6,9 +6,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 
-/// 縮尺のメーター（下の真ん中）。**大きめに出す**（ユーザーの指定。凡例を
-/// やめて空いた）。**棒を真ん中の目盛りで 2 つに割り、棒の右端の上にその長さの
-/// 距離を書く**（ユーザーの指定）。`flutter_map` の `Scalebar` は
+/// 縮尺のメーター（下の真ん中）。**長さは大きめ、線と字は細く**（ユーザーの
+/// 指定。太いと地図より目立った）。**棒を真ん中の目盛りで 2 つに割り、右端の目盛りの真上にその
+/// 長さの距離を書く**（ユーザーの指定）。`flutter_map` の `Scalebar` は
 /// 距離を棒の上の中央に書くので、「500 m」が棒全体なのか 1 目盛りなのか分から
 /// なかった（ユーザーの指摘。短すぎるとも言われた）。
 ///
@@ -23,6 +23,9 @@ class MapScaleBar extends StatelessWidget {
   /// 棒の長さの上限（pt）。
   /// 棒の長さの上限（置き場が広い時）。
   static const maxWidth = 180.0;
+
+  /// 距離の字の高さ（12pt・行の高さ 1）。
+  static const labelHeight = 12.0;
 
   /// 置き場の幅の下限（これより狭ければ出さない）。
   static const minWidth = 56.0;
@@ -44,37 +47,50 @@ class MapScaleBar extends StatelessWidget {
     final meters = niceDistance(perPoint * math.max(limit, 1));
     final width = meters / perPoint;
     return ExcludeSemantics(
-      // **距離は棒の右端の上に載せる**（ユーザーの指定。横に並べると幅を取る。
-      // 右端なので「棒の終わりがその距離」と読める）
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            formatDistance(meters),
-            style: TextStyle(
-              fontSize: 13,
-              height: 1,
-              fontWeight: FontWeight.w700,
-              color: colors.text,
-              fontFamily: AppTheme.defaultFontFamily,
-              shadows: [
-                for (final o in const [
-                  Offset(1, 0),
-                  Offset(-1, 0),
-                  Offset(0, 1),
-                  Offset(0, -1),
-                ])
-                  Shadow(color: colors.surface, offset: o),
-              ],
+      // **距離は右端の目盛りの真上に、字の中央を合わせて載せる**（ユーザーの
+      // 指定。横に並べると幅を取り、右端に字の端を揃えると目盛りとずれて見える）。
+      // 字の右半分は棒からはみ出す（置き場の左右の余白に収まる。`_BottomDelegate`）
+      child: SizedBox(
+        width: width,
+        height: labelHeight + 2 + 8,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: CustomPaint(
+                size: Size(width, 8),
+                painter: _BarPainter(ink: colors.text, halo: colors.surface),
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          CustomPaint(
-            size: Size(width, 10),
-            painter: _BarPainter(ink: colors.text, halo: colors.surface),
-          ),
-        ],
+            Positioned(
+              left: width,
+              top: 0,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, 0),
+                child: Text(
+                  formatDistance(meters),
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1,
+                    color: colors.text,
+                    fontFamily: AppTheme.defaultFontFamily,
+                    shadows: [
+                      for (final o in const [
+                        Offset(1, 0),
+                        Offset(-1, 0),
+                        Offset(0, 1),
+                        Offset(0, -1),
+                      ])
+                        Shadow(color: colors.surface, offset: o),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -128,7 +144,7 @@ class _BarPainter extends CustomPainter {
         Paint()
           ..color = halo
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 5
+          ..strokeWidth = 3.5
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       )
@@ -137,7 +153,7 @@ class _BarPainter extends CustomPainter {
         Paint()
           ..color = ink
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5
+          ..strokeWidth = 1.5
           ..strokeJoin = StrokeJoin.round
           ..strokeCap = StrokeCap.round,
       );
