@@ -42,12 +42,8 @@
                  付きの URL が「Page Not Found」で行き止まり。背面で落とされた
                  後は前に踏んだリンクが開く）。
 
-                 **App Links の intent-filter はまだ置かない**（リリース整備の
-                 Issue #9 で web の assetlinks.json と対にして足す）。足す時は
-                 **`deepLinkTarget` が開ける面だけを名乗ること**（開けない面を
-                 名乗ると、外部ブラウザへ逃がした 1 本が自分へ戻って際限なく
-                 往復する。`test/features/notifications/deep_link_test.dart` が
-                 止める）。**iOS 側の同じ設定は `ios/Runner/Info.plist`** -->
+                 **iOS 側の同じ設定は `ios/Runner/Info.plist`。** 片方だけ切ると
+                 OS で挙動が割れる -->
             <meta-data
               android:name="flutter_deeplinking_enabled"
               android:value="false"
@@ -55,6 +51,114 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- **App Links（iOS のユニバーサルリンクに相当）。** Chrome や LINE で
+                 ton-soku.com のリンクを押した時にブラウザではなくアプリを開く
+                 （gyumesy-frontend-app の intent-filter を写し、名乗る面をとん速の
+                 `deepLinkTarget` に合わせ直した）。
+
+                 **`autoVerify="true"` が要になる。** これが無いと「アプリで開くか」
+                 の選択ダイアログが毎回出る（＝既定でブラウザに負ける）。true だと
+                 OS が `https://ton-soku.com/.well-known/assetlinks.json` を取りに行き、
+                 署名の指紋が一致した時だけ既定でアプリを開く。
+
+                 **web 側に assetlinks.json が要る。** iOS の
+                 apple-app-site-association と対で、片側だけでは成立しない
+                 （中身と置き方は `docs/deep-links.md`）。
+
+                 受け口は `deepLinkTarget`（通知のタップと同じ関数に合流させる） -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <!-- **`deepLinkTarget` がアプリ内で開ける面だけを名乗る。**
+                     パスを絞らないと `https://ton-soku.com/` 配下の全 URL を奪う。
+                     名乗るのはホーム・記事一覧・記事・クーポン・カレンダー・
+                     ランキング・通知設定。**`/about`・`/legal/*`・`/category/*` は
+                     名乗らない**（アプリに画面が無い。とん速のホームにはカテゴリの
+                     タブが無いので、gyumesy と違ってカテゴリも外す）。
+
+                     **開けない面を名乗ってはいけない。** `deepLinkTarget` が
+                     null を返す面を `launchUrl` で外部ブラウザへ逃がすと、**その
+                     ACTION_VIEW を解決するのは「検証済みの App Links 持ち」＝
+                     自分自身**なので、リンクが自分へ戻ってくる。戻ってきたものを
+                     また逃がして、**際限なく往復する**（gyumesy の実測: 受け皿が
+                     無かった頃の `/category/` は、1 回踏むと 2000 回超の自己起動で
+                     ANR、端末の WindowManager ごと固まった）。
+                     **開ける面を増やすか、名乗るのをやめるかの二択**で、
+                     「名乗ったまま逃がす」だけは成り立たない。
+
+                     ロケール別（`/en/`, `/zh/`）も同じ規則で並べる。
+
+                     **末尾スラッシュの有無で 2 本並べる。** `android:path` は
+                     完全一致（`PatternMatcher` の `PATTERN_LITERAL`）なので、
+                     `/calendar` と `/calendar/` は別物。web の AASA も 2 つ列挙する。
+
+                     **`pathPattern` で 1 本にまとめようとしないこと**（gyumesy が
+                     2 回失敗した）。`?` は特別文字ではなくリテラル（`/calendar/?` は
+                     文字列 `/calendar/?` にしか当たらない）。`*` は「直前の 1 文字の
+                     0 回以上」だが、**効くのは照合文字列が残っている間だけ**で、
+                     `/calendar/*` は `/calendar/` には当たっても `/calendar` には
+                     当たらない。`.*` なら両方拾えるが **`/calendarium` まで拾う**。
+
+                     **記事は `pathPrefix` ではなく `pathPattern` の `..*`。**
+                     `pathPrefix` は前方一致の 1 行なので `/articles/` の後ろに何が
+                     来ても名乗る。`..*` は「任意の 1 文字 ＋ 0 回以上」なので slug が
+                     要る（slug の無い `/articles` `/articles/` は記事一覧として
+                     別に名乗っている）。
+
+                     **残っている穴:** `..*` は `/` も拾うので、`/articles/x/y/` の
+                     ような**web に無い深さ**も名乗ってしまう（`deepLinkTarget` は
+                     開けない）。web がそういう URL を出さない限り踏まれないが、
+                     踏まれると上の往復に落ちる。`pathPattern` では「`/` 以外」を
+                     書けない（gyumesy も同じ形で出している）。
+
+                     **名乗る範囲と `deepLinkTarget` のずれは
+                     `test/features/notifications/deep_link_test.dart` が
+                     止める**（このファイルを読んで、名乗った面が全部
+                     開けることを確かめている）。
+
+                     **この形の誤りはビルドも analyze も通る。** 実機で
+                     `adb shell am start -a android.intent.action.VIEW -d "<url>"`
+                     を踏んで確かめること -->
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/articles"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/articles/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/coupon"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/coupon/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/calendar"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/calendar/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/ranking"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/ranking/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/notifications"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/notifications/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:pathPattern="/articles/..*"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/articles"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/articles/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/coupon"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/coupon/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/calendar"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/calendar/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/ranking"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/ranking/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/notifications"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/notifications/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:pathPattern="/en/articles/..*"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/articles"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/articles/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/coupon"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/coupon/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/calendar"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/calendar/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/ranking"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/ranking/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/notifications"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/notifications/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:pathPattern="/zh/articles/..*"/>
             </intent-filter>
         </activity>
         <!-- **背面に居る時、通知は FCM が自分で出す。** その時に使うアイコン・色・

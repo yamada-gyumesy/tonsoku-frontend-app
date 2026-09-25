@@ -1,0 +1,658 @@
+# とん速 iOS の配信 lane。
+#
+# **gyumesy-frontend-app の `ios/fastlane/Fastfile` を写した**（lane の構成・
+# 見張り・コメントはそのまま。変えたのはアプリ固有の値と、とん速で事情が違う所）。
+# コメントの「1.0 で踏んだ」「実測」は gyumesy のもの。
+#
+#   bundle exec fastlane ios beta      # ビルド → TestFlight
+#   bundle exec fastlane ios release   # 掲載情報を反映して審査提出
+#   bundle exec fastlane ios resubmit  # ビルドを差し替えて再提出（審査中のものを取り下げて）
+#
+# **リジェクトされた後の再審査は 2 段階**（間に手作業が挟まる）:
+#
+#   bundle exec fastlane ios rejected_rebuild   # ビルドと掲載情報を差し替える
+#   （ASC の App Review に返信を貼る —— API では投稿できない）
+#   bundle exec fastlane ios rejected_submit    # 却下項目を解決して再提出
+#
+# **ストアアカウントは gyumesy-frontend-app・gyumeshi-rader-app と同じ運営者の
+# アカウント**（Team ID `29LP73942P`）。`three-frontend-flutter` は職場の別
+# アカウントなので値を流用しない。
+# 認証情報は**共用の** `~/.config/gyumesy/` を参照する（ASC API キーはアカウントに
+# 1 つで、アプリごとに作らない。`docs/secrets.md`）。
+
+require_relative "../../fastlane/shared"
+
+default_platform(:ios)
+
+APP_ID = "com.gyumesy.tonsoku"
+ASC_KEY_ID = "BHL97SX4FW"
+ASC_ISSUER_ID = "6961a556-feba-4b80-9943-25c882386bc3"
+ASC_KEY_PATH = File.expand_path("~/.config/gyumesy/AuthKey_BHL97SX4FW.p8")
+# **年齢レーティングの申告。** ASC の画面で答える 20 数問の実体はここで、
+# `deliver` が投入する。gyumesy の値（牛めしレーダーの実設定と 1 つずつ
+# 突き合わせたもの）を写し、**`advertising` だけ true にした**。
+#
+# JSON はコメントを持てないので、迷いやすい項目の根拠だけここに残す:
+# **`advertising` は true**。とん速は広告（AdMob）を必ず入れる（CLAUDE.md の
+# 「広告」。gyumesy には無い）。1.0 から広告の Issue（#5）が入っている前提。
+# **出すバイナリと申告を揃えること** —— 広告の入っていない版を出すなら false に戻す。
+# **`unrestrictedWebAccess` は false**。外部リンクは `LaunchMode.inAppBrowserView`
+# （`SFSafariViewController`）で記事のリンク先を開くだけで、URL を打てる
+# ブラウザは積んでいない。**`kidsAgeBand` は入れない**（キッズ向けではない）
+RATING_CONFIG = File.expand_path("rating_config.json", __dir__)
+# **App Store の名前に「松のや」を入れない。** gyumesy は「松屋」の語で
+# Guideline 4.1(a) のリジェクトを 2 回受けた（見出し → サブタイトル）。
+# 非公式であることは説明文に書く（`metadata/ja/description.txt`）。
+# **名前は App Store 全体で一意。** 取られていたら `create_app` が落ちるので、
+# その時はユーザーに相談して決める（勝手に語を足さない）
+APP_NAME = "とん速"
+
+platform :ios do
+  desc "ビルド → TestFlight"
+  lane :beta do
+    ensure_release_branch
+    ensure_shippable_tree
+    bn = build_ipa
+    upload_to_testflight(
+      api_key: asc_api_key,
+      ipa: ipa_path,
+      # 処理の完了を待たない（数分かかる。待っても得るものが無い）
+      skip_waiting_for_build_processing: true,
+    )
+    tag_build(os: "ios", build_number: bn)
+  end
+
+  desc "掲載情報を反映して審査提出"
+  desc "例: bundle exec fastlane ios release submit:false  （提出せず掲載情報だけ）"
+  lane :release do |options|
+    # **審査へ出す口にも見張りを付ける。** `deliver` は作業ツリーの掲載情報を
+    # 読み、`submit_for_review` の既定が true、`force: true` で確認画面も出ない。
+    # **出荷の瞬間はここ**
+    ensure_release_branch
+    ensure_shippable_tree
+    key = asc_api_key
+    deliver(
+      api_key: key,
+      app_identifier: APP_ID,
+      submit_for_review: options.fetch(:submit, true).to_s == "true",
+      # **審査を通ったら自動で公開する。** Android は draft で止めるので
+      # 構えが逆向きだが、これは OS の作りの違い —— iOS は「手動リリース」に
+      # すると審査通過後に ASC を開いて押しに行くことになる。
+      # **公開の瞬間を自分で決めたい時は `automatic:false`**
+      automatic_release: options.fetch(:automatic, true).to_s == "true",
+      force: true,
+      # **どの版を出すかを明示する。**
+      #
+      # **渡さないと 2 回目以降の提出で落ちる。** `skip_binary_upload` の
+      # `deliver` は版を自分では作らず、**いま編集できる版**を探すだけなので、
+      # 公開済みの版しか無い状態（1.0 が `READY_FOR_SALE`）では見つからず
+      # `Cannot find edit app store version` を 6 回リトライして終わる
+      # （1.0.1 で実測）。初回はバイナリを上げた時に版が出来ていたので通っていた
+      app_version: options[:app_version] || flutter_semver,
+      # **バイナリは上げない。** 上げるのは `beta`。ここは掲載情報と提出だけ
+      skip_binary_upload: true,
+      build_number: options[:build] ||
+        latest_testflight_build_number(api_key: key, app_identifier: APP_ID, platform: "ios").to_s,
+      skip_screenshots: options.fetch(:skip_screenshots, true).to_s == "true",
+      app_rating_config_path: RATING_CONFIG,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        content_rights_has_rights: true,
+        # **松のやの商品画像を引用している。** ここは「第三者のコンテンツを含む」
+        # として申告する。記事は自前だが画像は違う（gyumesy と同じ）
+        content_rights_contains_third_party_content: true,
+      },
+    )
+  end
+
+  desc "掲載情報だけ反映する（審査に出さない）"
+  desc "例: bundle exec fastlane ios metadata"
+  desc "例: bundle exec fastlane ios metadata skip_screenshots:false  （スクショも差し替え）"
+  lane :metadata do |options|
+    # **審査に出さなくても、これは出荷物。** `deliver` が読むのは作業ツリーの
+    # `ios/fastlane/metadata/` で、`force: true` なので確認プレビューも出ない。
+    # 見張りが無いと、レビュー前のブランチの文言がそのまま掲載情報に載る
+    ensure_release_branch
+    ensure_shippable_tree
+    # **審査に出さない口。** `release` は `deliver` の `submit_for_review` が
+    # 既定 true で `force: true` も付くので、文言を 1 つ直すたびに提出まで
+    # 走ってしまう。**出荷の瞬間は `release` だけ**にして、ここは分ける。
+    #
+    # **ビルドに触らない。** `release` は TestFlight の最新版を紐づけるが、
+    # 掲載情報はビルドが 1 つも無くても入る（審査前に文言だけ詰められる）
+    deliver(
+      api_key: asc_api_key,
+      app_identifier: APP_ID,
+      submit_for_review: false,
+      force: true,
+      skip_binary_upload: true,
+      # **スクリーンショットは既定で送らない。** 1 枚 3MB 前後をロケール分
+      # 上げるので、文言を 1 つ直すたびに数分待たされる。
+      # **口の名前と既定値は `release` と同じ**にしてある —— fastlane は
+      # 知らないオプションを黙って捨てるので、lane ごとに名前が違うと
+      # 打ち間違えた時に警告なしで送られないまま終わる
+      skip_screenshots: options.fetch(:skip_screenshots, true).to_s == "true",
+      # **送る時は必ず入れ替える。** 追加していくと古い版が残る。
+      #
+      # **これを付けても二重化は防げない。送ったら ASC で枚数を数えること。**
+      # `overwrite_screenshots` が消すのは手前の 1 回だけ（`delete_screenshots`）。
+      # そのあとの `upload_screenshots` は処理待ちだと自分を呼び直す
+      # （`upload_screenshots.rb:165` → `retry_upload_screenshots_if_needed` → `:212`）。
+      #
+      # **一覧の取り直しは効かない。** 再帰のたびに `AppScreenshotIterator` を
+      # 作り直し、ロケールごとに ASC を引き直している（`app_screenshot_iterator.rb:26`
+      # の `get_app_screenshot_sets`）。**問題は処理中の `source_file_checksum` が
+      # nil** なこと —— 引き直した一覧にさっき上げた分が入っていても、重複判定
+      # （`:144-145`）はチェックサムで突き合わせるので false になり、もう一度
+      # キューに入る。再試行の手前の `delete! unless complete?`（`:209-211`）を
+      # すり抜けるのは**「complete になったのにチェックサムがまだ nil」の窓**。
+      # **1.0 では実際に 4 枚が 8 枚になった**（この指定を付けた状態で）。
+      # 消すのは API から
+      overwrite_screenshots: true,
+      app_rating_config_path: RATING_CONFIG,
+      precheck_include_in_app_purchases: false,
+    )
+  end
+
+  desc "審査中のものを取り下げてビルドを差し替え、再提出する"
+  desc "**リジェクトされた後は使わないこと**（`rejected_rebuild` → `rejected_submit`）"
+  lane :resubmit do
+    ensure_release_branch
+    ensure_shippable_tree
+    key = asc_api_key
+    bn = build_ipa
+    upload_to_testflight(
+      api_key: key,
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: false,
+    )
+    deliver(
+      api_key: key,
+      app_identifier: APP_ID,
+      submit_for_review: true,
+      automatic_release: true,
+      force: true,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      build_number: bn.to_s,
+      precheck_include_in_app_purchases: false,
+      # **審査中のものを取り下げてから差し替える。** Resolution Center の
+      # やり取りを残したい時は手で操作すること
+      reject_if_possible: true,
+    )
+    tag_build(os: "ios", build_number: bn)
+  end
+
+  # ── リジェクト後の再審査 ────────────────────────────────
+  #
+  # **`release` では出せない。** `deliver` は **`UNRESOLVED_ISSUES` の
+  # submission を「審査中」とみなす**（`deliver/submit_for_review.rb:33` の
+  # `get_in_progress_review_submission` が `WAITING_FOR_REVIEW` / `IN_REVIEW` /
+  # `UNRESOLVED_ISSUES` を全部拾う）。リジェクトされた submission はこの状態で
+  # 残り続けるので、**`release` はリジェクト後には一度も成功しない**。
+  # 1.0 の 4.1(a) で実際に踏んだのはこれ:
+  #
+  #     Cannot submit for review - A review submission is already in progress
+  #
+  # **`resubmit` はもっと悪い。落ちずに壊す。** あちらは `reject_if_possible:
+  # true` を渡していて、`deliver` はそれを `upload_metadata` より前に実行する
+  # （`runner.rb:58-62`）。`reject_version_if_possible`（`runner.rb:251-269`）は
+  # **同じ `get_in_progress_review_submission`（＝ `UNRESOLVED_ISSUES` も拾う）
+  # を `cancel_submission` する。**
+  #
+  # - cancel が通れば、却下された submission が消えて `create_review_submission`
+  #   が**新しい submission を作る** —— 下で「絶対に避ける」と書いていることが
+  #   そのまま起きる
+  # - cancel が通らなければ、**あの待機ループにタイムアウトが無い**
+  #   （`Waiting for cancellation to take effect...` を 15 秒おきに永久に出す）
+  #
+  # **submission を作り直さないこと。** ASC の画面の「審査内容を更新」は
+  # **却下された項目を `resolved` にして、同じ submission を出し直す**もので、
+  # 新しい submission は作らない。作り直すと Resolution Center のやり取り
+  # （＝ Apple への返信）が別のスレッドに分かれる。
+  #
+  # **返信は提出の前。** Apple は「`until you resubmit to App Review`」まで
+  # しか返信を受け付けない（[Reply to App Review messages]）。API では投稿
+  # できないので、**そこだけ手で貼る**。だから lane を 2 つに割ってある。
+  #
+  #   1. bundle exec fastlane ios rejected_rebuild
+  #   2. **ASC の App Review に返信を貼る**（手作業）
+  #   3. bundle exec fastlane ios rejected_submit
+
+  desc "リジェクト後の再審査 ①: ビルドと掲載情報を差し替える（提出はしない）"
+  desc "例: bundle exec fastlane ios rejected_rebuild"
+  desc "例: bundle exec fastlane ios rejected_rebuild skip_build:true       （いま版に付いているビルドのまま）"
+  desc "例: bundle exec fastlane ios rejected_rebuild skip_screenshots:true （スクショを送らない）"
+  lane :rejected_rebuild do |options|
+    ensure_release_branch
+    ensure_shippable_tree
+    key = asc_api_key
+
+    bn = nil
+    unless options[:skip_build].to_s == "true"
+      bn = build_ipa
+      upload_to_testflight(
+        api_key: key,
+        ipa: ipa_path,
+        # **処理の完了を待つ。** 処理中のビルドは版に選べない（下の
+        # `select_build_for_edit_version!` が `Build.all` で拾えない）
+        skip_waiting_for_build_processing: false,
+      )
+      tag_build(os: "ios", build_number: bn)
+    end
+
+    # **掲載情報とスクショを両方送る。** リジェクトの理由が掲載情報側なら
+    # スクショの差し替えが本体なので、ここは既定で送る（`metadata` lane と
+    # 既定が逆なのは意図的。**口の名前は 3 lane で揃えてある**）
+    deliver(
+      api_key: key,
+      app_identifier: APP_ID,
+      submit_for_review: false,
+      force: true,
+      skip_binary_upload: true,
+      skip_screenshots: options.fetch(:skip_screenshots, false).to_s == "true",
+      overwrite_screenshots: true,
+      app_rating_config_path: RATING_CONFIG,
+      precheck_include_in_app_purchases: false,
+    )
+
+    # **ビルドは自分で版に紐づける。`deliver` はやってくれない。**
+    #
+    # `deliver` が `build_number` を版に反映する唯一の経路は
+    # `submit_for_review.rb:85` の `version.select_build` で、そこへ入るのは
+    # `runner.rb:72` の `submit_for_review if options[:submit_for_review]` だけ。
+    # **この lane は `submit_for_review: false` なので一度も通らない。**
+    # （`build_number` の残る参照は `runner.rb:65` の「`upload_binary` を
+    #  抑止するか」の判定だけで、`skip_binary_upload: true` では二重に無効）
+    #
+    # 紐づけないと `rejected_submit` は**却下されたのと同じバイナリ**を
+    # 再審査に出す。しかも `deliver` のサマリ表には `build_number` が出るので
+    # 紐づいたように見える。
+    select_build_for_edit_version!(build_number: bn)
+
+    # **枚数を数えて、重複を消す。** `overwrite_screenshots` を付けても
+    # 二重化は防げない（`deliver` の再帰アップロードが、処理中で
+    # `source_file_checksum` が nil の間に同じ絵をもう一度キューへ入れる）。
+    # **1.0 では 4 枚が 8 枚になった。2 回とも。**
+    verify_app_screenshots!
+
+    UI.important("ここでは審査に出していません。")
+    UI.important("**先に ASC の App Review に返信を貼ってください**（API では投稿できません）。")
+    UI.important("返信したら: bundle exec fastlane ios rejected_submit")
+  end
+
+  desc "リジェクト後の再審査 ②: 却下された項目を解決して再提出する"
+  desc "**返信を貼ってから叩くこと。** 提出すると返信できなくなる"
+  lane :rejected_submit do
+    ensure_release_branch
+    asc_auth
+    states = Spaceship::ConnectAPI::ReviewSubmission::ReviewSubmissionState
+
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    # **`READY_FOR_REVIEW` も拾う。** 項目の PATCH が通ったあと提出で失敗すると
+    # submission がそちらへ動き、`get_in_progress_review_submission`
+    # （`WAITING_FOR_REVIEW` / `IN_REVIEW` / `UNRESOLVED_ISSUES` だけ）から
+    # 落ちる。**そこで打ち切ると、返信を貼り終えた状態で lane から出せなくなる**
+    sub = app.get_in_progress_review_submission(platform: "IOS") ||
+          app.get_ready_review_submission(platform: "IOS")
+    UI.user_error!("submission が無い。まだ一度も審査に出していないなら `release` です") if sub.nil?
+    unless [states::UNRESOLVED_ISSUES, states::READY_FOR_REVIEW].include?(sub.state)
+      UI.user_error!("submission の状態が #{sub.state} です。" \
+                     "すでに審査に出ているなら何もする必要はありません")
+    end
+
+    items = Spaceship::ConnectAPI::ReviewSubmissionItem.all(
+      review_submission_id: sub.id, includes: "appStoreVersion")
+    UI.user_error!("submission に項目が無い") if items.empty?
+
+    # **版は `submission` の項目から id で引く。フィルタ越しに取らない。**
+    #
+    # `editable_app_store_version!` は `get_edit_app_store_version` を通るが、
+    # **あのフィルタに `READY_FOR_REVIEW` は入っていない**（`app.rb:260-273`）。
+    # 項目の PATCH が通ったあと提出で落ちると版はその状態になるので、
+    # 再実行した時に**版が取れずに「版が見つからない」で詰む** ——
+    # submission 側を広げても、ここで同じ壁に当たる。
+    version_ids = items.map { |i| i.app_store_version&.id }.compact.uniq
+    UI.user_error!("submission が版を指していない") if version_ids.empty?
+    UI.user_error!("submission が複数の版を指している: #{version_ids.join(', ')}") if version_ids.size > 1
+    version = Spaceship::ConnectAPI::AppStoreVersion.get(app_store_version_id: version_ids.first)
+
+    # **提出してよい状態か。** `READY_FOR_REVIEW` は「PATCH は済んで提出が
+    # 残っている」状態なので通す。`INVALID_BINARY` は通さない
+    vstates = Spaceship::ConnectAPI::AppStoreVersion::AppVersionState
+    submittable = [vstates::PREPARE_FOR_SUBMISSION, vstates::REJECTED,
+                   vstates::METADATA_REJECTED, vstates::DEVELOPER_REJECTED,
+                   vstates::READY_FOR_REVIEW]
+    unless submittable.include?(version.app_version_state)
+      UI.user_error!("版 #{version.version_string} が #{version.app_version_state} です。" \
+                     "この状態では提出できません")
+    end
+
+    # **書き込んだ版と、出す版が同じであることを確かめる。**
+    # `rejected_rebuild` と `verify_app_screenshots!` が書くのは
+    # `get_edit_app_store_version`（＝ **バージョン文字列が最大**のもの。
+    # `app.rb:275-277`）で、この submission が指す版とは別物になりうる。
+    # そうなると「新しいほうに書いて、古いほうを出す」が黙って成立する。
+    # **取れない時は比べない** —— 上のとおり `READY_FOR_REVIEW` では nil になる
+    edit_version = app.get_edit_app_store_version
+    if edit_version && edit_version.id != version.id
+      UI.user_error!("submission が指す版（#{version.id}）と、" \
+                     "掲載情報を書いた版（#{edit_version.id}）が違います")
+    end
+
+    # **これが「審査内容を更新」の実体。** `reviewSubmissionItems` を
+    # `resolved: true` に PATCH すると項目が `READY_FOR_REVIEW` になる。
+    # Spaceship に口が無いので素の client を叩く。
+    #
+    # **途中で止まっても、もう一度叩けば続きから進む** —— 残っている
+    # `REJECTED` だけが対象になる
+    client = Spaceship::ConnectAPI.tunes_request_client
+    items.select { |i| i.state == "REJECTED" }.each do |item|
+      body = { data: { type: "reviewSubmissionItems", id: item.id,
+                       attributes: { resolved: true } } }
+      resp = client.patch("v1/reviewSubmissionItems/#{item.id}", body)
+      # **`handle_response` は 2xx かつ body 空で nil を返す**（`api_client.rb:210-213`）。
+      # 204 が返ると `resp.to_models` で落ちるので、状態は表示できなくてもよい扱いに
+      state = (resp&.to_models&.first&.state rescue nil)
+      UI.success("項目を解決: #{item.id}#{state ? " → #{state}" : ''}")
+    end
+
+    # **版が `READY_FOR_REVIEW` になるのを待つ。** ASC の状態反映には遅れが
+    # あり、待たずに出すと `Version is not ready to be submitted yet` で弾かれる。
+    # `deliver` も同じ所を 10 回 × 15 秒待っている（`submit_for_review.rb:50-62`）
+    ready = vstates::READY_FOR_REVIEW
+    10.times do |i|
+      state = Spaceship::ConnectAPI::AppStoreVersion.get(
+        app_store_version_id: version.id).app_version_state
+      break if state == ready
+      UI.user_error!("版が #{state} のままです。ASC で理由を確認してください") if i == 9
+      UI.message("版が #{ready} になるのを待っています（いまは #{state}）...")
+      sleep(15)
+    end
+
+    result = sub.submit_for_review
+    UI.success("再提出しました: #{sub.state} → #{result&.state || '(応答なし)'}")
+  end
+
+  desc "Bundle ID を Developer Portal に登録する（アプリに 1 回だけ）"
+  desc "**やり直しが効かない。** 一度使った Bundle ID は再利用できない"
+  lane :register_app_id do
+    # **`produce` は使えない。** あちらは Developer Portal を Apple ID の
+    # セッションで叩く作りで、ASC の API 鍵を受け付けない
+    # （`Could not find option 'api_key'`）。Spaceship で直接叩く
+    asc_auth
+
+    existing = Spaceship::ConnectAPI::BundleId.find(APP_ID)
+    if existing
+      UI.important("Bundle ID #{APP_ID} は既にあります（id=#{existing.id}）。作り直しません。")
+      bundle_id = existing
+    else
+      bundle_id = Spaceship::ConnectAPI::BundleId.create(
+        # Developer Portal の中だけで使う名前（ストアには出ない）
+        name: "Tonsoku",
+        identifier: APP_ID,
+        platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
+      )
+      UI.success("Bundle ID #{APP_ID} を登録しました（id=#{bundle_id.id}）")
+    end
+
+    # **プッシュを有効にする。** `Runner.entitlements` が `aps-environment` を
+    # 持っているので、Bundle ID 側が無効だと profile と食い違う
+    # **`capabilities` というメソッドは無い。** 取りに行く口は `get_capabilities`
+    # で、属性のほうは `bundle_id_capabilities`（`find` では埋まらない）
+    #
+    # **Associated Domains も有効にする**（gyumesy の lane には無い）。
+    # `Runner.entitlements` が `com.apple.developer.associated-domains`
+    # （ユニバーサルリンク）を持っているので、プッシュと同じ理由で要る
+    types = Spaceship::ConnectAPI::BundleIdCapability::Type
+    enabled = bundle_id.get_capabilities.map(&:capability_type)
+    { types::PUSH_NOTIFICATIONS => "プッシュ",
+      types::ASSOCIATED_DOMAINS => "Associated Domains" }.each do |type, label|
+      if enabled.include?(type)
+        UI.important("#{label}は既に有効です。")
+      else
+        bundle_id.create_capability(type)
+        UI.success("#{label}を有効にしました。")
+      end
+    end
+  end
+
+  desc "App Store Connect のアプリ枠を作る（アプリに 1 回だけ）"
+  desc "**手で作らない。** gyumesy の Issue #7 の「API 非対応で UI のみ」は誤りだった"
+  lane :create_app do
+    asc_auth
+
+    existing = Spaceship::ConnectAPI::App.find(APP_ID)
+    if existing
+      UI.important("ASC のアプリ枠は既にあります（id=#{existing.id} / #{existing.name}）。作り直しません。")
+      next
+    end
+
+    # **Bundle ID が先。** 枠は Bundle ID に紐づくので、無いと作れない
+    bundle_id = Spaceship::ConnectAPI::BundleId.find(APP_ID)
+    UI.user_error!("Bundle ID #{APP_ID} がありません。先に `register_app_id` を実行してください。") unless bundle_id
+
+    Spaceship::ConnectAPI::App.create(
+      name: APP_NAME,
+      # **`version_string` は最初のバージョン。** ここで作った枠は
+      # `PREPARE_FOR_SUBMISSION` で始まる
+      version_string: "1.0",
+      # **SKU は後から変えられない。** bundle id と同じにしておくと迷わない
+      sku: APP_ID,
+      primary_locale: "ja",
+      bundle_id: APP_ID,
+      platforms: ["IOS"],
+    )
+    UI.success("ASC のアプリ枠 #{APP_NAME}（#{APP_ID}）を作りました。")
+  end
+
+  desc "ipa を作るだけ（アップロードしない）"
+  lane :build do
+    build_ipa
+  end
+end
+
+# ── 補助 ───────────────────────────────────────────
+
+
+# **Spaceship を API 鍵で認証する。** `produce` は Apple ID のセッションでしか
+# 動かないので、Developer Portal / ASC を触る lane はこちらを通す。
+def asc_auth
+  Spaceship::ConnectAPI.auth(
+    key_id: ASC_KEY_ID,
+    issuer_id: ASC_ISSUER_ID,
+    filepath: ASC_KEY_PATH,
+  )
+end
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ASC_KEY_ID,
+    issuer_id: ASC_ISSUER_ID,
+    key_filepath: ASC_KEY_PATH,
+  )
+end
+
+# **触ってよい版を取る。**
+#
+# **`get_edit_app_store_version` は「編集できる版」ではない。** フィルタに
+# `WAITING_FOR_REVIEW` が入っている（`app.rb:260-273`）ので、**審査に出した
+# あとも返ってくる**。nil チェックだけでは足りないので状態も見る。
+#
+# 返すのは**バージョン文字列が最大**のもの（同 `:275-277`）で、必ずしも
+# 「いま審査に関係している版」ではない。**それを確かめるのは呼ぶ側の仕事。**
+def editable_app_store_version!(app)
+  version = app.get_edit_app_store_version
+  UI.user_error!("版が見つからない") if version.nil?
+
+  states = Spaceship::ConnectAPI::AppStoreVersion::AppVersionState
+  allowed = [states::PREPARE_FOR_SUBMISSION, states::REJECTED,
+             states::METADATA_REJECTED, states::DEVELOPER_REJECTED,
+             states::INVALID_BINARY]
+  unless allowed.include?(version.app_version_state)
+    UI.user_error!("版 #{version.version_string} が #{version.app_version_state} です。" \
+                   "この状態では触れません（すでに審査に出ていませんか）")
+  end
+  version
+end
+
+# **ビルドを版に紐づける。**
+#
+# `deliver` に任せられない —— あちらが `version.select_build` を呼ぶのは
+# `submit_for_review.rb:85` の 1 箇所だけで、そこへ入るのは
+# `runner.rb:72` の `submit_for_review if options[:submit_for_review]` だけ。
+# **提出しない lane では一度も通らない。**
+#
+# `build_number` を渡しても駄目で、`deliver` 側の残る参照は `runner.rb:65` の
+# 「`upload_binary` を抑止するか」の判定だけ（`skip_binary_upload: true` では
+# 二重に無効）。**サマリ表には出るので、紐づいたように見えてしまう。**
+#
+# **`build_number` が nil なら、いま版に付いているものをそのまま使う。**
+# TestFlight の最新を拾ってはいけない —— それだと `skip_build:true`
+# （＝「ビルドを上げ直さない」）が、**誰かが別に上げた、一度も審査していない
+# バイナリ**に差し替える操作になる。
+def select_build_for_edit_version!(build_number: nil)
+  asc_auth
+  app = Spaceship::ConnectAPI::App.find(APP_ID)
+  version = editable_app_store_version!(app)
+
+  if build_number.nil?
+    current = version.build
+    UI.user_error!("版にビルドが付いていません。`skip_build` を外して上げ直してください") if current.nil?
+    UI.success("ビルドは #{current.version} のまま（`skip_build` なので触らない）")
+    return current
+  end
+
+  # **`VALID` に絞る。** 既定は `PROCESSING,FAILED,INVALID,VALID` なので、
+  # 絞らないと処理中のビルドを選びに行って `select_build` が弾かれる。
+  # `version:` は `preReleaseVersion.version`（＝ `CFBundleShortVersionString`
+  # の `1.0.0`）に当たる。**App Store の版番号（`1.0`）ではない**
+  builds = Spaceship::ConnectAPI::Build.all(
+    app_id: app.id, platform: "IOS", processing_states: "VALID",
+    build_number: build_number.to_s, version: flutter_semver)
+  build = builds.first
+  UI.user_error!("ビルドが見つからない: #{build_number}") if build.nil?
+
+  if version.build&.id == build.id
+    UI.success("ビルド #{build.version} は既に版に紐づいています")
+    return build
+  end
+  version.select_build(build_id: build.id)
+  UI.success("ビルド #{build.version} を版 #{version.version_string} に紐づけました")
+  build
+end
+
+# **送ったスクショを数えて、確実な重複だけ畳む。**
+#
+# `deliver` に `overwrite_screenshots: true` を付けても二重化は防げない。
+# 消すのは手前の 1 回だけ（`delete_screenshots`）で、そのあとの
+# `upload_screenshots` は処理待ちだと自分を呼び直す
+# （`upload_screenshots.rb:165` → `retry_upload_screenshots_if_needed` → `:212`）。
+# 再帰のたびに ASC から一覧を引き直してはいるが、**処理中の
+# `source_file_checksum` が nil** なので重複判定（`:144-145`）が false になり、
+# 同じ絵がもう一度キューに入る。**1.0 では 2 回とも 4 枚が 8 枚になった。**
+#
+# ## 数えるのが主で、消すのは従
+#
+# 前は「同じ名前かつ同じチェックサム」だけを消して、消せなければ緑で
+# 「重複なし」と言っていた。**それでは畳めない時に人の目より弱くなる** ——
+# 上のとおり**二重化が生まれるのはチェックサムが nil の窓**なので、いちばん
+# 起きる形をちょうど取りこぼす。
+#
+# なので **1 スロット（`file_name`）に 2 枚以上あれば重複**として数え、
+#
+# - **中身が同じと確認できた時だけ消す**（チェックサムが揃っていて nil でない）
+# - 確認できなければ**残して止める**。古い版が残っている場合も同じで、
+#   それは「送り直しが効いていない」印なので黙って消してはいけない
+#
+# 最後に**手元の枚数と突き合わせる**。送られなかった 1 枚は重複では拾えない。
+def verify_app_screenshots!
+  asc_auth
+  app = Spaceship::ConnectAPI::App.find(APP_ID)
+  # **握り潰さない。** 版が取れなければ止める —— 素通りすると、確認して
+  # いないのに `rejected_rebuild` の「返信を貼ってください」まで進む
+  version = editable_app_store_version!(app)
+
+  removed = 0
+  unresolved = []
+  names = []
+  version.get_app_store_version_localizations.each do |loc|
+    (loc.get_app_screenshot_sets || []).each do |set|
+      shots = (set.app_screenshots || []).compact
+      by_name = shots.group_by(&:file_name)
+      kept_removed = 0
+      by_name.each do |name, group|
+        names << name
+        next if group.size <= 1
+        sums = group.map(&:source_file_checksum)
+        if sums.uniq.size == 1 && !sums.first.nil?
+          # 中身が同じと確認できた。1 枚残して消す
+          group.sort_by { |s| s.id.to_s }.drop(1).each do |shot|
+            Spaceship::ConnectAPI.delete_app_screenshot(app_screenshot_id: shot.id)
+            removed += 1
+            kept_removed += 1
+          end
+        else
+          unresolved << "#{loc.locale} / #{set.screenshot_display_type} / #{name}: " \
+                        "#{group.size} 枚（checksum #{sums.map { |c| c || 'nil' }.uniq.join(', ')}）"
+        end
+      end
+      # **削除後の枚数を出す。** `shots` は削除前の配列なので、畳んだ set では
+      # 実際より多く出てしまう
+      UI.message("#{loc.locale} / #{set.screenshot_display_type}: " \
+                 "#{by_name.size} スロット / #{shots.size - kept_removed} 枚")
+    end
+  end
+  UI.important("重複を #{removed} 枚消しました") unless removed.zero?
+
+  unless unresolved.empty?
+    UI.user_error!("中身を確認できない重複が残っています。ASC で見てください:\n  " +
+                   unresolved.join("\n  "))
+  end
+
+  # **手元と枚数を突き合わせる。** 重複を畳んだだけでは「1 枚送られなかった」を
+  # 拾えない。ASC 側の `file_name` は手元のファイル名そのままなので直接比べる。
+  #
+  # **掲載言語を増やしたらここも直すこと。** いまは両側ともロケールを平らに
+  # した basename の集合なので、**`ja` が埋めてしまって別の言語の欠落を
+  # 見逃す**（`ios/fastlane/screenshots/README.md` が「増やすならセットで要る」
+  # と書いている、まさにその抜け）。ロケールごとに突き合わせる形に変える
+  local = Dir[File.join(REPO_ROOT, "ios/fastlane/screenshots/*/*.png")].map { |f| File.basename(f) }
+  missing = local.uniq - names.uniq
+  extra = names.uniq - local.uniq
+  unless missing.empty? && extra.empty?
+    UI.user_error!("手元と ASC でスクショが食い違っています。" \
+                   "送られていない: #{missing.empty? ? 'なし' : missing.join(', ')} / " \
+                   "手元に無い: #{extra.empty? ? 'なし' : extra.join(', ')}")
+  end
+  UI.success("スクショ #{names.uniq.size} 枚、手元と一致（重複なし）")
+end
+
+
+# **名前を決め打ちしない。** ipa の名前は Xcode の product 名から決まるので、
+# `pubspec.yaml` の `name` とも一致するとは限らない。出来たものを拾う。
+def ipa_path
+  found = Dir[File.join(REPO_ROOT, "build/ios/ipa/*.ipa")]
+  UI.user_error!("ipa が見つからない（build/ios/ipa/）") if found.empty?
+  UI.user_error!("ipa が複数ある: #{found.join(', ')}") if found.size > 1
+  found.first
+end
+
+def build_ipa
+  bn = build_number
+  Dir.chdir(REPO_ROOT) do
+    sh("flutter", "clean")
+    sh("flutter", "pub", "get")
+    # **`with_unbundled_env` で包む。** `flutter build` は中で CocoaPods
+    # （Homebrew の ruby）を呼ぶので、bundler の環境変数が漏れると pod が壊れる
+    Bundler.with_unbundled_env do
+      sh("flutter", "build", "ipa", "--release",
+         "--build-number=#{bn}",
+         "--export-options-plist=ios/ExportOptions.plist")
+    end
+  end
+  bn
+end
+
+
+

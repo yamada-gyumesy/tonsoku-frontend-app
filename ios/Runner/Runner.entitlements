@@ -5,13 +5,23 @@
 	<!-- APNs の環境。**development のままだと本番のトークンが取れない**が、
 	     App Store / TestFlight 配布時は Xcode が自動で production に差し替える。
 	     ここを production 固定にすると開発ビルドで通知が来なくなる
-	     （gyumesy-frontend-app と同じ）。
-
-	     **ユニバーサルリンク（`com.apple.developer.associated-domains`）はまだ
-	     置かない。** リリース整備の Issue（#9）で、web 側の
-	     apple-app-site-association と対にして足す（片側だけでは成立しない）。
-	     受け口は通知のタップと同じ `deepLinkTarget` に合流させる -->
+	     （gyumesy-frontend-app と同じ）。 -->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- **ユニバーサルリンク。** Safari や LINE で ton-soku.com のリンクを押した時に
+	     ブラウザではなくアプリを開く。OS が
+	     `https://ton-soku.com/.well-known/apple-app-site-association` を取りに行き、
+	     そこに載っている appID（`29LP73942P.com.gyumesy.tonsoku`）と照合する。
+	     **web 側のファイルとこの entitlement は対**で、片側だけでは成立しない
+	     （web に置く中身は `docs/deep-links.md`）。
+
+	     **Bundle ID 側でも Associated Domains を有効にすること。** entitlement に
+	     あるのに Bundle ID 側が無効だと、profile と食い違って署名で落ちる
+	     （`fastlane ios register_app_id` がプッシュと一緒に有効にする）。
+	     受け口は `deepLinkTarget`（通知のタップと同じ関数に合流させる） -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:ton-soku.com</string>
+	</array>
 </dict>
 </plist>

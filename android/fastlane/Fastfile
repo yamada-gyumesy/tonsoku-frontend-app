@@ -1,0 +1,183 @@
+# とん速 Android の配信 lane。
+#
+# **gyumesy-frontend-app の `android/fastlane/Fastfile` を写した**（lane の構成・
+# 見張り・コメントはそのまま。アプリ固有の値は `Appfile` にしか無い）。
+# コメントの「1.0.1 で実際にそうなった」などは gyumesy の実測。
+#
+#   bundle exec fastlane android alpha     # ビルド → クローズドテスト
+#   bundle exec fastlane android promote version_code:NNN
+#   bundle exec fastlane android metadata  # 掲載情報・画像だけ
+#
+# **クローズドテストを主経路にする**（内部テストではない。個人開発リリースで、
+# `gyumeshi-rader-app` と同じフロー）。
+#
+# 認証情報はリポジトリに置かない。**共用の** `~/.config/gyumesy/play-console.json` を
+# `Appfile` から参照する（`docs/secrets.md`）。
+
+require_relative "../../fastlane/shared"
+
+default_platform(:android)
+
+platform :android do
+  desc "ビルド → Google Play クローズドテスト"
+  desc "**初回公開前は `draft:true`。** Play は draft のアプリに"
+  desc "`completed` のリリースを作らせない（`Only releases with status draft`）"
+  lane :alpha do |options|
+    ensure_release_branch
+    ensure_shippable_tree
+    ensure_release_signing
+    bn = build_aab
+    # **初回公開前のアプリは draft でしか上げられない。**
+    # 一度公開したあとは `completed`（そのままテスターへ配られる）。
+    # 既定は `completed` で、初回だけ `draft:true` を渡す
+    draft = options[:draft].to_s == "true"
+    upload_to_play_store(
+      track: "alpha",
+      aab: aab_path,
+      release_status: draft ? "draft" : "completed",
+      # **掲載情報はここでは上げない。** 配信のたびに上書きすると、
+      # ストア側で直した文言が黙って戻る（更新は `metadata` lane で明示的に）
+      skip_upload_metadata: true,
+      # **変更内容（`changelogs/`）だけは上げる。** ここで作るのは**新しい
+      # リリース**なので、上書きする相手が居ない —— 切っていると
+      # **Play にだけ変更内容が無いまま配られる**（1.0.1 で実際にそうなった。
+      # iOS は `deliver` が `metadata/` を読むので入り、片側だけ欠けた）。
+      # `default.txt` が使われる（版コードは epoch で採番するので
+      # `<versionCode>.txt` は置けない）
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+    tag_build(os: "android", build_number: bn)
+  end
+
+  desc "クローズドテストのビルドを本番へ昇格（再ビルドしない）"
+  desc "例: bundle exec fastlane android promote version_code:1782217820"
+  lane :promote do |options|
+    # **審査へ出す口にも見張りを付ける。** 出荷の瞬間はここ
+    ensure_release_branch
+    raw = options[:version_code] || UI.user_error!("version_code:<昇格する versionCode> が要る")
+    # **`to_i` に素で通さない。** 綴り違いや空文字が 0 になって、
+    # 「存在しない versionCode を昇格」という無言の失敗になる
+    unless raw.to_s =~ /\A\d+\z/
+      UI.user_error!("version_code は数字で指定してください（受け取った値: #{raw.inspect}）")
+    end
+    vc = raw.to_i
+    from = options[:from] || "alpha"
+    to   = options[:to]   || "production"
+    # **`track` と `track_promote_to` を両方渡す。** `track` + `version_code` だけだと
+    # supply が「AAB 無しのアップロード」と解釈して黙って何もしない（exit 0 のまま）
+    upload_to_play_store(
+      track: from,
+      track_promote_to: to,
+      version_code: vc.to_i,
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      # **本番は draft で止める。** 初回公開前は draft が必須で、公開後も
+      # draft にしておけば「審査・公開は手動」になり自動公開の事故が無い。
+      #
+      # **効いているのは `track_promote_release_status` だけ。** `release_status`
+      # は「新しい apk/aab を上げる時」のもので、この lane は
+      # `skip_upload_aab: true` なので働かない。**消さずに残しているのは、
+      # 次に触る人が「効いていないほう」を消して「効いているほう」を残すため
+      # ではなく、逆をやらないため** —— 消すなら `release_status` のほう
+      release_status: to == "production" ? "draft" : "completed",
+      track_promote_release_status: to == "production" ? "draft" : "completed",
+    )
+  end
+
+  desc "掲載情報・スクリーンショットだけアップロード"
+  desc "例: bundle exec fastlane android metadata track:alpha"
+  desc "例: bundle exec fastlane android metadata track:alpha changelogs:true  （変更内容も送る）"
+  lane :metadata do |options|
+    # **iOS と同じ理由で見張る**（`ios/fastlane/Fastfile` の `metadata`）。
+    # 掲載情報も出荷物で、supply が読むのは作業ツリーの `metadata/`
+    ensure_release_branch
+    ensure_shippable_tree
+    # **メタデータだけでも fastlane はトラックとリリースを要求する。**
+    # `perform_upload_meta` が `fetch_track_and_release!` を必ず通り、
+    # `skip_upload_changelogs: true` でも手前で落ちる（uploader.rb:99）。
+    # しかも版の除外が `version_codes.to_s`（配列）と書かれていて nil を弾けないので、
+    # **version_code を渡さないと `''` を探しに行って必ず失敗する**。
+    # 掲載情報自体はトラックに紐づかないので、**リリースがあるトラックを借りる**。
+    track = options[:track] || "alpha"
+    version_code = options[:version_code] ||
+                   google_play_track_version_codes(track: track).first
+    UI.user_error!("#{track} トラックにリリースがありません") unless version_code
+
+    upload_to_play_store(
+      track: track,
+      version_code: version_code,
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      # **借りたトラックの変更履歴は既定で書き換えない。** 掲載情報を直すたびに
+      # 配信中のリリースノートが上書きされるため。
+      # **`changelogs:true` で明示した時だけ送る** —— 上げ済みのリリースの
+      # 変更内容を後から直す口がここしか無い（`alpha` を叩き直すと版が変わる）
+      skip_upload_changelogs: options.fetch(:changelogs, false).to_s != "true",
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      sync_image_upload: true,
+    )
+  end
+
+  desc "AAB を作るだけ（アップロードしない）"
+  desc "**署名の見張りを通さない。** 手元で中身を確かめるためのもので、配らない"
+  lane :build do
+    build_aab
+  end
+end
+
+# ── この platform だけの補助 ────────────────────────
+
+def aab_path
+  found = Dir[File.join(REPO_ROOT, "build/app/outputs/bundle/release/*.aab")]
+  UI.user_error!("aab が見つからない（build/app/outputs/bundle/release/）") if found.empty?
+  UI.user_error!("aab が複数ある: #{found.join(', ')}") if found.size > 1
+  found.first
+end
+
+def build_aab
+  bn = build_number
+  Dir.chdir(REPO_ROOT) do
+    # **必ず clean する。** 差分ビルドだとソースの変更が aab に入らないまま
+    # versionCode だけ上がることがある
+    sh("flutter", "clean")
+    sh("flutter", "pub", "get")
+    sh("flutter", "build", "appbundle", "--release", "--build-number=#{bn}")
+  end
+  bn
+end
+
+# **debug 鍵のまま配らない。**
+#
+# `build.gradle.kts` は鍵が無ければ debug 鍵に落とす（鍵を持たない人でも
+# ビルドできるように）。**その判定は無言**なので、`sync-secrets.sh download` を
+# 忘れた環境で `alpha` を叩くと、**debug 鍵の AAB がそのまま Play に上がる**。
+# 初回アップロードなら、それが署名鍵として確定してしまう。
+#
+# **`storeFile` の有無だけでは足りない。** `build.gradle.kts` の判定と同じ穴
+# （ファイルごと無い / 空 / 綴り違い）を塞ぐため、4 つ全部と実体を見る。
+def ensure_release_signing
+  props = File.join(REPO_ROOT, "android/key.properties")
+  unless File.exist?(props)
+    UI.user_error!(
+      "android/key.properties がありません。**debug 鍵のまま配ることになります。**\n" \
+      "bash scripts/sync-secrets.sh download",
+    )
+  end
+  values = File.readlines(props).grep(/=/).to_h { |l| l.strip.split("=", 2) }
+  missing = %w[storeFile storePassword keyAlias keyPassword].reject { |k| values[k].to_s != "" }
+  unless missing.empty?
+    UI.user_error!("android/key.properties に #{missing.join(', ')} がありません。")
+  end
+  # `storeFile` は android/app から見た相対パス
+  store = File.expand_path(values["storeFile"], File.join(REPO_ROOT, "android/app"))
+  UI.user_error!("署名鍵が見つかりません: #{store}") unless File.exist?(store)
+end
+

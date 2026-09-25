@@ -1,0 +1,261 @@
+# ユニバーサルリンク / App Links
+
+web（`https://ton-soku.com`）のリンクを踏んだ時に、ブラウザではなくアプリを開く。
+**アプリ側とweb側の 2 か所で対になって初めて成立する**（片側だけでは何も起きない）。
+
+| | アプリ側（このリポジトリ） | web 側（tonsoku-frontend-web） |
+|---|---|---|
+| iOS | `ios/Runner/Runner.entitlements` の `applinks:ton-soku.com` | `/.well-known/apple-app-site-association` |
+| Android | `android/app/src/main/AndroidManifest.xml` の `autoVerify` の intent-filter | `/.well-known/assetlinks.json` |
+
+**受け口は通知のタップと同じ `deepLinkTarget` 1 本**（`lib/features/notifications/domain/deep_link.dart`。
+リンクの受け取りは `lib/app.dart` の `_listenAppLinks`）。gyumesy-frontend-app が #90 で直した形を
+写している（最後に踏まれた 1 本を `getLatestLink` で取り直す・Flutter 内蔵のディープリンクを切る）。
+
+## 名乗る面
+
+**`deepLinkTarget` がアプリ内で開ける面だけ。** 開けない面を名乗ると、Android では外部ブラウザへ
+逃がした 1 本が自分へ戻って**際限なく往復する**（gyumesy の実測: 2000 回超の自己起動で ANR）。
+
+| 面 | 名乗る | 理由 |
+|---|---|---|
+| `/`・`/articles`・`/articles/{slug}` | ✅ | ホーム・記事一覧・記事 |
+| `/coupon`・`/calendar`・`/ranking`・`/notifications` | ✅ | クーポンはタブ、残りはメニューから開く画面 |
+| `/category/{slug}` | ❌ | **とん速のホームにはカテゴリのタブが無い**（gyumesy は名乗っている） |
+| `/about`・`/legal/*` | ❌ | アプリは web で表示する方針（メニューから web を開く） |
+| RSS・sitemap・`/api/*`・アセット | ❌ | HTML の面ではない |
+
+ロケール（`/en`・`/zh`）も同じ規則。**末尾スラッシュの有無で 2 本ずつ**並べる
+（web は常に末尾スラッシュ付きで出すが、スラッシュ無しで貼られた URL も拾う）。
+
+**面を増やす時は 3 か所を一緒に直す**: `deepLinkTarget`・`AndroidManifest.xml`・web の AASA。
+Android 側のずれは `test/features/notifications/deep_link_test.dart` が止めるが、
+**web の AASA はこのリポジトリのテストでは見られない。**
+
+## web に置くもの
+
+**置くのは web のセッションの仕事**（このリポジトリからは web を触らない）。gyumesy-frontend-web は
+AASA を `scripts/prepare-locale-assets.mts` で `ROUTES` とロケール表から生成している
+（`APP_LINK_ROUTES` で面ごとに `exact` / `prefix` / `none` を決め、ページを足した人が必ず
+決める形）。**とん速の web も同じ作りにするのがよい**（手書きだとロケールを増やした時に漏れる）。
+
+### `/.well-known/apple-app-site-association`
+
+- **拡張子なしのファイル名**で置き、**`Content-Type: application/json`** で返す。**リダイレクト不可**
+  （Cloudflare Pages は拡張子から Content-Type を決めるので、`public/_headers` で明示する。
+  gyumesy-frontend-web の `public/_headers` と同じ）
+- `components` は**先に一致したものが勝つ**。ここは名乗るものだけを並べる allowlist なので、
+  載せていない URL は一致せず名乗られない（exclude は要らない）
+- `comment` は Apple が用意している説明用のキー。Apple の CDN を通るので ASCII で書く
+- **`/articles/*` は深さを問わない**（`/articles/x/y/` も名乗る）。iOS では開けない面を名乗っても
+  往復しない（アプリ内のブラウザで開くだけ）ので、gyumesy と同じ形でよい
+
+```json
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "29LP73942P.com.gyumesy.tonsoku"
+        ],
+        "components": [
+          {
+            "/": "/",
+            "comment": "home (ja)"
+          },
+          {
+            "/": "/calendar",
+            "comment": "calendar (ja)"
+          },
+          {
+            "/": "/calendar/",
+            "comment": "calendar (ja)"
+          },
+          {
+            "/": "/coupon",
+            "comment": "coupon (ja)"
+          },
+          {
+            "/": "/coupon/",
+            "comment": "coupon (ja)"
+          },
+          {
+            "/": "/ranking",
+            "comment": "ranking (ja)"
+          },
+          {
+            "/": "/ranking/",
+            "comment": "ranking (ja)"
+          },
+          {
+            "/": "/notifications",
+            "comment": "notifications (ja)"
+          },
+          {
+            "/": "/notifications/",
+            "comment": "notifications (ja)"
+          },
+          {
+            "/": "/articles",
+            "comment": "articleBase (ja)"
+          },
+          {
+            "/": "/articles/*",
+            "comment": "articleBase (ja)"
+          },
+          {
+            "/": "/en",
+            "comment": "home (en)"
+          },
+          {
+            "/": "/en/",
+            "comment": "home (en)"
+          },
+          {
+            "/": "/en/calendar",
+            "comment": "calendar (en)"
+          },
+          {
+            "/": "/en/calendar/",
+            "comment": "calendar (en)"
+          },
+          {
+            "/": "/en/coupon",
+            "comment": "coupon (en)"
+          },
+          {
+            "/": "/en/coupon/",
+            "comment": "coupon (en)"
+          },
+          {
+            "/": "/en/ranking",
+            "comment": "ranking (en)"
+          },
+          {
+            "/": "/en/ranking/",
+            "comment": "ranking (en)"
+          },
+          {
+            "/": "/en/notifications",
+            "comment": "notifications (en)"
+          },
+          {
+            "/": "/en/notifications/",
+            "comment": "notifications (en)"
+          },
+          {
+            "/": "/en/articles",
+            "comment": "articleBase (en)"
+          },
+          {
+            "/": "/en/articles/*",
+            "comment": "articleBase (en)"
+          },
+          {
+            "/": "/zh",
+            "comment": "home (zh)"
+          },
+          {
+            "/": "/zh/",
+            "comment": "home (zh)"
+          },
+          {
+            "/": "/zh/calendar",
+            "comment": "calendar (zh)"
+          },
+          {
+            "/": "/zh/calendar/",
+            "comment": "calendar (zh)"
+          },
+          {
+            "/": "/zh/coupon",
+            "comment": "coupon (zh)"
+          },
+          {
+            "/": "/zh/coupon/",
+            "comment": "coupon (zh)"
+          },
+          {
+            "/": "/zh/ranking",
+            "comment": "ranking (zh)"
+          },
+          {
+            "/": "/zh/ranking/",
+            "comment": "ranking (zh)"
+          },
+          {
+            "/": "/zh/notifications",
+            "comment": "notifications (zh)"
+          },
+          {
+            "/": "/zh/notifications/",
+            "comment": "notifications (zh)"
+          },
+          {
+            "/": "/zh/articles",
+            "comment": "articleBase (zh)"
+          },
+          {
+            "/": "/zh/articles/*",
+            "comment": "articleBase (zh)"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### `/.well-known/assetlinks.json`
+
+**署名の指紋はまだ無い**（Android のアップロード鍵をまだ作っていない。`docs/setup-app.md`）。
+鍵ができたら `<…>` を差し替える。**指紋は 2 つ要る**:
+
+- **アップロード鍵**（`keytool -list -v -keystore android/keystore/upload.jks -alias upload` の SHA256）
+  —— 手元で入れた端末・クローズドテストの前に手で入れた端末
+- **Play のアプリ署名鍵**（Play Console →「アプリの完全性」→「アプリの署名」の SHA-256）
+  —— **ストアから入れた端末はこちらで署名されている。** これが無いと、ストア版だけ
+  リンクがブラウザで開く
+
+```json
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.gyumesy.tonsoku",
+      "sha256_cert_fingerprints": [
+        "<Play のアプリ署名鍵の SHA-256>",
+        "<アップロード鍵の SHA-256>"
+      ]
+    }
+  }
+]
+```
+
+**指紋が入るまで web に置かない**（置き場所だけ先に作ると、Android は検証に失敗して
+「アプリで開くか」を毎回聞く形に落ちる。置かないのと同じで害は無いが、「置いたのに効かない」
+と誤読される）。**AASA のほうは今置いてよい**（appID は確定している）。
+
+## 確かめ方
+
+**この形の誤りはビルドも analyze もテストも通る。** 実機（またはエミュレータ /
+シミュレータ）で踏んで確かめる。
+
+```bash
+# Android: App Links の検証状態
+adb shell pm get-app-links com.gyumesy.tonsoku
+# Android: リンクを踏んだのと同じ intent を投げる
+adb shell am start -a android.intent.action.VIEW -d "https://ton-soku.com/articles/<slug>/"
+# iOS シミュレータ: リンクを開く
+xcrun simctl openurl booted "https://ton-soku.com/articles/<slug>/"
+```
+
+- **iOS は AASA を Apple の CDN 越しに取る**（`https://app-site-association.cdn-apple.com/a/v1/ton-soku.com`）。
+  web に置いてから反映まで時間がかかる
+- 確かめる面: 記事・`/en/` 付きの記事・カレンダー（`#category=campaign` 付き）・通知設定・
+  **名乗っていない面（`/about/`・`/category/<slug>/`）がブラウザで開くこと**
+- **背面から踏む**: 記事 A を開いて背面へ → 記事 B のリンクを踏む → **B が開くこと**
+  （gyumesy で A が開いていた不具合。`_syncLatestLink` が直している）

@@ -1,0 +1,6 @@
+# **Play のサービスアカウントは共用**（gyumesy-frontend-app・gyumeshi-rader-app と
+# 同じ実体。`docs/secrets.md`）。**このアプリへの権限は Play Console で別に
+# 付けること** —— 付いていないと `supply` が `Invalid request` で弾かれ、
+# 「アプリが無い」のか「権限が無い」のか API からは区別できない（`docs/setup-app.md`）
+json_key_file(File.expand_path("~/.config/gyumesy/play-console.json"))
+package_name("com.gyumesy.tonsoku")

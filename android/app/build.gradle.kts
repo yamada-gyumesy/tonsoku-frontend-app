@@ -1,3 +1,18 @@
+import java.util.Properties
+
+// **リリース署名の鍵。** `android/key.properties` はリポジトリに入れない
+// （`.gitignore` 済み。実体は Google Drive と同期する。`docs/secrets.md` 参照。
+// gyumesy-frontend-app と同じ作り）。
+//
+// **無い時は debug 鍵のままにする。** ここで落とすと、鍵を持っていない人が
+// デバッグビルドすらできなくなる。**debug 鍵のまま配らないよう、配信の lane
+// （`android/fastlane/Fastfile` の `ensure_release_signing`）が見張っている。**
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+val hasReleaseKey = keystoreProperties.getProperty("storeFile") != null
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -31,11 +46,26 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // **鍵が無ければ debug のまま。** 鍵を持っていない人でも
+            // `flutter run --release` が通るようにする（配信は鍵を持つ人だけ）
+            signingConfig = if (hasReleaseKey) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
 
             // **`shrinkResources` を入れる時は通知アイコンを守ること**（gyumesy の注記）。
             // R8 の資源収縮は `ic_stat_notification` を「参照されていない」と
