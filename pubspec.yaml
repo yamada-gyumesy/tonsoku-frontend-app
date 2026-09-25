@@ -79,6 +79,10 @@ dev_dependencies:
   # Testing
   mocktail: ^1.0.5
 
+  # ランチャーアイコンの生成（`dart run flutter_launcher_icons`）。
+  # 設定は末尾の `flutter_launcher_icons:` セクション
+  flutter_launcher_icons: ^0.14.4
+
 flutter:
   uses-material-design: true
 
@@ -117,3 +121,40 @@ flutter:
           weight: 400
         - asset: assets/fonts/NotoSansJP-Bold.ttf
           weight: 700
+
+# アプリアイコン。**元は web の `public/icon.svg`**（赤い丸＋白い字の 1 枚）。
+# **作りは web の `scripts/lib/icons.ts` に揃える**（web のユーザーの方針で、
+# アプリのアイコンもこの意匠をそのまま使う）。`assets/icon/` の 2 枚の作り方は README。
+flutter_launcher_icons:
+  android: true
+  ios: true
+  # **iOS は白いタイルの中央に、一辺の 0.805 の丸**（web の `apple-touch-icon.png` と
+  # 同じ。`IOS_CIRCLE_RATIO`）。**四隅の白がはっきり出る所まで引く** ―― 丸を
+  # 目いっぱい（1.0）にすると iOS の角丸に丸の縁が切られ、web でも「窮屈」と
+  # 指摘されて 0.805 にした（アプリでも一度 1.0 で作り、ユーザーに却下された）。
+  # **丸は SVG のものを使わず描き直す**（SVG の丸は下と右が数単位届いておらず、
+  # 白地だと縁に白い線が残る。web の注記）
+  #
+  # **これが使われるのは iOS 25 以前だけ。** iOS 26 以降は
+  # `ios/Runner/AppIcon.icon`（Icon Composer の形式）が使われる。この形式の
+  # アイコンを置かないと、iOS 26 は 1 枚絵のアイコンに**既定のガラスの加工を
+  # 重ね**、赤い丸が透けて下が白っぽくぼやける（実機で出た。白地が大半の
+  # ギュメシーでは目立たない）。**AppIcon.icon はガラス・透け・ハイライト・
+  # 影をすべて切ってあり**、この 1 枚と同じ絵がそのまま出る（README）
+  image_path: "assets/icon/icon.png"
+  # iOS は透過を許さない（App Store の検証で弾かれる）
+  remove_alpha_ios: true
+  # **Android は丸い印だけ**（ユーザーの指示。白いタイルを敷かない）。
+  # アダプティブに対応しない古い端末の `ic_launcher.png` は、角が透明な丸ごとの印
+  # （web の `plain`。`icon-512x512.png` と同じ作り）
+  image_path_android: "assets/icon/icon_android.png"
+  # **Android のアダプティブアイコンは、赤の地に字だけを置く**（web の maskable と
+  # 同じ考え方。web のユーザーの判断「Android は丸なんだからロゴをそのまま
+  # アイコンに」「白枠を付けるな」）。前景は丸を落とした字だけで、丸は地の赤が担う。
+  # 前景のキャンバス（108dp）のうち見える窓は 72dp（66.7%）。**字が窓のふちに
+  # わずかに届く大きさ**にする（web の `MASKABLE_VISIBLE_CIRCLE` と同じく、
+  # 隙間が空くより髪の毛ほど削れるほうが元の絵に近い）。inset 16% で字の外縁は
+  # 窓の 1.02 倍（17% だと 0.99 倍で赤い輪が残る）
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  adaptive_icon_background: "#A7232A"
+  adaptive_icon_foreground_inset: 16
