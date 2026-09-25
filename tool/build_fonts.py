@@ -11,6 +11,12 @@ web（tonsoku-frontend-web）が npm で持っている配布物から作る。*
 - Klee One: `@expo-google-fonts/klee-one` の `KleeOne_600SemiBold.ttf`（Google Fonts・OFL）
 - Noto Sans JP: `@fontsource/noto-sans-jp` の `-japanese-` woff2 を素の TTF に戻す
 
+## Klee One の太さの値を書き換える理由
+
+**画面は SemiBold 1 つで描き、太字は縁取りで付ける**（web の判断）。アプリでは
+Flutter の合成太字を縁取りの代わりにするため、ファイル自身の太さ（OS/2 の
+usWeightClass）を 600 → 400 に書き換えている（理由は `pubspec.yaml` の `fonts:`）。
+
 ## Klee One を切り出す理由と範囲
 
 web はビルド時に全ページの字が分かるので「使っている字だけ」に切り出しているが、
@@ -77,6 +83,12 @@ def main() -> int:
     subsetter = subset.Subsetter(options)
     subsetter.populate(unicodes=sorted(wanted))
     subsetter.subset(klee)
+    # **ファイル自身の太さを 400 にする。** Flutter は「要求した太さがファイルの
+    # 太さより 200 以上重い」時にだけ合成太字を掛けるので、600 のままだと
+    # `FontWeight.bold`（700）で太くならない。web は太字を縁取り
+    # （`--bold-stroke: 0.035em`）で付けていて、合成太字の量（字の大きさの
+    # 1/24〜1/32）がそれとほぼ同じになる。字形は SemiBold のまま変わらない
+    klee["OS/2"].usWeightClass = 400
     target = out / "KleeOne-SemiBold.ttf"
     klee.save(target)
     klee.close()

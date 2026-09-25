@@ -13,7 +13,11 @@ import 'package:tonsoku/core/theme/app_colors.dart';
 ///
 /// **Klee One は SemiBold（600）1 つだけを同梱する**（web も画面は 600 だけで描く。
 /// Regular は細すぎて本文が読めなかった）。`FontWeight.w400` を指定しても
-/// 600 で描かれる。
+/// SemiBold で描かれる。
+///
+/// **太字（`FontWeight.bold`）には縁取りに相当する合成太字が掛かる**（web の
+/// `--bold-stroke`）。仕掛けは `pubspec.yaml` の `fonts:` の注記（SemiBold の
+/// ファイルの太さを 400 に書き換えている。`tool/build_fonts.py`）。
 ///
 /// 同梱の範囲と作り方は `tool/build_fonts.py`。
 abstract final class AppTheme {

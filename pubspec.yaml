@@ -72,10 +72,21 @@ flutter:
     # 実体は web が npm で持っている Google Fonts の TTF を、
     # gyumesy の Noto と同じ字の集合（6,886 字）に切り出したもの。
     # 生成手順は tool/build_fonts.py
+    #
+    # **太字は縁取りで付ける**（web の `--bold-stroke: 0.035em`）。Flutter の
+    # テキストは「要求した太さが**フォントファイル自身の太さ**（OS/2 の
+    # usWeightClass）より 200 以上重く、かつ 600 以上」の時に合成太字（輪郭を
+    # 字の大きさの 1/24〜1/32 だけ太らせる。web の縁取りとほぼ同じ量）を掛ける。
+    # そこで **SemiBold の usWeightClass を 400 に書き換えて同梱している**
+    # （tool/build_fonts.py）。`FontWeight.bold`（700）の所にだけ太字が掛かり、
+    # 本文（400）はそのまま SemiBold で描かれる。
+    # **ここの `weight:` を変えても効かない** ―― 判定が見るのはファイルの値で、
+    # 600 のままだと 700 との差が 100 になり、太字が本文と同じ太さに戻る
+    # （実際にそうなっていた）
     - family: Klee One
       fonts:
         - asset: assets/fonts/KleeOne-SemiBold.ttf
-          weight: 600
+          weight: 400
     # **英語・中国語は Noto Sans JP**（web と同じ。中国語の簡体字で
     # 収録外の字は OS の書体へ落ちる）。gyumesy-frontend-app と同じ実体
     - family: Noto Sans JP
