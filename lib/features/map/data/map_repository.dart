@@ -41,7 +41,25 @@ class MapRepository {
 
   /// **品は配列が空でも正常**（店舗限定が無い週）。`decodeJsonList` は空配列を
   /// そのまま空で返す（例外にするのは「要素があるのに 1 件も読めない」時だけ）。
-  static final _limited = decodeJsonList(LimitedMenu.fromJson);
+  static List<LimitedMenu> _limited(String body) => [
+    for (final m in decodeLimitedAll(body))
+      if (isShown(m)) m,
+  ];
+
+  /// 配信をそのまま読む（絞る前。鍵の対応を確かめるテスト用）。
+  static final decodeLimitedAll = decodeJsonList(LimitedMenu.fromJson);
+
+  /// 地図に出す品か。**次の 2 つは出さない**（どちらもユーザーの判断）。
+  ///
+  /// - **全店で終売した品**（[LimitedMenu.endedAt] が入っている）。配信は
+  ///   14 日間残すが、もう買えない品で絞り込んでも行き先が無い。店ごとの終売
+  ///   （まだどこかで売っている品の、一部の店の終売）は出す
+  /// - **「単品◯◯」**。松のやは同じ品を「◯◯定食」と「単品◯◯」の 2 項目で出し、
+  ///   取扱店も同じ（tonsoku-backend-batch の `app/articles/context.py` の
+  ///   `_NAME_NOISE`）。両方並べると同じ品のチップが 2 つ並び、店の詳細にも
+  ///   同じ品が 2 行出るだけになる
+  static bool isShown(LimitedMenu m) =>
+      m.endedAt == null && !m.name.startsWith('単品');
 
   /// テストから本文を読むための口（fixtures を同じ規則で読む）。
   static List<Shop> decodeShops(String body) => _shops(body);

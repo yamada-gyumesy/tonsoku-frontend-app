@@ -52,7 +52,7 @@ void main() {
   });
 
   test('店舗限定の品を読める（全店で終売した品も）', () {
-    final menus = MapRepository.decodeLimited(limitedBody);
+    final menus = MapRepository.decodeLimitedAll(limitedBody);
     expect(menus, hasLength(3));
 
     final selling = menus.first;
@@ -73,7 +73,7 @@ void main() {
 
   test('品の鍵は配信と 1 対 1', () {
     final raw = jsonDecode(limitedBody) as List<dynamic>;
-    final menus = MapRepository.decodeLimited(limitedBody);
+    final menus = MapRepository.decodeLimitedAll(limitedBody);
     for (final (i, e) in raw.indexed) {
       final json = e as Map<String, dynamic>;
       expect(menus[i].toJson().keys.toSet(), json.keys.toSet());
@@ -88,6 +88,28 @@ void main() {
 
   test('品が 0 件の週は空で読める（失敗にしない）', () {
     expect(MapRepository.decodeLimited('[]'), isEmpty);
+  });
+
+  test('全店で終売した品と「単品◯◯」は地図に出さない', () {
+    final raw = jsonDecode(limitedBody) as List<dynamic>;
+    final selling = Map<String, dynamic>.from(raw[0] as Map);
+    final side = {
+      ...selling,
+      'campaign_id': '1',
+      'name': '単品${selling['name']}',
+    };
+    final partlyEnded = {
+      ...selling,
+      'campaign_id': '2',
+      'name': '一部の店で終売',
+      'ended_shops': [
+        {'code': '0000001214', 'ended_at': '2026-09-19 08:01'},
+      ],
+    };
+    final names = MapRepository.decodeLimited(
+      jsonEncode([...raw, side, partlyEnded]),
+    ).map((m) => m.name);
+    expect(names, [selling['name'], '一部の店で終売']);
   });
 
   test('1 軒の形が崩れても残りは出す', () {

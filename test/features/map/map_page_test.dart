@@ -83,14 +83,7 @@ void main() {
     expect(find.text('15店舗'), findsOneWidget);
     expect(find.text('売り切れ・終売の店も含める'), findsOneWidget);
 
-    // 全店で終売した品: 含めなければ 0 店、含めれば取扱店が戻る
-    await tester.tap(find.text('たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'));
-    await tester.pump();
-    await tester.tap(find.text('“極厚”肩ロース定食'));
-    await tester.pump();
-    expect(find.text('0店舗'), findsOneWidget);
-    await tester.tap(find.text('売り切れ・終売の店も含める'));
-    await tester.pump();
-    expect(find.text('15店舗'), findsOneWidget);
+    // 全店で終売した品はチップごと出さない（行き先が無い）
+    expect(find.text('“極厚”肩ロース定食'), findsNothing);
   });
 }
