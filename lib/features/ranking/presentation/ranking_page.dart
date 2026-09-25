@@ -80,6 +80,13 @@ class _RankingPageState extends ConsumerState<RankingPage> {
   bool _onScroll(ScrollUpdateNotification notification) {
     _headerHidden.handleScroll(notification);
     _updateStuck();
+    // **並べ直した後にもう一度測る。** 通知はスクロール位置が変わった直後・
+    // 並べ直す前に届くので、ここで測る番兵の位置は 1 つ前のフレームのもの。
+    // 最後の通知でずれたままになると、先頭まで戻したのに貼り付いた帯が残る
+    // （カレンダーを作る時にテストで踏んだ。同じ組み方）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateStuck();
+    });
     return false;
   }
 
