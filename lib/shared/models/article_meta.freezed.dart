@@ -16,8 +16,12 @@ T _$identity<T>(T value) => value;
 mixin _$ArticleMeta {
 
  String get slug; String get title; List<String> get categories; List<String> get tags; bool get published;/// 初回配信の時刻。**契約は null を許すが、配信に載るのは配信済みの記事だけ**
-/// なので実際には必ず入る（web の `models/article.ts` も同じ理由で必須に
-/// 狭めている）
+/// なので実際には必ず入る。
+///
+/// **必須に狭めるのは、読めない 1 件を落とす仕組みとセット。** web は
+/// 狭めたうえで、読めない記事があれば**ビルドを止める**（`models/article.ts` の
+/// `articleProblems`）。アプリは止めようが無いので、`decodeJsonList` が
+/// その 1 件だけを落とす（null が来ても一覧ごとは消えない）
 @JsonKey(name: 'created_at') DateTime get createdAt;/// **記事の編集時刻ではなく DB 行の更新時刻。** `created_at` より前の値に
 /// なりうる（web の `models/article.ts` に経緯）。「更新された」の表示に使わないこと
 @JsonKey(name: 'updated_at') DateTime? get updatedAt; String get description;@JsonKey(name: 'editor_comment') String get editorComment;/// ひとことに添えるのや子の表情（`normal` / `smile` / `angry` / `confused`）。
@@ -260,8 +264,12 @@ class _ArticleMeta extends ArticleMeta {
 
 @override@JsonKey() final  bool published;
 /// 初回配信の時刻。**契約は null を許すが、配信に載るのは配信済みの記事だけ**
-/// なので実際には必ず入る（web の `models/article.ts` も同じ理由で必須に
-/// 狭めている）
+/// なので実際には必ず入る。
+///
+/// **必須に狭めるのは、読めない 1 件を落とす仕組みとセット。** web は
+/// 狭めたうえで、読めない記事があれば**ビルドを止める**（`models/article.ts` の
+/// `articleProblems`）。アプリは止めようが無いので、`decodeJsonList` が
+/// その 1 件だけを落とす（null が来ても一覧ごとは消えない）
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
 /// **記事の編集時刻ではなく DB 行の更新時刻。** `created_at` より前の値に
 /// なりうる（web の `models/article.ts` に経緯）。「更新された」の表示に使わないこと

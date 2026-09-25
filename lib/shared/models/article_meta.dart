@@ -26,9 +26,9 @@ abstract class ArticleMeta with _$ArticleMeta {
     /// なので実際には必ず入る。
     ///
     /// **必須に狭めるのは、読めない 1 件を落とす仕組みとセット。** web は
-    /// `articleProblems` がその記事を落とす前提で狭めている（`models/article.ts`）。
-    /// こちらは `decodeJsonList` が 1 件ずつ落とすので、null が来ても一覧ごと
-    /// 消えない
+    /// 狭めたうえで、読めない記事があれば**ビルドを止める**（`models/article.ts` の
+    /// `articleProblems`）。アプリは止めようが無いので、`decodeJsonList` が
+    /// その 1 件だけを落とす（null が来ても一覧ごとは消えない）
     @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// **記事の編集時刻ではなく DB 行の更新時刻。** `created_at` より前の値に
