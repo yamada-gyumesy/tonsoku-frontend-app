@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 手元（mise）と CI で Flutter の版を揃える。`.tool-versions` が唯一の情報源。
+  #
+  # **flutter-action の `flutter-version-file` には渡さないこと。** `.tool-versions` を
+  # 渡しても版が解決されず、channel: stable の最新（実測で 3.47.1）が入る。SDK が
+  # 固定する transitive の版が手元と変わり、`flutter pub get` が pubspec.lock を
+  # 書き換えて、下の codegen ジョブが「生成物が古い」と誤検知していた。
+  version:
+    name: Resolve Flutter version
+    runs-on: ubuntu-latest
+    outputs:
+      flutter: ${{ steps.read.outputs.flutter }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: read
+        run: |
+          version="$(awk '$1 == "flutter" { print $2 }' .tool-versions)"
+          if [ -z "$version" ]; then
+            echo "::error::.tool-versions から flutter の版を読めなかった"
+            exit 1
+          fi
+          echo "flutter=$version" >> "$GITHUB_OUTPUT"
+          echo "Flutter $version を使う"
+
+  lint:
+    name: Lint
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ needs.version.outputs.flutter }}
+          cache: true
+      # --enforce-lockfile: lock と食い違ったら黙って上げずに落とす。
+      # CI は pubspec.lock のとおりに解決すること
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter analyze
+
+  test:
+    name: Test
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ needs.version.outputs.flutter }}
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter test
+
+  codegen:
+    # 生成物（*.freezed.dart / *.g.dart）はリポジトリにコミットしているので、
+    # 手で編集した後に build_runner を回し忘れると、CI も手元も気づかないまま
+    # 古い生成物で動き続ける。ここで実際に生成し直して差分が出ないことを確かめる
+    name: Codegen up to date
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ needs.version.outputs.flutter }}
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart run build_runner build
+      - name: 生成物に差分が無いこと
+        run: git diff --exit-code

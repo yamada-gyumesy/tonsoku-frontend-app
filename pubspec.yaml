@@ -1,0 +1,97 @@
+name: tonsoku
+description: "とん速 - 松のや専門メディア"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # Flutter 内部の Cupertino ウィジェット（iOS 風の戻る・テキスト選択）が
+  # CupertinoIcons を参照するため、外すと release ビルドで
+  # 「Expected to find fonts for CupertinoIcons」の警告が出る。
+  # 未使用ならツリーシェイクでほぼ消えるので置いておく
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  # flutter_hooks / riverpod_annotation は実際に使う Issue で足す。今入れると
+  # riverpod_generator（analyzer ^12 を要求）まで連れてきて freezed が
+  # pre-release でしか解けなくなる（gyumesy-frontend-app で踏んだ）
+  hooks_riverpod: ^3.3.2
+
+  # Routing
+  go_router: ^18.0.1
+
+  # Network（R2 の配信 JSON 取得）
+  dio: ^5.10.0
+
+  # ロゴ（web と同じ icon.svg を使う。PNG にすると地の白が
+  # ダークテーマで四角く出る）
+  flutter_svg: ^2.3.0
+
+  # Data / Serialization
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
+
+  # Storage（設定値は shared_preferences、配信データのキャッシュはファイル）
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.6
+
+  # Utilities
+  # テスト可能な時刻取得。キャッシュの鮮度判定で DateTime.now() を直接使わない
+  clock: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code Generation
+  build_runner: ^2.15.1
+  freezed: ^3.2.5
+  json_serializable: ^6.14.0
+
+  # Testing
+  mocktail: ^1.0.5
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # ヘッダーのロゴ。web の public/icon.svg と同じもの（意匠を揃える）
+    - assets/brand/
+
+  fonts:
+    # **日本語は Klee One の SemiBold 1 つで描く**（web と同じ。本文も太字も）。
+    # 大正浪漫の雰囲気でとん速の"色"を出すための書体で、web の
+    # `main.css` の `html[data-locale='ja']` に経緯がある。
+    # 実体は web が npm で持っている Google Fonts の TTF を、
+    # gyumesy の Noto と同じ字の集合（6,886 字）に切り出したもの。
+    # 生成手順は tool/build_fonts.py
+    #
+    # **太字は縁取りで付ける**（web の `--bold-stroke: 0.035em`）。Flutter の
+    # テキストは「要求した太さが**フォントファイル自身の太さ**（OS/2 の
+    # usWeightClass）より 200 以上重く、かつ 600 以上」の時に合成太字（輪郭を
+    # 字の大きさの 1/24〜1/32 だけ太らせる。web の縁取りとほぼ同じ量）を掛ける。
+    # そこで **SemiBold の usWeightClass を 400 に書き換えて同梱している**
+    # （tool/build_fonts.py）。`FontWeight.bold`（700）の所にだけ太字が掛かり、
+    # 本文（400）はそのまま SemiBold で描かれる。
+    # **ここの `weight:` を変えても効かない** ―― 判定が見るのはファイルの値で、
+    # 600 のままだと 700 との差が 100 になり、太字が本文と同じ太さに戻る
+    # （実際にそうなっていた）
+    - family: Klee One
+      fonts:
+        - asset: assets/fonts/KleeOne-SemiBold.ttf
+          weight: 400
+    # **英語・中国語は Noto Sans JP**（web と同じ。中国語の簡体字で
+    # 収録外の字は OS の書体へ落ちる）。gyumesy-frontend-app と同じ実体
+    - family: Noto Sans JP
+      fonts:
+        - asset: assets/fonts/NotoSansJP-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansJP-Bold.ttf
+          weight: 700
