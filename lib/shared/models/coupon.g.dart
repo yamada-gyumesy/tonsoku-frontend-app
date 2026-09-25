@@ -1,0 +1,145 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'coupon.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_Coupon _$CouponFromJson(Map<String, dynamic> json) => _Coupon(
+  generatedAt: json['generated_at'] as String,
+  ranks:
+      (json['ranks'] as List<dynamic>?)
+          ?.map((e) => CouponRank.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CouponRank>[],
+  offers:
+      (json['offers'] as List<dynamic>?)
+          ?.map((e) => CouponOffer.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CouponOffer>[],
+  upcoming:
+      (json['upcoming'] as List<dynamic>?)
+          ?.map((e) => CouponOffer.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CouponOffer>[],
+);
+
+Map<String, dynamic> _$CouponToJson(_Coupon instance) => <String, dynamic>{
+  'generated_at': instance.generatedAt,
+  'ranks': instance.ranks,
+  'offers': instance.offers,
+  'upcoming': instance.upcoming,
+};
+
+_CouponRank _$CouponRankFromJson(Map<String, dynamic> json) => _CouponRank(
+  id: json['id'] as String,
+  order: (json['order'] as num).toInt(),
+  rates:
+      (json['rates'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, (e as num).toDouble()),
+      ) ??
+      const <String, double>{},
+);
+
+Map<String, dynamic> _$CouponRankToJson(_CouponRank instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'order': instance.order,
+      'rates': instance.rates,
+    };
+
+_CouponOffer _$CouponOfferFromJson(Map<String, dynamic> json) => _CouponOffer(
+  id: json['id'] as String,
+  brand: json['brand'] as String?,
+  title: json['title'] as String?,
+  ratePercent: (json['rate_percent'] as num?)?.toDouble(),
+  rateMultiplier: (json['rate_multiplier'] as num?)?.toDouble(),
+  pointAmount: (json['point_amount'] as num?)?.toInt(),
+  discountYen: (json['discount_yen'] as num?)?.toInt(),
+  discountMaxYen: (json['discount_max_yen'] as num?)?.toInt(),
+  capYen: (json['cap_yen'] as num?)?.toInt(),
+  minSpendYen: (json['min_spend_yen'] as num?)?.toInt(),
+  tiers:
+      (json['tiers'] as List<dynamic>?)
+          ?.map((e) => CouponTier.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CouponTier>[],
+  requiresEntry: json['requires_entry'] as bool? ?? false,
+  benefitType: json['benefit_type'] as String?,
+  channels:
+      (json['channels'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>[],
+  howToGet: json['how_to_get'] as String?,
+  startDate: json['start_date'] as String,
+  endDate: json['end_date'] as String?,
+  endAt: json['end_at'] as String?,
+  timeWindow: json['time_window'] as String?,
+  links:
+      (json['links'] as List<dynamic>?)
+          ?.map((e) => CouponLink.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CouponLink>[],
+  imageUrl: json['image_url'] as String?,
+  qrImageUrl: json['qr_image_url'] as String?,
+  sourceUrl: json['source_url'] as String?,
+  sourceLabel: json['source_label'] as String?,
+  notes:
+      (json['notes'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>[],
+  articleSlug: json['article_slug'] as String?,
+);
+
+Map<String, dynamic> _$CouponOfferToJson(_CouponOffer instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'brand': instance.brand,
+      'title': instance.title,
+      'rate_percent': instance.ratePercent,
+      'rate_multiplier': instance.rateMultiplier,
+      'point_amount': instance.pointAmount,
+      'discount_yen': instance.discountYen,
+      'discount_max_yen': instance.discountMaxYen,
+      'cap_yen': instance.capYen,
+      'min_spend_yen': instance.minSpendYen,
+      'tiers': instance.tiers,
+      'requires_entry': instance.requiresEntry,
+      'benefit_type': instance.benefitType,
+      'channels': instance.channels,
+      'how_to_get': instance.howToGet,
+      'start_date': instance.startDate,
+      'end_date': instance.endDate,
+      'end_at': instance.endAt,
+      'time_window': instance.timeWindow,
+      'links': instance.links,
+      'image_url': instance.imageUrl,
+      'qr_image_url': instance.qrImageUrl,
+      'source_url': instance.sourceUrl,
+      'source_label': instance.sourceLabel,
+      'notes': instance.notes,
+      'article_slug': instance.articleSlug,
+    };
+
+_CouponTier _$CouponTierFromJson(Map<String, dynamic> json) => _CouponTier(
+  ratePercent: (json['rate_percent'] as num).toDouble(),
+  minSpendYen: (json['min_spend_yen'] as num).toInt(),
+);
+
+Map<String, dynamic> _$CouponTierToJson(_CouponTier instance) =>
+    <String, dynamic>{
+      'rate_percent': instance.ratePercent,
+      'min_spend_yen': instance.minSpendYen,
+    };
+
+_CouponLink _$CouponLinkFromJson(Map<String, dynamic> json) => _CouponLink(
+  url: json['url'] as String,
+  kind: json['kind'] as String,
+  ratePercent: (json['rate_percent'] as num?)?.toDouble(),
+);
+
+Map<String, dynamic> _$CouponLinkToJson(_CouponLink instance) =>
+    <String, dynamic>{
+      'url': instance.url,
+      'kind': instance.kind,
+      'rate_percent': instance.ratePercent,
+    };

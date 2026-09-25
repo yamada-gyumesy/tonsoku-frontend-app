@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/features/article/presentation/article_page.dart';
+import 'package:tonsoku/features/home/presentation/article_list_page.dart';
+import 'package:tonsoku/features/home/presentation/home_page.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
 import 'package:tonsoku/features/shell/presentation/placeholder_page.dart';
 
@@ -17,7 +20,26 @@ abstract final class AppRoutes {
   static const home = '/';
   static const map = '/map';
   static const coupon = '/coupon';
+
+  /// 記事一覧（ホームの「過去の記事を見る」の先）。web の `/articles/`。
+  static const articles = '/articles';
+
+  static String article(String slug) => '/articles/$slug';
 }
+
+/// 記事詳細のルート。**どのタブの中にも積む**（タブを切り替えても読みかけの記事が
+/// 残り、戻ると元の画面に戻れる。gyumesy と同じ）。
+///
+/// 関連記事・後継記事は**同じタブの中に積み重ねる**（戻るで辿ってきた記事へ順に
+/// 戻れる）。積む先は `context.push` の相対パスではなく、そのタブの接頭辞を持った
+/// 絶対パスで決める —— 接頭辞を落とすとホームのタブへ飛ばされる。
+GoRoute articleRoute(String prefix) => GoRoute(
+  path: 'articles/:slug',
+  builder: (context, state) => ArticlePage(
+    slug: state.pathParameters['slug']!,
+    onOpenArticle: (next) => context.push('$prefix/articles/$next'),
+  ),
+);
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -49,7 +71,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                builder: (context, state) => const PlaceholderPage(),
+                builder: (context, state) => HomePage(
+                  onOpenArticle: (slug) =>
+                      context.push(AppRoutes.article(slug)),
+                  onOpenArchive: () => context.push(AppRoutes.articles),
+                  // **クーポンはタブなので、積まずにタブごと切り替える**
+                  onOpenCoupon: () => context.go(AppRoutes.coupon),
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'articles',
+                    builder: (context, state) => ArticleListPage(
+                      onOpenArticle: (slug) =>
+                          context.push(AppRoutes.article(slug)),
+                    ),
+                  ),
+                  articleRoute(''),
+                ],
               ),
             ],
           ),
