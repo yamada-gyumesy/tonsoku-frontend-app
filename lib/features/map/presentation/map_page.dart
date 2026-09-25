@@ -146,7 +146,12 @@ class _MapPageState extends ConsumerState<MapPage> {
     // **開いたらまず現在地へ寄せる**（ユーザーの判断。まだ聞いていなければここで
     // 許可を求める）。取れるまでは最後に見ていた位置（無ければ日本全体）を出しておき、
     // 取れなければそのまま。開いただけで失敗を知らせない（`quiet`）
-    WidgetsBinding.instance.addPostFrameCallback((_) => _locate(quiet: true));
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _locate(quiet: true);
+      // **動画は現在地の許可が片付いてから出す。** 同時に出すと、OS の許可の
+      // ダイアログが動画の上に重なる（シミュレータで確かめた）
+      if (mounted) setState(() => _located = true);
+    });
   }
 
   @override
@@ -239,6 +244,10 @@ class _MapPageState extends ConsumerState<MapPage> {
   /// **マップを開いた**（タブへ来た）ので、閉じていれば動画を出す
   /// （[_offerIfLocked]）。最初に開いた時と、他のタブから戻った時に立てる。
   bool _offerPending = true;
+
+  /// 開いた時の現在地の取得（許可のダイアログを含む）が片付いたか。
+  /// 動画を自動で出すのはこの後（[_offerIfLocked]）。
+  bool _located = false;
 
   void _stopCompass() {
     unawaited(_compass?.cancel());
@@ -362,8 +371,8 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   /// マップを開いた時、店舗限定の表示を閉じていれば動画を出す（ユーザーの指定）。
   ///
-  /// - **広告の準備（同意・初期化）と品の取得を待ってから決める**（待っている間は
-  ///   [_offerPending] を残す）
+  /// - **広告の準備（同意・初期化）と品の取得、開いた時の現在地の取得（許可の
+  ///   ダイアログ）を待ってから決める**（待っている間は [_offerPending] を残す）
   /// - **開放すれば見える品が無い週は出さない**（見ても何も増えない）
   /// - **この起動の間に途中で閉じていたら、もう自動では出さない**
   ///   （`MapUnlockState.declined`）。閉じた人に開くたび出し直すと、閉じる操作が
@@ -375,7 +384,10 @@ class _MapPageState extends ConsumerState<MapPage> {
     MapUnlockState unlock,
     List<LimitedMenu>? menus,
   ) {
-    if (!_offerPending || gate == MapLimitedGate.waiting || menus == null) {
+    if (!_offerPending ||
+        !_located ||
+        gate == MapLimitedGate.waiting ||
+        menus == null) {
       return;
     }
     _offerPending = false;
