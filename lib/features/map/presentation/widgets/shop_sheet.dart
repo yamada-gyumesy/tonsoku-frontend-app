@@ -364,7 +364,8 @@ class _GoogleMapsButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.map_outlined, size: 18, color: colors.text),
+              // 下タブのマップと同じアイコン（ユーザーの指定）
+              Icon(Icons.location_on_outlined, size: 18, color: colors.text),
               const SizedBox(width: 6),
               Text(
                 label,
