@@ -155,9 +155,8 @@ class MapFilterButton extends ConsumerWidget {
   }
 }
 
-/// 松のや専門店・併設のトグル。選ばれたら文字色で塗り、面色の文字（記事一覧の
-/// タグのトグル `TagToggleChip` と同じ塗り分け）。地図の上に浮かせるので、
-/// 選ばれていない時も面色の地を敷く。
+/// 松のや専門店・併設のトグル。選ばれた時の見た目は品のチップ（[MenuChip]）に
+/// 揃える。地図の上に浮かせるので、選ばれていない時も面色の地を敷く。
 class _BrandChip extends StatelessWidget {
   const _BrandChip({
     required this.dot,
@@ -175,35 +174,43 @@ class _BrandChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    // 選んだ時は品のチップ（[MenuChip]）と同じ: 地の上の赤（`primaryText`）の
+    // 枠と文字、地はその 6%（ユーザーの指定。文字色で塗ると黒くなって浮いた）
+    final line = colors.primaryText;
     return Semantics(
       toggled: selected,
       button: true,
       child: Material(
-        color: selected ? colors.text : colors.surface,
+        color: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: selected ? colors.text : colors.border),
+          side: BorderSide(
+            color: selected ? line.withValues(alpha: 0.6) : colors.border,
+          ),
         ),
         elevation: 2,
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ShopDot(colors: dot, size: 10),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.2,
-                    color: selected ? colors.surface : colors.textSub,
+        child: Ink(
+          color: selected ? line.withValues(alpha: 0.06) : null,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShopDot(colors: dot, size: 10),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.2,
+                      color: selected ? line : colors.textSub,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
