@@ -59,6 +59,17 @@ Future<void> registerPushHandlers() async {
       >()
       ?.createNotificationChannel(_channel);
 
+  // **終了状態で、前面で出したローカル通知をタップして起動した時の 1 通。**
+  // `onDidReceiveNotificationResponse` は起動中にしか呼ばれず（プラグインの
+  // README に明記）、アプリが出した通知なので `getInitialMessage` にも流れない。
+  // ここを読まないと**前面で受けた通知を、アプリを閉じた後にタップした時だけ
+  // 記事が開かない**（レビューで判明。gyumesy にも同じ穴がある）
+  final launch = await _local.getNotificationAppLaunchDetails();
+  if (launch?.didNotificationLaunchApp ?? false) {
+    final payload = launch?.notificationResponse?.payload;
+    if (payload != null) pushedLink.value = payload;
+  }
+
   FirebaseMessaging.onMessage.listen(_showOnAndroid);
 }
 

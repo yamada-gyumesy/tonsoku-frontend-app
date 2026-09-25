@@ -38,6 +38,15 @@ abstract final class AppRoutes {
   /// ランキング（web の `/ranking/`）。[prefix] は [branchPrefixes] の 1 つ。
   static String ranking(String prefix) => '$prefix/ranking';
 
+  /// 通知設定（web の `/notifications/`）。[prefix] は [branchPrefixes] の 1 つ。
+  ///
+  /// **ランキング・カレンダーと同じくメニューから開く画面**で、今のタブの中に
+  /// 積み、タブを移ったら畳む（`AppShell` の `_openFromMenu`）。gyumesy は
+  /// 名前付きの `MaterialPageRoute` をナビゲータへ直に積んでいたが、とん速は
+  /// メニューの画面を全部 go_router の行き先で持っているので揃えた（畳み方が
+  /// 1 つで済み、通知のタップからも同じ行き先で開ける）。
+  static String notifications(String prefix) => '$prefix/notifications';
+
   /// カレンダー（web の `/calendar/`）。[prefix] は [branchPrefixes] の 1 つ。
   ///
   /// [category] を渡すとそのカテゴリで絞って開く（`?category=campaign`。
@@ -51,15 +60,6 @@ abstract final class AppRoutes {
   ///
   /// **省略できる引数しか足さない**（メニューの `_openFromMenu` が
   /// `String Function(String prefix)` として受け取る）。
-  /// 通知設定（web の `/notifications/`）。[prefix] は [branchPrefixes] の 1 つ。
-  ///
-  /// **ランキング・カレンダーと同じくメニューから開く画面**で、今のタブの中に
-  /// 積み、タブを移ったら畳む（`AppShell` の `_openFromMenu`）。gyumesy は
-  /// 名前付きの `MaterialPageRoute` をナビゲータへ直に積んでいたが、とん速は
-  /// メニューの画面を全部 go_router の行き先で持っているので揃えた（畳み方が
-  /// 1 つで済み、通知のタップからも同じ行き先で開ける）。
-  static String notifications(String prefix) => '$prefix/notifications';
-
   static String calendar(String prefix, {String? category, String? month}) {
     final query = {'category': ?category, 'month': ?month};
     return Uri(
