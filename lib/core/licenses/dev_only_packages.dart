@@ -7,7 +7,6 @@
 const devOnlyPackages = <String>{
   '_fe_analyzer_shared',
   'analyzer',
-  'archive',
   'build',
   'build_config',
   'build_daemon',
@@ -30,7 +29,6 @@ const devOnlyPackages = <String>{
   'lints',
   'mocktail',
   'pool',
-  'posix',
   'pubspec_parse',
   'shelf',
   'shelf_web_socket',

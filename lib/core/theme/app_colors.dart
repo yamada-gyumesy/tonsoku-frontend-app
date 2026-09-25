@@ -342,6 +342,82 @@ abstract final class CategoryPalette {
       (colors.isDark ? _dark : _light)[slug]?.ink ?? colors.textSub;
 }
 
+/// マップの背景地図の色。**web に地図は無い**ので、ここだけはアプリで決めた値。
+///
+/// ## 決め方
+///
+/// - **陸は紙面の地（`bg` の生成り／ダークは面）に寄せる。** 地図が主役ではなく、
+///   上に載る店の印が主役なので、地図は紙面の続きに見えるくらい静かにする
+/// - **水は青を使わない。** とん速の配色は松のやの色（墨・赤・灰・緑・黄土）だけで
+///   組んでいて、青系を入れない（[CategoryPalette] と同じ方針）。**彩度をほぼ落とした
+///   灰緑**にして、陸との差は明るさで付ける
+/// - **道路・境界は罫線（`border`）の仲間。** 装飾なのでコントラスト要件は無いが、
+///   店の印（非テキスト 3:1）より必ず弱くする
+/// - **鉄道だけは一段濃い灰。** 駅名と並べて場所の見当を付ける手がかりなので、
+///   道路より目立たせる
+/// - **地名の文字は副テキスト（`textSub`）**。縁取りを陸の色で入れるので、道路や
+///   境界の上でも 4.5:1 を保つ（地に対して ライト 5.52:1 / ダーク 6.27:1）
+///
+/// **色を変えたら両テーマで店の印の見え方を確かめること**（印は陸の上に載る）。
+@immutable
+class MapPalette {
+  const MapPalette({
+    required this.land,
+    required this.water,
+    required this.boundaryCountry,
+    required this.boundaryRegion,
+    required this.highway,
+    required this.majorRoad,
+    required this.rail,
+    required this.label,
+    required this.labelHalo,
+  });
+
+  final Color land;
+
+  /// 海（陸の外側）と湖・川。
+  final Color water;
+  final Color boundaryCountry;
+
+  /// 都道府県の境。
+  final Color boundaryRegion;
+  final Color highway;
+  final Color majorRoad;
+  final Color rail;
+
+  /// 地名・駅名の文字。
+  final Color label;
+
+  /// 地名・駅名の縁取り（陸と同じ色）。
+  final Color labelHalo;
+
+  static const light = MapPalette(
+    land: Color(0xFFFAF7F3), // bg と同じ
+    water: Color(0xFFDDE3E1),
+    boundaryCountry: Color(0xFFB5A99F),
+    boundaryRegion: Color(0xFFCDC2B6),
+    highway: Color(0xFFE2D2C2),
+    majorRoad: Color(0xFFEAE1D7),
+    rail: Color(0xFFA3968D),
+    label: Color(0xFF6E625B), // textSub
+    labelHalo: Color(0xFFFAF7F3),
+  );
+
+  static const dark = MapPalette(
+    land: Color(0xFF211A17), // surface と同じ
+    water: Color(0xFF121615),
+    boundaryCountry: Color(0xFF5A4E47),
+    boundaryRegion: Color(0xFF41362F),
+    highway: Color(0xFF41352E),
+    majorRoad: Color(0xFF342A25),
+    rail: Color(0xFF6B5E56),
+    label: Color(0xFFA79A92), // textSub
+    labelHalo: Color(0xFF211A17),
+  );
+
+  static MapPalette of(AppColors colors) => colors.isDark ? dark : light;
+}
+
 extension AppColorsX on BuildContext {
   AppColors get colors => Theme.of(this).extension<AppColors>()!;
 }

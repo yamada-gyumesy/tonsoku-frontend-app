@@ -24,6 +24,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- マップの「現在地」。**ここだけは理由を書く**（Apple の審査が、何のために
+	     位置情報を使うかを利用者に示すことを求めている。画面の文言の「状態だけを
+	     書く」とは別の決まり）。許可を求めるのは「現在地」を押した時だけで、
+	     開いただけでは求めない（lib/features/map/data/location_repository.dart） -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>近くの松のやを地図で探すために、現在地を使います。</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

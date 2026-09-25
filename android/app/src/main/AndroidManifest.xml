@@ -4,6 +4,12 @@
          **release ビルドだけ**が全通信に失敗する。`flutter run`（debug）では再現しない
          （gyumesy-frontend-app と同じ） -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- マップの「現在地」（geolocator）。許可を求めるのは「現在地」を押した時だけ
+         （lib/features/map/data/location_repository.dart）。**COARSE も置く** ——
+         Android 12 以降は利用者が「おおよその位置」だけを許可でき、その時に
+         FINE しか宣言していないと許可の画面が出ない -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="とん速"
         android:name="${applicationName}"

@@ -8,8 +8,8 @@ import 'package:tonsoku/features/coupon/presentation/coupon_page.dart';
 import 'package:tonsoku/features/ranking/presentation/ranking_page.dart';
 import 'package:tonsoku/features/home/presentation/article_list_page.dart';
 import 'package:tonsoku/features/home/presentation/home_page.dart';
+import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
-import 'package:tonsoku/features/shell/presentation/placeholder_page.dart';
 
 /// ルート定義。
 ///
@@ -142,15 +142,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // **マップは中身の無い画面で出す**（ユーザーの判断。実装は後の Issue）。
-          // web の「中身の無い面はタブごと出さない」とは逆で、**4 タブの並びを
-          // 先に見せることを優先した**。中身を入れる時にこの注記も外すこと
           StatefulShellBranch(
             navigatorKey: branchNavigatorKeys[1],
             routes: [
               GoRoute(
                 path: AppRoutes.map,
-                builder: (context, state) => const PlaceholderPage(),
+                builder: (context, state) => MapPage(
+                  // **品の記事はマップのタブの上に積む**（戻るとマップへ帰る。
+                  // 見ていた位置と絞り込みはそのまま残る）
+                  onOpenArticle: (slug) =>
+                      context.push('${AppRoutes.map}/articles/$slug'),
+                ),
                 // メニューから開く画面と、そこから開く記事を積む
                 routes: [
                   articleRoute(AppRoutes.map),

@@ -32,6 +32,8 @@
 - **dio** - 配信データの取得
 - **freezed / json_serializable** - モデル
 - **shared_preferences / path_provider** - 設定値とキャッシュ
+- **flutter_map / vector_map_tiles** - マップ（同梱の背景地図をベクターのまま描く）
+- **geolocator** - マップの現在地
 
 依存は**実際に使う時に足す**（gyumesy と同じ方針）。
 
@@ -71,6 +73,7 @@ flutter run --dart-define=LOCALE=en
 | `flutter test` | テスト |
 | `dart run build_runner build` | freezed / json_serializable の生成物を更新 |
 | `python3 tool/build_fonts.py` | 同梱書体を web の配布物から作り直す |
+| `tool/build_map.sh` | マップの背景地図と駅（`assets/map/`）を作り直す（下の「マップの背景地図」） |
 | `python3 tool/build_licenses.py` | ライセンス表記から外すパッケージ（配布物に入らないもの）の一覧を作り直す。依存を変えたら回す（CI が差分を見る） |
 
 **生成物（`*.freezed.dart` / `*.g.dart`）はリポジトリにコミットする。** CI が生成し直して差分が出ないことを確認する。
@@ -116,6 +119,21 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 ## 書体
 
 **日本語は Klee One、英語・中国語は Noto Sans JP**（web と同じ使い分け）。実体は web が npm で持っている配布物から `tool/build_fonts.py` が作る（web 側で `yarn install` 済みであること）。
+
+## マップの背景地図
+
+**背景地図はアプリに同梱する**（`assets/map/`。ユーザーの判断）。配信（R2）から取らないので、圏外でも地図が出て、通信量もかからない。ほぼ更新しない前提。
+
+| ファイル | 中身 |
+|---|---|
+| `assets/map/japan.pmtiles`（約 30MB） | [Protomaps](https://protomaps.com/) の basemap（OpenStreetMap 由来）から日本の範囲（経度 122〜154・緯度 20〜46）を切り出したベクタータイル。**z0〜11 だけ**で、層は陸（`earth`）・湖と川（`water`。海は陸の外側として描く）・境界・主な道路と鉄道・地名に絞ってある |
+| `assets/map/stations.json`（約 390KB） | OpenStreetMap の駅 8,740 件（名前・英語名・座標）。**地図には主要駅しか入っていない**ので別に持ち、寄った時（z13 以上）に印として描く |
+
+- **作り方は `tool/build_map.sh`**（`pmtiles` と `tippecanoe` が要る。`brew install pmtiles tippecanoe`）。層と属性の絞り方、z11 で止めた理由（z12 まで入れると約 70MB）もスクリプトの冒頭にある
+- **地図を作り直して層や属性を変えたら、描き方（`lib/features/map/presentation/map_theme.dart`）も直す。** 名前がずれても例外にはならず、その層が黙って描かれなくなる（`test/features/map/map_theme_test.dart` は描き方の側しか見ていない）
+- 読み手は自前（`lib/features/map/data/pmtiles.dart`）。公開の PMTiles のパッケージは今の依存と解決できない（理由は同ファイル）
+- 配色はアプリ側で持つ（`MapPalette`。`lib/core/theme/app_colors.dart`）。ライト／ダークで描き分ける
+- **地図の上に「© OpenStreetMap contributors」を常に出す**（ODbL の帰属表示。畳まない・隠さない）
 
 ## アプリアイコン
 

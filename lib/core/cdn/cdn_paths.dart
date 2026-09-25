@@ -56,6 +56,22 @@ class CdnPaths {
   String categoryArticles(String categoryId) =>
       '${_ns}categories/$categoryId/articles.json';
 
+  // ── マップ（ロケールの名前空間を持たない）────────────
+
+  /// マップの店（`app/shop.json`）と店舗限定の取扱店（`app/limited.json`）。
+  ///
+  /// **`i18n/{locale}/` を付けない。** `app/` は牛めしレーダーと同じ形でアプリにだけ
+  /// 出している配信で、店名も品名も日本語 1 つしか無い（配信側の契約。英語・中国語の
+  /// 画面でも同じものを読む）。**`_ns` を足すと 404 になる。**
+  ///
+  /// **`app/version.json` は読まない。** 牛めしレーダーは「版が変わったら 2 つを
+  /// 落とし直す」ためにこれを見るが、こちらは `CdnRepository` が `ETag` で
+  /// 「変わったかどうか」を 1 本ずつ聞いており（変わっていなければ 304 で本文は
+  /// 流れない）、同じことをもう 1 段重ねるだけになる。版を先に聞く形にすると
+  /// 往復が 1 回増え、**売り切れ（15 分ごとに変わる）を拾うのが遅れる**だけで得が無い。
+  static const appShops = 'app/shop.json';
+  static const appLimited = 'app/limited.json';
+
   // ── 404 がありうるもの ────────────────────────────
 
   /// クーポン・還元。

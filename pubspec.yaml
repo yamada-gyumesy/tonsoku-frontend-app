@@ -70,6 +70,25 @@ dependencies:
   # （pubspec の値を焼き込むと、ストア用に番号だけ上げた時に食い違う。gyumesy と同じ）
   package_info_plus: ^10.2.1
 
+  # マップ。**背景地図は同梱の PMTiles をベクターのまま描く**（`assets/map/`）。
+  # 地図の土台は flutter_map、ベクタータイルの描画は vector_map_tiles。
+  #
+  # **vector_map_tiles は 9 のベータに固定する。** 安定版（8.0.0）は
+  # flutter_map 7 までしか対応しておらず、flutter_map 8 と組めるのは 9 の
+  # ベータだけ（2026-09-25 時点）。`^` を付けるとベータどうしで勝手に上がるので
+  # 版を決め打ちにし、上げる時は画面で確かめてから上げる。
+  # 10 のベータは描画を作り直している途中（vector_tile_renderer 7 のベータ）で採らない
+  #
+  # **PMTiles の読み手は自前で持つ**（`lib/features/map/data/pmtiles.dart`）。
+  # 公開の vector_map_tiles_pmtiles / pmtiles はこの組と依存が解決できない
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  vector_map_tiles: 9.0.0-beta.13
+  # 描き方（テーマ）を組み立てる `ThemeReader` がこちらにある
+  vector_tile_renderer: ^6.1.0
+  # 現在地（牛めしレーダーと同じ）
+  geolocator: ^14.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -96,6 +115,10 @@ flutter:
     - assets/brand/
     # 同梱書体のライセンス（SIL OFL の帰属表示。`lib/core/licenses/font_licenses.dart`）
     - assets/licenses/
+    # マップの背景地図（Protomaps / OpenStreetMap。約 30MB）と駅（約 390KB）。
+    # 作り方は tool/build_map.sh（README の「マップの背景地図」）
+    - assets/map/japan.pmtiles
+    - assets/map/stations.json
 
   fonts:
     # **日本語は Klee One の SemiBold 1 つで描く**（web と同じ。本文も太字も）。

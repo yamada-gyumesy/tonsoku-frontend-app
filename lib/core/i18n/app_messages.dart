@@ -146,6 +146,31 @@ class AppMessages {
     required this.couponRankNames,
     required this.couponStartBracket,
     required this.couponStartsOn,
+    required this.mapBrandMatsuya,
+    required this.mapBrandMycurry,
+    required this.mapIncludeInactive,
+    required this.mapSelling,
+    required this.mapUpcoming,
+    required this.mapSoldOut,
+    required this.mapLegendShop,
+    required this.mapLegendLabel,
+    required this.mapMyLocation,
+    required this.mapLocationUnavailable,
+    required this.mapOpenInGoogleMaps,
+    required this.mapAddress,
+    required this.mapHours,
+    required this.mapPhone,
+    required this.mapCall,
+    required this.mapDateTime,
+    required this.mapDate,
+    required this.mapStartsAt,
+    required this.mapEndedAt,
+    required this.mapTempClosed,
+    required this.mapTempClosedUntil,
+    required this.mapTempClosedPlanned,
+    required this.mapOpensAt,
+    required this.mapClosesAt,
+    required this.mapClosed,
   });
 
   /// アプリ名・ヘッダーのロゴの右（web の `site.name`）。
@@ -384,6 +409,55 @@ class AppMessages {
   /// （日付だけだとその日限りの予定に見える）。
   final String Function(String start) couponStartsOn;
 
+  // ── マップ（**web に無い面**。訳はこちらで決めた）──────────────
+
+  /// 併設のフィルタ（`ShopBrand`）。**松屋・マイカリー食堂は固有名**なので訳さない
+  /// （英語は `Matsuya` / `My Curry Shokudo`）。
+  final String mapBrandMatsuya;
+  final String mapBrandMycurry;
+
+  /// 品を選んだ時だけ出るチェック。
+  final String mapIncludeInactive;
+
+  /// 店ごとの品の状態（印の凡例と店の詳細で同じ語を使う）。**終売は
+  /// [homeLimitedEnded] を使う**（web の週カードの判子と同じ語）。
+  final String mapSelling;
+  final String mapUpcoming;
+  final String mapSoldOut;
+
+  /// 凡例の「普通の店」の印。
+  final String mapLegendShop;
+
+  /// 凡例全体の読み上げ名。
+  final String mapLegendLabel;
+  final String mapMyLocation;
+  final String mapLocationUnavailable;
+  final String mapOpenInGoogleMaps;
+  final String mapAddress;
+  final String mapHours;
+  final String mapPhone;
+
+  /// 電話をかける操作の読み上げ名。
+  final String Function(String phone) mapCall;
+
+  /// 時刻つきの日付（JST）。**日本語・中国語は時まで**（記事の取扱店の表の
+  /// 「9/13 21時 終売」と同じ粒度）。英語は分まで出す（`21時` に当たる短い
+  /// 書き方が無く、`:00` を付けると分を丸めたことが読めなくなる）。
+  final String Function(int month, int day, int hour, int minute) mapDateTime;
+  final String Function(int month, int day) mapDate;
+  final String Function(String when) mapStartsAt;
+  final String Function(String when) mapEndedAt;
+
+  /// 一時閉店・開店・閉店の状態（店の詳細の上に出す）。
+  final String mapTempClosed;
+  final String Function(String reopens) mapTempClosedUntil;
+
+  /// これからの一時閉店。[until] は再開日で、無ければ null。
+  final String Function(String from, String? until) mapTempClosedPlanned;
+  final String Function(String when) mapOpensAt;
+  final String Function(String when) mapClosesAt;
+  final String mapClosed;
+
   static AppMessages of(AppLocale locale) => switch (locale) {
     AppLocale.ja => ja,
     AppLocale.en => en,
@@ -544,6 +618,32 @@ class AppMessages {
     },
     couponStartBracket: (start) => '[$start]',
     couponStartsOn: (start) => '$start〜',
+    mapBrandMatsuya: '松屋併設',
+    mapBrandMycurry: 'マイカリー食堂併設',
+    mapIncludeInactive: '売り切れ・終売の店も含める',
+    mapSelling: '販売中',
+    mapUpcoming: '発売前',
+    mapSoldOut: '売り切れ',
+    mapLegendShop: '店舗',
+    mapLegendLabel: '凡例',
+    mapMyLocation: '現在地',
+    mapLocationUnavailable: '現在地を取得できません',
+    mapOpenInGoogleMaps: 'Google マップで開く',
+    mapAddress: '住所',
+    mapHours: '営業時間',
+    mapPhone: '電話',
+    mapCall: (phone) => '$phone に電話をかける',
+    mapDateTime: (m, d, h, _) => '$m/$d $h時',
+    mapDate: (m, d) => '$m/$d',
+    mapStartsAt: (when) => '$when 発売',
+    mapEndedAt: (when) => '$when 終売',
+    mapTempClosed: '一時閉店中（再開日未定）',
+    mapTempClosedUntil: (reopens) => '一時閉店中（$reopens 再開）',
+    mapTempClosedPlanned: (from, until) =>
+        until == null ? '$from から一時閉店' : '$from〜$until 一時閉店',
+    mapOpensAt: (when) => '$when 開店',
+    mapClosesAt: (when) => '$when 閉店',
+    mapClosed: '閉店',
   );
 
   static final en = AppMessages(
@@ -712,6 +812,33 @@ class AppMessages {
     },
     couponStartBracket: (start) => '[$start]',
     couponStartsOn: (start) => 'From $start',
+    mapBrandMatsuya: 'With Matsuya',
+    mapBrandMycurry: 'With My Curry Shokudo',
+    mapIncludeInactive: 'Include sold-out and ended stores',
+    mapSelling: 'Available',
+    mapUpcoming: 'Coming soon',
+    mapSoldOut: 'Sold out',
+    mapLegendShop: 'Store',
+    mapLegendLabel: 'Legend',
+    mapMyLocation: 'My location',
+    mapLocationUnavailable: 'Your location is unavailable',
+    mapOpenInGoogleMaps: 'Open in Google Maps',
+    mapAddress: 'Address',
+    mapHours: 'Hours',
+    mapPhone: 'Phone',
+    mapCall: (phone) => 'Call $phone',
+    mapDateTime: (m, d, h, min) => '$m/$d $h:${min.toString().padLeft(2, '0')}',
+    mapDate: (m, d) => '$m/$d',
+    mapStartsAt: (when) => 'From $when',
+    mapEndedAt: (when) => 'Ended $when',
+    mapTempClosed: 'Temporarily closed (reopening date TBA)',
+    mapTempClosedUntil: (reopens) => 'Temporarily closed (reopens $reopens)',
+    mapTempClosedPlanned: (from, until) => until == null
+        ? 'Temporarily closed from $from'
+        : 'Temporarily closed $from – $until',
+    mapOpensAt: (when) => 'Opens $when',
+    mapClosesAt: (when) => 'Closing for good $when',
+    mapClosed: 'Closed for good',
   );
 
   static final zh = AppMessages(
@@ -868,6 +995,32 @@ class AppMessages {
     },
     couponStartBracket: (start) => '[$start]',
     couponStartsOn: (start) => '$start起',
+    mapBrandMatsuya: '附设松屋',
+    mapBrandMycurry: '附设My Curry食堂',
+    mapIncludeInactive: '包括已售罄和已停售的门店',
+    mapSelling: '销售中',
+    mapUpcoming: '即将发售',
+    mapSoldOut: '已售罄',
+    mapLegendShop: '门店',
+    mapLegendLabel: '图例',
+    mapMyLocation: '当前位置',
+    mapLocationUnavailable: '无法获取当前位置',
+    mapOpenInGoogleMaps: '在 Google 地图中打开',
+    mapAddress: '地址',
+    mapHours: '营业时间',
+    mapPhone: '电话',
+    mapCall: (phone) => '拨打 $phone',
+    mapDateTime: (m, d, h, _) => '$m/$d $h时',
+    mapDate: (m, d) => '$m/$d',
+    mapStartsAt: (when) => '$when 开售',
+    mapEndedAt: (when) => '$when 停售',
+    mapTempClosed: '暂停营业中（恢复日期未定）',
+    mapTempClosedUntil: (reopens) => '暂停营业中（$reopens 恢复营业）',
+    mapTempClosedPlanned: (from, until) =>
+        until == null ? '$from 起暂停营业' : '$from–$until 暂停营业',
+    mapOpensAt: (when) => '$when 开业',
+    mapClosesAt: (when) => '$when 闭店',
+    mapClosed: '已闭店',
   );
 }
 
