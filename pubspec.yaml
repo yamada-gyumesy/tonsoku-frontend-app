@@ -98,6 +98,10 @@ dependencies:
   firebase_messaging: ^16.6.0
   flutter_local_notifications: ^22.3.1
   app_settings: ^9.0.0
+  # GA4 の画面計測（`screen_view`）。**版は gyumesy-frontend-app と揃える**。
+  # **送る所は `lib/core/analytics/analytics.dart` の 1 か所だけ**（画面から
+  # `FirebaseAnalytics` を直接呼ばない。テストはそこを差し替える）
+  firebase_analytics: ^12.5.0
   # 広告（AdMob）。**SDK に触るのは `lib/core/ads/ad_gateway.dart` だけ**（テストは
   # そこを偽物に差し替え、本物の広告を読み込まない）。枠の ID は
   # `lib/core/config/ad_config.dart`、アプリ ID は Info.plist / AndroidManifest.xml
@@ -156,6 +160,11 @@ flutter:
     # （`tonsoku-frontend-web/public/images/notifications/`。作り方は web の
     # `docs/notification-samples.md`）。**gyumesy の絵を流用しない**（中身が松屋側）
     - assets/notifications/
+    # オンボーディング（初回起動の 2 枚）の絵。**とん速の web の OGP 画像を縮めたもの**
+    # （`tonsoku-frontend-web/public/ogp-*.png`。ロケールごとに 1 枚ずつ）。
+    # gyumesy はアプリの実スクリーンショットを端末の枠に入れているが、とん速は
+    # まだ撮れていない（作り方と差し替えの方針は `OnboardingPage` の doc）
+    - assets/onboarding/
 
   fonts:
     # **日本語は Klee One の SemiBold 1 つで描く**（web と同じ。本文も太字も）。

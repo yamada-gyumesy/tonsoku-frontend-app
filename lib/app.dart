@@ -14,6 +14,7 @@ import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/core/theme/theme_mode_controller.dart';
 import 'package:tonsoku/features/notifications/data/push_bootstrap.dart';
 import 'package:tonsoku/features/notifications/domain/deep_link.dart';
+import 'package:tonsoku/features/onboarding/presentation/onboarding_overlay.dart';
 import 'package:tonsoku/features/shell/presentation/menu_screen_request.dart';
 
 class TonsokuApp extends ConsumerStatefulWidget {
@@ -191,6 +192,9 @@ class _TonsokuAppState extends ConsumerState<TonsokuApp>
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // 初回だけオンボーディングを重ねる（重ねる形にした理由は
+      // [OnboardingOverlay]。gyumesy と同じ置き場）
+      builder: (context, child) => OnboardingOverlay(child: child),
     );
   }
 }

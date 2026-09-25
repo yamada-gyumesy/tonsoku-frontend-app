@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/licenses/dev_only_packages.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
@@ -30,32 +32,36 @@ class LicensesPage extends ConsumerWidget {
     final colors = context.colors;
     final entries = ref.watch(bundledLicensesProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(t.menuLicenses)),
-      body: entries.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        // **黙って白紙にしない。** 集める側が 1 つでも落ちると全件消えるが、
-        // これは法令順守のための画面で、消えたこと自体が問題になる。
-        // 気づけないまま出荷するより、読み直せる形で出す
-        error: (_, _) =>
-            LoadFailure(onRetry: () => ref.invalidate(bundledLicensesProvider)),
-        data: (packages) => ListView.separated(
-          itemCount: packages.length + 1,
-          separatorBuilder: (context, _) =>
-              Divider(height: 1, thickness: 1, color: colors.border),
-          itemBuilder: (context, index) {
-            if (index == 0) return _Intro(colors: colors);
-            final package = packages[index - 1];
-            return MenuListRow(
-              label: package.name,
-              value: t.licenseCount(package.licenses.length),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => _LicenseDetailPage(package: package),
+    return TrackScreen(
+      screen: ScreenPath.licenses(ref.watch(localeControllerProvider), t),
+      child: Scaffold(
+        appBar: AppBar(title: Text(t.menuLicenses)),
+        body: entries.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          // **黙って白紙にしない。** 集める側が 1 つでも落ちると全件消えるが、
+          // これは法令順守のための画面で、消えたこと自体が問題になる。
+          // 気づけないまま出荷するより、読み直せる形で出す
+          error: (_, _) => LoadFailure(
+            onRetry: () => ref.invalidate(bundledLicensesProvider),
+          ),
+          data: (packages) => ListView.separated(
+            itemCount: packages.length + 1,
+            separatorBuilder: (context, _) =>
+                Divider(height: 1, thickness: 1, color: colors.border),
+            itemBuilder: (context, index) {
+              if (index == 0) return _Intro(colors: colors);
+              final package = packages[index - 1];
+              return MenuListRow(
+                label: package.name,
+                value: t.licenseCount(package.licenses.length),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => _LicenseDetailPage(package: package),
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

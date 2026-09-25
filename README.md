@@ -37,6 +37,7 @@
 - **firebase_messaging / flutter_local_notifications** - プッシュ通知（下の「プッシュ通知」）
 - **google_mobile_ads / app_tracking_transparency** - 広告（AdMob）と iOS の ATT
 - **app_links** - ユニバーサルリンク / App Links（[docs/deep-links.md](docs/deep-links.md)）
+- **firebase_analytics** - GA4 の画面計測（下の「計測（GA4）」）
 
 依存は**実際に使う時に足す**（gyumesy と同じ方針）。
 
@@ -90,6 +91,8 @@ CI は `.tool-versions` から Flutter の版を読んで固定し、`flutter pu
 ```
 lib/
   core/
+    ads/        # 広告（AdMob）
+    analytics/  # GA4 の画面計測（web と同じパス・題で送る）
     cdn/        # 配信データのパス解決と取得（stale-while-revalidate）
     config/     # 環境設定
     i18n/       # ロケール定義・UI固定文言
@@ -131,6 +134,37 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 - **通知のタップの行き先は `deepLinkTarget` の 1 本で決める**（`lib/features/notifications/domain/deep_link.dart`）。アプリに無い面は外部ブラウザで開く。ユニバーサルリンク / App Links も同じ入口に合流させている（[docs/deep-links.md](docs/deep-links.md)）
 - iOS の最低対応は **15.0**（firebase-core / firebase-messaging が要求する。gyumesy と同じ）
 
+## 計測（GA4）
+
+**web と同じ GA4 プロパティ（`552748808`「とん速 | 松のや速報」）に入る**（Firebase プロジェクト `tonsoku` のアプリのストリーム。作り手は tonsoku-infra-terraform）。作りは gyumesy-frontend-app のまま。
+
+- **画面ごとに `screen_view` を 1 回送る**（`lib/core/analytics/`）。**スクリーン名は web の `<title>`、スクリーン クラスは web のパス**にしてあり、GA4 の統合ディメンション（「ページタイトルとスクリーン名」「ページパスとスクリーン クラス」）で**同じ画面の app と web が 1 行に並ぶ**。理由と `page_view` を送らない経緯は `analytics.dart` の doc
+- **自動の `screen_view` は切ってある**（iOS の `Info.plist` の `FirebaseAutomaticScreenReportingEnabled`、Android の `google_analytics_automatic_screen_reporting_enabled`）。Flutter は画面が 1 枚なので、自動では全画面が 1 行に潰れる
+- **画面を足したら `ScreenPath` に足し、`TrackScreen` で包む。** 対応は `test/core/analytics/screen_path_test.dart` が全画面・全ロケールで持っている
+
+| 画面 | スクリーン クラス（= web のパス） | スクリーン名（= web の `<title>`、日本語） |
+|---|---|---|
+| ホーム | `/` | `とん速 \| 松のや速報` |
+| 記事一覧 | `/articles/` | `記事一覧 \| とん速` |
+| 記事 | `/articles/{slug}/` | `{記事の題} \| とん速` |
+| カレンダー | `/calendar/` | `松のやカレンダー \| とん速` |
+| クーポン | `/coupon/` | `松のやのクーポン \| とん速` |
+| ランキング | `/ranking/` | `ランキング \| とん速` |
+| 通知設定 | `/notifications/` | `通知設定 \| とん速` |
+| マップ（web に無い） | `map` | `map` |
+| ライセンス（web に無い） | `licenses` | `licenses` |
+| オンボーディング（web に無い） | `onboarding/intro` / `onboarding/notifications` | 同左 |
+
+英語・中国語は web と同じく `/en/` `/zh/` が付き、題の接尾辞は `Tonsoku` / `豚速`。**web に無い画面はスラッシュの無い名前で送る**（web のパスと見分けが付き、web に同名のページができても混ざらない）。
+
+## オンボーディング
+
+**初回起動だけ 2 枚を本体の上に重ねる**（サービス紹介 → 通知の許可。`lib/features/onboarding/`。作りは gyumesy-frontend-app のまま）。一度閉じたら二度と出さない（版では出し直さない）。
+
+- **通知の許可はいきなり求めない**（2 枚目で何が届くかを見せてから）。許可すると全カテゴリを購読する。**カテゴリが届くまで最大 5 秒待つ**（届く前に進むと購読 0 件になる。gyumesy の 79d2ce4）
+- **広告の同意（UMP）と ATT はオンボーディングを閉じてから出す**（下の「広告」）
+- 絵（`assets/onboarding/`）は web の OGP 画像を縮めたもの。**アプリのスクリーンショットが撮れたら差し替える**（手順は `OnboardingPage` の doc）
+
 ## 広告
 
 AdMob。置き場と方針は [CLAUDE.md](CLAUDE.md) の「広告」。
@@ -143,7 +177,7 @@ AdMob。置き場と方針は [CLAUDE.md](CLAUDE.md) の「広告」。
 
 - **release 以外（`flutter run`）は枠の ID に関係なく Google のテスト用 ID で出る**（テスト用の広告は数えられない）
 - **リリース前にアプリ ID を 2 つとも差し替える。** ユニット ID だけ入れてアプリ ID がテスト用のままだと広告が配信されない
-- 起動の順は **同意（UMP）→ ATT → SDK の初期化**（`lib/core/ads/ads_controller.dart`。呼ぶのは `main.dart` の 1 か所）
+- 起動の順は **同意（UMP）→ ATT → SDK の初期化**（`lib/core/ads/ads_controller.dart`。呼ぶのは `main.dart` の 1 か所）。**初回起動はオンボーディングを閉じてから始める**（ATT を通知の許可やオンボーディングに重ねない。`lib/features/onboarding/data/ads_after_onboarding.dart`）
 
 ## 書体
 

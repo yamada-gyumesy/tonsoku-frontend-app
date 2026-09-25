@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/analytics/screen_path.dart';
+import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/lifecycle/app_resume.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
@@ -105,61 +107,67 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 記事は読める（web も 1 枚も無ければ節ごと出さない）
     final weeks = ref.watch(limitedWeeksProvider).value?.weeks ?? const [];
 
-    return Scaffold(
-      backgroundColor: colors.page,
-      body: NotificationListener<ScrollUpdateNotification>(
-        onNotification: _headerHidden.handleScroll,
-        child: Stack(
-          children: [
-            RefreshIndicator(
-              // 引っ張って更新の輪はヘッダーの下から出す
-              edgeOffset: topInset,
-              onRefresh: _reload,
-              child: CustomScrollView(
-                // 中身が短くても引っ張って更新できるようにする
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  // ヘッダーに潜り込ませるぶんの余白 ＋ web の `pt-4`
-                  SliverToBoxAdapter(child: SizedBox(height: topInset + 16)),
-                  SliverToBoxAdapter(
-                    child: LimitedWeeksSection(
-                      weeks: weeks,
-                      onOpenArticle: widget.onOpenArticle,
+    return TrackScreen(
+      screen: ScreenPath.home(
+        ref.watch(localeControllerProvider),
+        ref.watch(messagesProvider),
+      ),
+      child: Scaffold(
+        backgroundColor: colors.page,
+        body: NotificationListener<ScrollUpdateNotification>(
+          onNotification: _headerHidden.handleScroll,
+          child: Stack(
+            children: [
+              RefreshIndicator(
+                // 引っ張って更新の輪はヘッダーの下から出す
+                edgeOffset: topInset,
+                onRefresh: _reload,
+                child: CustomScrollView(
+                  // 中身が短くても引っ張って更新できるようにする
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    // ヘッダーに潜り込ませるぶんの余白 ＋ web の `pt-4`
+                    SliverToBoxAdapter(child: SizedBox(height: topInset + 16)),
+                    SliverToBoxAdapter(
+                      child: LimitedWeeksSection(
+                        weeks: weeks,
+                        onOpenArticle: widget.onOpenArticle,
+                      ),
                     ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: DealCouponSection(
-                      onOpenArticle: widget.onOpenArticle,
-                      onOpenCoupon: widget.onOpenCoupon,
+                    SliverToBoxAdapter(
+                      child: DealCouponSection(
+                        onOpenArticle: widget.onOpenArticle,
+                        onOpenCoupon: widget.onOpenCoupon,
+                      ),
                     ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: SectionHeading(label: t.homeLatestHeading),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: SectionHeading(label: t.homeLatestHeading),
+                      ),
                     ),
-                  ),
-                  ..._latest(
-                    feed: feed,
-                    categories: categories,
-                    tags: tags,
-                    noArticles: t.commonNoArticles,
-                    pastArticles: t.homePastArticles,
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                ],
+                    ..._latest(
+                      feed: feed,
+                      categories: categories,
+                      tags: tags,
+                      noArticles: t.commonNoArticles,
+                      pastArticles: t.homePastArticles,
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                  ],
+                ),
               ),
-            ),
-            ValueListenableBuilder<double>(
-              valueListenable: _headerHidden,
-              builder: (context, hidden, _) => Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: TonsokuAppBar(hidden: hidden),
+              ValueListenableBuilder<double>(
+                valueListenable: _headerHidden,
+                builder: (context, hidden, _) => Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: TonsokuAppBar(hidden: hidden),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

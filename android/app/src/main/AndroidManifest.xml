@@ -13,10 +13,23 @@
     <!-- Android 13 以降は通知の表示に実行時の許可が要る。**宣言が無いと
          許可を求めるダイアログ自体が出ない**（拒否として即座に返る。gyumesy と同じ） -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- **広告 ID（AD_ID）は外さない。** gyumesy は `firebase_analytics` が足してくる
+         AD_ID を `tools:node="remove"` で外しているが、あれは広告を持たないアプリの
+         判断。**とん速は AdMob を入れている**ので、外すと広告のターゲティングと
+         計測が効かなくなる。Play Console の申告も「広告 ID を使う」にすること -->
     <application
         android:label="とん速"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- **自動の `screen_view` を切る。** Flutter は Activity が
+             1 つしか無いので、自動収集は全画面を `MainActivity` の
+             1 行に潰してしまう。**画面は `Analytics.screen` が
+             `screen_view` で送る**（`lib/core/analytics/analytics.dart`。
+             iOS の Info.plist と対。片方だけ切ると OS で数え方が変わる。
+             gyumesy と同じ） -->
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
