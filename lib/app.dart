@@ -175,10 +175,11 @@ class _TonsokuAppState extends ConsumerState<TonsokuApp>
   Widget build(BuildContext context) {
     final locale = ref.watch(localeControllerProvider);
 
+    final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
       title: ref.watch(messagesProvider).appName,
       debugShowCheckedModeBanner: false,
-      routerConfig: ref.watch(appRouterProvider),
+      routerConfig: router,
       // **書体はロケールで変わる**（日本語は Klee One。[AppTheme]）
       theme: AppTheme.light(locale),
       darkTheme: AppTheme.dark(locale),
@@ -194,7 +195,11 @@ class _TonsokuAppState extends ConsumerState<TonsokuApp>
       ],
       // 初回だけオンボーディングを重ねる（重ねる形にした理由は
       // [OnboardingOverlay]。gyumesy と同じ置き場）
-      builder: (context, child) => OnboardingOverlay(child: child),
+      // 戻る操作はルーターの受け口から先に取る（[OnboardingPage] の注記）
+      builder: (context, child) => OnboardingOverlay(
+        backButtonDispatcher: router.backButtonDispatcher,
+        child: child,
+      ),
     );
   }
 }

@@ -12,9 +12,16 @@ import 'package:tonsoku/features/onboarding/presentation/onboarding_page.dart';
 /// ディープリンクで記事を直接開いた時に間に挟まる。
 /// **重ねるだけなら、閉じた瞬間に下の画面がそのまま出る。**
 class OnboardingOverlay extends ConsumerStatefulWidget {
-  const OnboardingOverlay({required this.child, super.key});
+  const OnboardingOverlay({
+    required this.child,
+    this.backButtonDispatcher,
+    super.key,
+  });
 
   final Widget? child;
+
+  /// ルーターの戻るの受け口。[OnboardingPage] へ渡す（戻るを先に取るため）。
+  final BackButtonDispatcher? backButtonDispatcher;
 
   @override
   ConsumerState<OnboardingOverlay> createState() => _OnboardingOverlayState();
@@ -41,6 +48,7 @@ class _OnboardingOverlayState extends ConsumerState<OnboardingOverlay> {
         // **ここに来る時点で `_show` は必ず true**（上で早期に返している）。
         ExcludeSemantics(child: child),
         OnboardingPage(
+          backButtonDispatcher: widget.backButtonDispatcher,
           onDone: () {
             // **見せたことを先に残す。** 閉じる前に落ちても二度は出さない。
             // ここで広告の SDK も始まる（`waitForOnboarding`）

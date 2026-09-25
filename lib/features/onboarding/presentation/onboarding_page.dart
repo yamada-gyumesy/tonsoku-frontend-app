@@ -44,9 +44,18 @@ import 'package:tonsoku/shared/models/category.dart';
 /// **スクリーンショットが撮れたら差し替える**（[DeviceMock] に `Image.asset` を
 /// 渡す。gyumesy と同じ 1206 x 2622 で撮り、幅 900 の WebP に縮める）。
 class OnboardingPage extends ConsumerStatefulWidget {
-  const OnboardingPage({required this.onDone, super.key});
+  const OnboardingPage({
+    required this.onDone,
+    this.backButtonDispatcher,
+    super.key,
+  });
 
   final VoidCallback onDone;
+
+  /// ルーターの戻るの受け口（`GoRouter.backButtonDispatcher`）。**この子になって
+  /// 戻る操作を先に取る**（`_OnboardingPageState._back`）。null なら取らない
+  /// （テストで単体に置く時）。
+  final BackButtonDispatcher? backButtonDispatcher;
 
   @override
   ConsumerState<OnboardingPage> createState() => _OnboardingPageState();
@@ -68,10 +77,59 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   /// 通知設定の画面と違い、ここは地がテーマで変わらない
   static const _sample = 'assets/notifications/notification-sample-1.webp';
 
+  /// **戻る操作は、ルーターの戻るの受け口で先に取る**（[_onBack]）。
+  ///
+  /// オンボーディングは `MaterialApp.router` の `builder:` で本体に重ねてあり、
+  /// **ナビゲータの外**に居る。`PopScope` は `ModalRoute` に登録して効くので
+  /// ここでは効かず、`BackButtonListener` も `builder:` がルーターの外なので
+  /// 届かない。そのまま戻るを押すと、ルートならアプリを抜け、ディープリンクで
+  /// 記事を開いていれば**下に隠れた記事だけが pop される**（レビューで判明。
+  /// gyumesy も同じ置き方で同じ穴がある）。**ルーター自身の
+  /// `BackButtonDispatcher` の子になって優先を取れば**、置き場に関係なく
+  /// 最初に呼ばれる
+  ChildBackButtonDispatcher? _back;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.backButtonDispatcher case final parent?) {
+      _back = ChildBackButtonDispatcher(parent)
+        ..addCallback(_onBack)
+        ..takePriority();
+    }
+  }
+
   @override
   void dispose() {
+    if (_back case final back?) {
+      back
+        ..removeCallback(_onBack)
+        ..parent.forget(back);
+    }
     _controller.dispose();
     super.dispose();
+  }
+
+  /// **2 枚目で戻ったら 1 枚目へ返す。** 横取りしないとオンボーディングごと
+  /// アプリが終わり、見終わっていないので**次の起動でまた最初から**出る
+  /// （利用者は「閉じた」つもりなのに戻ってくる）。
+  ///
+  /// **1 枚目での戻るはアプリを抜ける**（ここが最初の画面なので、終わるのが
+  /// 自然）。ルーターへ通すと、下にディープリンクの記事がある時にそれだけが
+  /// pop されるので、ルーターへは渡さない。
+  Future<bool> _onBack() async {
+    if (_page == 0) {
+      await SystemNavigator.pop();
+      return true;
+    }
+    // 送りの完了は待たない（受け口は「処理した」をすぐ返せばよい）
+    unawaited(
+      _controller.previousPage(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      ),
+    );
+    return true;
   }
 
   /// 通知を入れて閉じる。
@@ -155,98 +213,85 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         name: _page == 0 ? 'onboarding/intro' : 'onboarding/notifications',
         title: _page == 0 ? t.onboardingIntroTitle : t.onboardingNotifyTitle,
       ),
-      child: PopScope(
-        // **2 枚目で戻ったら 1 枚目へ返す。** 横取りしないとオンボーディングごと
-        // アプリが終わり、見終わっていないので**次の起動でまた最初から**
-        // 出る（利用者は「閉じた」つもりなのに戻ってくる）。
-        //
-        // **1 枚目での戻るは通す。** ここが最初の画面なので、終わるのが自然。
-        canPop: _page == 0,
-        onPopInvokedWithResult: (didPop, _) {
-          if (didPop) return;
-          _controller.previousPage(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-          );
-        },
-        // **ステータスバーの字も暗くする。** 地をライトに固定するので、OS の
-        // ダークに合わせて白いままだと時刻とアンテナが読めなくなる
-        child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle.dark.copyWith(
-            statusBarColor: Colors.transparent,
-            systemNavigationBarColor: OnboardingStage.background,
-            systemNavigationBarIconBrightness: Brightness.dark,
-          ),
-          child: Scaffold(
-            // **テーマに追随させない。** 絵はライトの地で焼いてあるので、
-            // 地だけ暗いと絵の上下に濃い帯が出て分断して見える
-            backgroundColor: OnboardingStage.background,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: PageView(
-                      controller: _controller,
-                      onPageChanged: (i) => setState(() => _page = i),
-                      children: [
-                        _Intro(t: t, locale: locale),
-                        _Notify(t: t, sample: _sample),
-                      ],
-                    ),
+      // 戻る操作は [_onBack]（`PopScope` はここでは効かない。[_back] の注記）
+      //
+      // **ステータスバーの字も暗くする。** 地をライトに固定するので、OS の
+      // ダークに合わせて白いままだと時刻とアンテナが読めなくなる
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: OnboardingStage.background,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
+        child: Scaffold(
+          // **テーマに追随させない。** 絵はライトの地で焼いてあるので、
+          // 地だけ暗いと絵の上下に濃い帯が出て分断して見える
+          backgroundColor: OnboardingStage.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: PageView(
+                    controller: _controller,
+                    onPageChanged: (i) => setState(() => _page = i),
+                    children: [
+                      _Intro(t: t, locale: locale),
+                      _Notify(t: t, sample: _sample),
+                    ],
                   ),
-                  // **上下に余白を取る。** 端末のモックが下端まで伸びるので、
-                  // 詰めると絵に食い込んで読めない
-                  const SizedBox(height: 24),
-                  _Dots(count: 2, current: _page),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    // **どちらの枚でも同じ高さを取る。** 1 枚目だけボタンが
-                    // 1 段だと、上の絵の高さが枚をまたいで変わって落ち着かない
-                    child: Column(
-                      children: [
-                        _Primary(
-                          label: _page == 0
-                              ? t.onboardingNext
-                              : t.onboardingAllow,
-                          onPressed: _busy
-                              ? null
-                              : _page == 0
-                              ? () => _controller.nextPage(
-                                  duration: const Duration(milliseconds: 250),
-                                  curve: Curves.easeOut,
-                                )
-                              : _allow,
-                        ),
-                        const SizedBox(height: 8),
-                        // **許可しなくても使える。** 同じ強さで並べない。
-                        // 1 枚目では場所だけ取って出さない
-                        Visibility(
-                          visible: _page == 1,
-                          maintainSize: true,
-                          maintainAnimation: true,
-                          maintainState: true,
-                          child: TextButton(
-                            onPressed: _busy ? null : widget.onDone,
-                            style: TextButton.styleFrom(
-                              foregroundColor: OnboardingStage.sub,
-                              // **高さを詰める。** 既定は 48 あり、1 枚目で
-                              // 場所だけ取ると下がぽっかり空いて見える
-                              minimumSize: const Size(0, 36),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 6,
-                              ),
+                ),
+                // **上下に余白を取る。** 端末のモックが下端まで伸びるので、
+                // 詰めると絵に食い込んで読めない
+                const SizedBox(height: 24),
+                _Dots(count: 2, current: _page),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  // **どちらの枚でも同じ高さを取る。** 1 枚目だけボタンが
+                  // 1 段だと、上の絵の高さが枚をまたいで変わって落ち着かない
+                  child: Column(
+                    children: [
+                      _Primary(
+                        label: _page == 0
+                            ? t.onboardingNext
+                            : t.onboardingAllow,
+                        onPressed: _busy
+                            ? null
+                            : _page == 0
+                            ? () => _controller.nextPage(
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOut,
+                              )
+                            : _allow,
+                      ),
+                      const SizedBox(height: 8),
+                      // **許可しなくても使える。** 同じ強さで並べない。
+                      // 1 枚目では場所だけ取って出さない
+                      Visibility(
+                        visible: _page == 1,
+                        maintainSize: true,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        child: TextButton(
+                          onPressed: _busy ? null : widget.onDone,
+                          style: TextButton.styleFrom(
+                            foregroundColor: OnboardingStage.sub,
+                            // **高さを詰める。** 既定は 48 あり、1 枚目で
+                            // 場所だけ取ると下がぽっかり空いて見える
+                            minimumSize: const Size(0, 36),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
                             ),
-                            child: Text(t.onboardingSkip),
                           ),
+                          child: Text(t.onboardingSkip),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

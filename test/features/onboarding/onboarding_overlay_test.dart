@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -141,5 +144,69 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     expect(OnboardingStore(prefs).isDone, isTrue);
+  });
+
+  // **戻るは本番と同じ置き方で見る**（`MaterialApp.router` の `builder:` に
+  // 重ね、下にディープリンクの記事を積む）。`MaterialApp(home:)` では
+  // ナビゲータの内側に居るので、`PopScope` が効かない穴を拾えない（レビューで判明）
+  testWidgets('2 枚目の戻るは 1 枚目へ返し、下の記事は閉じない', (tester) async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'ja'});
+    final prefs = await SharedPreferences.getInstance();
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(
+      initialLocation: '/articles/x',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Scaffold(body: Text('ホーム')),
+          routes: [
+            GoRoute(
+              path: 'articles/:slug',
+              builder: (_, _) => const Scaffold(body: Text('記事')),
+            ),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          messagingServiceProvider.overrideWithValue(messaging),
+          categoriesProvider.overrideWith((ref) => Stream.value(categories)),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(AppLocale.ja),
+          routerConfig: router,
+          builder: (context, child) => OnboardingOverlay(
+            backButtonDispatcher: router.backButtonDispatcher,
+            child: child,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(OnboardingPage), findsOneWidget);
+
+    // 2 枚目へ
+    await tester.tap(find.text('次へ'));
+    await tester.pumpAndSettle();
+    expect(find.text('あとで'), findsOneWidget);
+
+    // Android の戻る
+    // 受け口の Future を待たずに、ページ送りのアニメーションを進める
+    unawaited(tester.binding.handlePopRoute());
+    await tester.pumpAndSettle();
+
+    // 1 枚目に返り、下の記事は閉じていない
+    expect(find.text('次へ'), findsOneWidget);
+    expect(find.byType(OnboardingPage), findsOneWidget);
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/articles/x');
   });
 }
