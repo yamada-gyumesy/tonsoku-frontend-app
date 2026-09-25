@@ -71,6 +71,7 @@ flutter run --dart-define=LOCALE=en
 | `flutter test` | テスト |
 | `dart run build_runner build` | freezed / json_serializable の生成物を更新 |
 | `python3 tool/build_fonts.py` | 同梱書体を web の配布物から作り直す |
+| `python3 tool/build_licenses.py` | ライセンス表記から外すパッケージ（配布物に入らないもの）の一覧を作り直す。依存を変えたら回す（CI が差分を見る） |
 
 **生成物（`*.freezed.dart` / `*.g.dart`）はリポジトリにコミットする。** CI が生成し直して差分が出ないことを確認する。
 

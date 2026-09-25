@@ -24,6 +24,18 @@ class AppMessages {
     required this.navMap,
     required this.navCoupon,
     required this.navMenu,
+    required this.navAbout,
+    required this.navTerms,
+    required this.navPrivacy,
+    required this.themeLabel,
+    required this.themeLight,
+    required this.themeDark,
+    required this.languageLabel,
+    required this.menuOther,
+    required this.menuLicenses,
+    required this.menuVersion,
+    required this.licenseIntro,
+    required this.licenseCount,
     required this.commonLoading,
     required this.commonError,
     required this.commonRetry,
@@ -128,6 +140,27 @@ class AppMessages {
   final String navMap;
   final String navCoupon;
   final String navMenu;
+
+  /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` のうち特商法を除く 2 つ）。
+  final String navAbout;
+  final String navTerms;
+  final String navPrivacy;
+
+  /// 外観の切替（web の `theme.*`）。
+  final String themeLabel;
+  final String themeLight;
+  final String themeDark;
+  final String languageLabel;
+
+  /// メニューの「その他」（アプリ独自。web はフッターに置いている法務とライセンス・版）。
+  /// 文言は gyumesy-frontend-app と同じ。
+  final String menuOther;
+  final String menuLicenses;
+  final String menuVersion;
+  final String licenseIntro;
+
+  /// ライセンス表記の件数。**英語は単数形を持つ**（`1 licenses` は誤り。gyumesy と同じ）。
+  final String Function(int count) licenseCount;
 
   final String commonLoading;
   final String commonError;
@@ -286,6 +319,18 @@ class AppMessages {
     navMap: 'マップ',
     navCoupon: 'クーポン',
     navMenu: 'メニュー',
+    navAbout: 'とん速とは',
+    navTerms: '利用規約',
+    navPrivacy: 'プライバシーポリシー',
+    themeLabel: '外観モード',
+    themeLight: 'ライトモード',
+    themeDark: 'ダークモード',
+    languageLabel: '言語',
+    menuOther: 'その他',
+    menuLicenses: 'ライセンス表記',
+    menuVersion: 'バージョン',
+    licenseIntro: 'このアプリは次のオープンソースソフトウェアを利用しています。',
+    licenseCount: (count) => 'ライセンス $count 件',
     commonLoading: '読み込み中...',
     commonError: 'エラーが発生しました',
     commonRetry: '再読み込み',
@@ -407,6 +452,18 @@ class AppMessages {
     navMap: 'Map',
     navCoupon: 'Coupons',
     navMenu: 'Menu',
+    navAbout: 'About Tonsoku',
+    navTerms: 'Terms of Service',
+    navPrivacy: 'Privacy Policy',
+    themeLabel: 'Theme',
+    themeLight: 'Light mode',
+    themeDark: 'Dark mode',
+    languageLabel: 'Language',
+    menuOther: 'More',
+    menuLicenses: 'Licenses',
+    menuVersion: 'Version',
+    licenseIntro: 'This app uses the following open source software.',
+    licenseCount: (count) => count == 1 ? '1 license' : '$count licenses',
     commonLoading: 'Loading...',
     commonError: 'Something went wrong',
     commonRetry: 'Retry',
@@ -539,6 +596,18 @@ class AppMessages {
     navMap: '地图',
     navCoupon: '优惠券',
     navMenu: '菜单',
+    navAbout: '关于豚速',
+    navTerms: '使用条款',
+    navPrivacy: '隐私政策',
+    themeLabel: '外观模式',
+    themeLight: '浅色模式',
+    themeDark: '深色模式',
+    languageLabel: '语言',
+    menuOther: '其他',
+    menuLicenses: '许可信息',
+    menuVersion: '版本',
+    licenseIntro: '本应用使用了以下开源软件。',
+    licenseCount: (count) => '$count 项许可',
     commonLoading: '加载中…',
     commonError: '发生错误',
     commonRetry: '重新加载',

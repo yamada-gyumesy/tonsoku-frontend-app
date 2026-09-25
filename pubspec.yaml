@@ -66,6 +66,10 @@ dependencies:
   # テスト可能な時刻取得。キャッシュの鮮度判定で DateTime.now() を直接使わない
   clock: ^1.1.1
 
+  # メニューに出すアプリバージョン。**入っている実物から読む**
+  # （pubspec の値を焼き込むと、ストア用に番号だけ上げた時に食い違う。gyumesy と同じ）
+  package_info_plus: ^10.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -90,6 +94,8 @@ flutter:
     # ヘッダーのロゴ。web の public/icon.svg と同じもの（意匠を揃える）。
     # サムネイルの無い記事の既定の絵も web の `public/images/articles/` と同じもの
     - assets/brand/
+    # 同梱書体のライセンス（SIL OFL の帰属表示。`lib/core/licenses/font_licenses.dart`）
+    - assets/licenses/
 
   fonts:
     # **日本語は Klee One の SemiBold 1 つで描く**（web と同じ。本文も太字も）。
