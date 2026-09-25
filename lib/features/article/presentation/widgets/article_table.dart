@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tonsoku/core/theme/app_colors.dart';
+import 'package:tonsoku/features/article/presentation/widgets/article_markdown.dart';
+import 'package:tonsoku/features/article/presentation/widgets/external_link_icon.dart';
 
 /// 本文の表。web の `markdown.css` の `table`:
 ///
@@ -83,29 +84,34 @@ class ArticleTable extends StatelessWidget {
     TextStyle head,
   ) {
     final colors = context.colors;
-    Widget cell(String text, TextStyle style) => Padding(
-      padding: cellPadding,
-      child: MarkdownBody(
-        data: ParsedTable.noWrapLinks(text),
-        styleSheet: MarkdownStyleSheet(
-          p: style,
-          pPadding: EdgeInsets.zero,
-          strong: const TextStyle(fontWeight: FontWeight.w700),
-          a: style.copyWith(
-            color: colors.primaryText,
-            decoration: TextDecoration.underline,
-            decorationColor: colors.primaryText,
+    Widget cell(String text, TextStyle style) {
+      final links = ParsedTable.cellMarkdown(text);
+      return Padding(
+        padding: cellPadding,
+        child: MarkdownBody(
+          data: links.markdown,
+          inlineSyntaxes: [ExternalLinkIconSyntax()],
+          builders: {
+            ExternalLinkIconSyntax.tag: ExternalLinkIconBuilder(
+              hrefs: links.hrefs,
+              color: colors.primaryText,
+              onTap: openArticleLink,
+            ),
+          },
+          styleSheet: MarkdownStyleSheet(
+            p: style,
+            pPadding: EdgeInsets.zero,
+            strong: const TextStyle(fontWeight: FontWeight.w700),
+            a: style.copyWith(
+              color: colors.primaryText,
+              decoration: TextDecoration.underline,
+              decorationColor: colors.primaryText,
+            ),
           ),
+          onTapLink: (text, href, title) => openArticleLink(href),
         ),
-        onTapLink: (text, href, title) {
-          final uri = href == null ? null : Uri.tryParse(href);
-          if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
-            return;
-          }
-          launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-        },
-      ),
-    );
+      );
+    }
 
     return Table(
       columnWidths: {
@@ -136,16 +142,39 @@ class ArticleTable extends StatelessWidget {
     TextScaler scaler, {
     required bool header,
   }) {
-    // **組む時と同じ文字で測る**（リンクは折り返さない。[ParsedTable.noWrapLinks]）
-    final plain = ParsedTable.plainText(ParsedTable.noWrapLinks(markdown));
+    // **組む時と同じ文字で測る**（リンクは折り返さない。外部リンクの記号は
+    // 1 字に縮めて、幅は記号の分を足す）
+    final plain = ExternalLinks.collapse(
+      ParsedTable.plainText(ParsedTable.cellMarkdown(markdown).markdown),
+    );
+    // **記号は組む時と同じ字を、前後の文字と続けて 1 度に測る。** 別々に測って
+    // 足すと続けて組んだ幅より僅かに狭く出ることがあり、列がその幅ちょうどで
+    // 決まると**記号だけが次の行に落ちた**（リンクだけのセル。実機で出た）
     double width(String s) {
+      final parts = s.split(ExternalLinks.open);
       final painter = TextPainter(
-        text: TextSpan(text: s, style: style),
+        text: TextSpan(
+          style: style,
+          children: [
+            for (final (i, part) in parts.indexed) ...[
+              if (i > 0)
+                ExternalLinkIconBuilder.span(
+                  style,
+                  color: const Color(0xFF000000),
+                ),
+              TextSpan(text: part),
+            ],
+          ],
+        ),
         textDirection: TextDirection.ltr,
         textScaler: scaler,
         maxLines: 1,
       )..layout();
-      final w = painter.width;
+      // **1pt の余裕を持たせる。** 測った幅と、セルの中で組んだ時に要る幅は
+      // 字間の丸めなどで僅かに食い違う（実測で 0.17pt 狭く出た）。列がその幅
+      // ちょうどで決まると、折り返せない一続きの末尾（外部リンクの記号）だけが
+      // 次の行に落ちる
+      final w = painter.width + 1;
       painter.dispose();
       return w;
     }
@@ -326,6 +355,12 @@ class ParsedTable {
       if (ch == _wordJoiner) {
         // 幅 0。前後を切らせないだけ
         glued = true;
+      } else if (ch == ExternalLinks.open) {
+        // 外部リンクの記号（[ExternalLinks.collapse] で 1 字に縮めたもの）。
+        // **前とはつながる**（記号の空きが NO-BREAK SPACE）。後ろは英字の
+        // 扱い（アイコンの書体の字は組版では英字と同じ類）
+        buffer.write(ch);
+        set();
       } else if (ch == _noBreakSpace) {
         buffer.write(ch);
         set();
@@ -353,6 +388,12 @@ class ParsedTable {
     flush();
     return segments;
   }
+
+  /// セルに渡す Markdown。**リンクは折り返さず**（[noWrapLinks]）、外部リンクの
+  /// 記号を付ける（web の `td a { white-space: nowrap }` はリンク全体 ―― 記号を
+  /// 含む ―― に掛かっている。記号の前で折り返さないのは [ExternalLinks.mark]）。
+  static ExternalLinks cellMarkdown(String markdown) =>
+      ExternalLinks.mark(noWrapLinks(markdown));
 
   static const _wordJoiner = '\u2060';
   static const _noBreakSpace = '\u00A0';

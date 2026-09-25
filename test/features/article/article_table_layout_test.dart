@@ -58,7 +58,9 @@ void main() {
       final boxes = paragraph.getBoxesForSelection(
         TextSelection(baseOffset: i, extentOffset: i + 1),
       );
-      if (boxes.isEmpty) continue;
+      // 外部リンクの記号（置き換え文字）は縦位置を中央に揃えているので、
+      // 箱の上端で行を分けられない。記号の位置は別に確かめる
+      if (boxes.isEmpty || plain[i] == '\uFFFC') continue;
       final top = boxes.first.top.roundToDouble();
       (lines[top] ??= StringBuffer()).write(plain[i]);
     }
@@ -103,9 +105,64 @@ void main() {
     final withLink = lines.where((l) => l.contains('松')).toList();
     expect(withLink, hasLength(1), reason: '$lines');
     expect(
-      withLink.single.replaceAll('⁠', '').replaceAll(' ', ' '),
+      withLink.single.replaceAll('\u2060', '').replaceAll('\u00A0', ' '),
       contains('松のや 草加店（草加駅前）'),
       reason: '$lines',
     );
+
+    // **外部リンクの記号はリンクの末尾と同じ行に付く**（web の `td a` の
+    // `nowrap` は記号を含むリンク全体に掛かる）
+    final paragraph = tester
+        .renderObjectList<RenderParagraph>(find.byType(RichText))
+        .firstWhere(
+          (p) => p.text.toPlainText().replaceAll('\u2060', '').contains('草加店'),
+        );
+    final plain = paragraph.text.toPlainText();
+    Rect boxOf(int i) => paragraph
+        .getBoxesForSelection(TextSelection(baseOffset: i, extentOffset: i + 1))
+        .first
+        .toRect();
+    final glyph = plain.indexOf(
+      String.fromCharCode(Icons.open_in_new.codePoint),
+    );
+    expect(glyph, greaterThan(0), reason: '記号が描かれている');
+    final close = boxOf(plain.indexOf('）'));
+    final icon = boxOf(glyph);
+    expect(icon.center.dy, inInclusiveRange(close.top, close.bottom));
+    expect(icon.left, greaterThanOrEqualTo(close.right));
+  });
+
+  /// 本番の記事 `lsmujz`。リンクだけのセルは、列の幅がリンク＋記号の幅ちょうどで
+  /// 決まる。**測った幅が組んだ時に要る幅より僅かでも狭いと、記号だけが次の行に
+  /// 落ちた**（シミュレータで出た。差は 0.17pt）。
+  testWidgets('リンクだけのセルでも記号はリンクと同じ行に付く', (tester) async {
+    await pump(
+      tester,
+      '| 店舗名 | 所在地 | 営業時間 |\n'
+      '|---|---|---|\n'
+      '| [松のや 川口店](https://example.com/a) '
+      '| 埼玉県川口市 [Map](https://example.com/b) '
+      '| 5時から翌3時、ラストオーダー30分前 |',
+    );
+    final glyph = String.fromCharCode(Icons.open_in_new.codePoint);
+    for (final paragraph in tester.renderObjectList<RenderParagraph>(
+      find.byType(RichText),
+    )) {
+      final plain = paragraph.text.toPlainText();
+      final at = plain.indexOf(glyph);
+      if (at < 1) continue;
+      Rect boxOf(int i) => paragraph
+          .getBoxesForSelection(
+            TextSelection(baseOffset: i, extentOffset: i + 1),
+          )
+          .first
+          .toRect();
+      final before = boxOf(at - 2); // 空きの前の字
+      expect(
+        boxOf(at).center.dy,
+        inInclusiveRange(before.top, before.bottom),
+        reason: plain.replaceAll('\u2060', ''),
+      );
+    }
   });
 }

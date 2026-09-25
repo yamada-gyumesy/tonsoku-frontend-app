@@ -45,7 +45,9 @@ import 'package:tonsoku/shared/widgets/section_heading.dart';
 ///
 /// ## この画面にまだ無いもの
 ///
-/// - **広告**（web の `CoAdSlot` 3 枠）… 広告の Issue（#5）
+/// - **広告** … 広告の Issue（#5）。**web の記事 3 枠（`CoAdSlot`）は写さない**
+///   （アプリは記事への直接の着地が少なく回遊型なので、下タブの上の固定バナーが
+///   主軸。記事の中は置いても 1 枠。web の広告の選定セッションの回答）
 /// - **この記事の前後の予定**（web の `CoCalendarSection`）… カレンダーと一緒に
 ///   メニューの Issue（#4）
 /// - **アプリの案内**（web の `CoAppDownload`）… アプリの中では出さない

@@ -4,6 +4,15 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tonsoku/core/theme/app_colors.dart';
+import 'package:tonsoku/features/article/presentation/widgets/external_link_icon.dart';
+
+/// 本文・表のリンクを開く。**http(s) 以外は開かない**（web の `safeExternalUrl`。
+/// 配信の URL はこちらの管理下に無い）。
+void openArticleLink(String? href) {
+  final uri = href == null ? null : Uri.tryParse(href);
+  if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) return;
+  launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+}
 
 /// 本文の Markdown 部分。**web の `src/assets/styles/markdown.css` を移したもの。**
 ///
@@ -26,28 +35,23 @@ class ArticleMarkdown extends StatelessWidget {
     // ——長文を読ませる画面で、web と同じ間隔にしないと同じ記事が別物の密度に見える
     final body = TextStyle(fontSize: 16, height: 2, color: colors.text);
 
+    // 本文の http リンクの後ろに外部リンクの記号（web の `a[href^="http"]::after`）
+    final links = ExternalLinks.mark(markdown);
+
     return MarkdownBody(
-      data: markdown,
+      data: links.markdown,
       selectable: false,
-      onTapLink: (text, href, title) {
-        final uri = href == null ? null : Uri.tryParse(href);
-        // **http(s) 以外は開かない**（web の `safeExternalUrl`。配信の URL は
-        // こちらの管理下に無い）
-        if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
-          return;
-        }
-        launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      },
-      // **本文中の http リンクに外部リンクの記号を付けていない。**
-      // web は `a[href^="http"]::after` で 0.75em の記号を置くが、この器は
-      // インラインの後ろに部品を足す口を持たない（`'a'` の builder で描くと
-      // リンクの押下と表の中の折り返しを自前で持ち直すことになる）。
-      // **リンクであることは下線と色で示せている**ので、記号だけを落とした
-      //
+      onTapLink: (text, href, title) => openArticleLink(href),
+      inlineSyntaxes: [ExternalLinkIconSyntax()],
       // 見出しは枠線を持つので、スタイルシートでは表現できない
       builders: {
         'h2': _HeadingBuilder.h2(colors),
         'h3': _HeadingBuilder.h3(colors),
+        ExternalLinkIconSyntax.tag: ExternalLinkIconBuilder(
+          hrefs: links.hrefs,
+          color: colors.primaryText,
+          onTap: openArticleLink,
+        ),
       },
       // **行の中身は触らず、記号だけ差し替える**（gyumesy が `'li'` の builder で
       // 太字もリンクも番号も消したのを踏まない）
