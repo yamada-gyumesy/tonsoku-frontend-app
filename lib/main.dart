@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tonsoku/app.dart';
 import 'package:tonsoku/core/licenses/font_licenses.dart';
+import 'package:tonsoku/core/licenses/map_data_license.dart';
 import 'package:tonsoku/core/storage/json_cache.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 
@@ -11,6 +12,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // 同梱書体（Klee One / Noto Sans JP）のライセンスをライセンス表記に載せる
   registerFontLicenses();
+  registerMapDataLicense();
 
   // 保存済みのテーマ・言語を反映してから最初のフレームを描く。非同期のまま
   // 起動すると、既定値で一瞬描いてから設定値に差し替わってちらつく

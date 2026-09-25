@@ -342,6 +342,137 @@ abstract final class CategoryPalette {
       (colors.isDark ? _dark : _light)[slug]?.ink ?? colors.textSub;
 }
 
+/// マップの背景地図の色。**web に地図は無い**ので、ここだけはアプリで決めた値。
+///
+/// ## 決め方
+///
+/// - **陸は紙面の地（`bg` の生成り／ダークは面）に寄せる。** 地図が主役ではなく、
+///   上に載る店の印が主役なので、地図は紙面の続きに見えるくらい静かにする
+/// - **水は青を使わない。** とん速の配色は松のやの色（墨・赤・灰・緑・黄土）だけで
+///   組んでいて、青系を入れない（[CategoryPalette] と同じ方針）。**彩度をほぼ落とした
+///   灰緑**にして、陸との差は明るさで付ける
+/// - **道路・境界は罫線（`border`）の仲間。** 装飾なのでコントラスト要件は無いが、
+///   店の印（非テキスト 3:1）より必ず弱くする
+/// - **鉄道だけは一段濃い灰。** 駅名と並べて場所の見当を付ける手がかりなので、
+///   道路より目立たせる
+/// - **地名の文字は副テキスト（`textSub`）**。縁取りを陸の色で入れるので、道路や
+///   境界の上でも 4.5:1 を保つ（地に対して ライト 5.52:1 / ダーク 6.27:1）
+///
+/// **色を変えたら両テーマで店の印の見え方を確かめること**（印は陸の上に載る）。
+@immutable
+class MapPalette {
+  const MapPalette({
+    required this.land,
+    required this.water,
+    required this.boundaryCountry,
+    required this.boundaryRegion,
+    required this.highway,
+    required this.majorRoad,
+    required this.rail,
+    required this.label,
+    required this.labelHalo,
+    required this.shop,
+    required this.annexMatsuya,
+    required this.soldOut,
+    required this.me,
+    required this.panel,
+    required this.panelBorder,
+  });
+
+  final Color land;
+
+  /// 海（陸の外側）と湖・川。
+  final Color water;
+  final Color boundaryCountry;
+
+  /// 都道府県の境。
+  final Color boundaryRegion;
+  final Color highway;
+  final Color majorRoad;
+  final Color rail;
+
+  /// 地名・駅名の文字。
+  final Color label;
+
+  /// 地名・駅名の縁取り（陸と同じ色）。
+  final Color labelHalo;
+
+  /// **松のや専門店の点**（店舗限定の印が無い時。併設の店は [annexMatsuya] /
+  /// `AppColors.brown`。`ShopDot`）。緑（ユーザーの指定）。
+  ///
+  /// 茶（`AppColors.brown`）は地図の地・道路と同じ系統の色で馴染みすぎ、
+  /// 黄土色も見分けにくかった（どちらもユーザーの指摘）。緑は地図のどの色とも
+  /// 系統が違い、店舗限定の赤とも取り違えない。地との比（計算値。図形は 3:1 以上）:
+  ///
+  /// | | 陸 | 水 |
+  /// |---|---|---|
+  /// | ライト `#1E8A4C` | 4.10 | 3.37 |
+  /// | ダーク `#3DBE7A` | 7.22 | 7.68 |
+  final Color shop;
+
+  /// 松屋併設の店の点。黄（ユーザーの指定。専門店は [shop] の緑、マイカリー
+  /// 食堂併設は `AppColors.brown` の茶）。
+  /// ライトは地との比が 3:1 に届く濃い黄（`#B58500` 陸 3.11。明るい黄は 2.3 で
+  /// 地に溶けた）、ダークは `#F2C94C`（10.8）。
+  final Color annexMatsuya;
+
+  /// **売り切れの印の塗り**（白★を載せる）。押せないボタンのような薄い灰
+  /// （ユーザーの指定。一時的に止まっているだけという意味）。★との差は
+  /// わざと小さい（読ませる字ではなく、沈んで見えることが目的）。
+  final Color soldOut;
+
+  /// **現在地の印**と向きの扇。地図アプリで定番の青（ユーザーの判断。店の緑・
+  /// 店舗限定の赤と取り違えない）。地との比（計算値）: ライト `#1A73E8` 4.22 /
+  /// ダーク `#4C8DF6` 5.26。
+  final Color me;
+
+  /// **地図の上に浮かせる部品**（検索・チップ・ボタン・吹き出し）の地と枠。
+  /// ライトは面色のまま。**ダークはヘッダーと同じ地（`bg`）にする**（ユーザーの
+  /// 指定）―― ダークの陸は面色で、部品も面色だと地図に溶けた。陸を暗くする・
+  /// 明るくする手は、地図が暗すぎる・見えないと言われたので採らない。
+  final Color panel;
+  final Color panelBorder;
+
+  static const light = MapPalette(
+    land: Color(0xFFFAF7F3), // bg と同じ
+    water: Color(0xFFDDE3E1),
+    boundaryCountry: Color(0xFFB5A99F),
+    boundaryRegion: Color(0xFFCDC2B6),
+    highway: Color(0xFFE2D2C2),
+    majorRoad: Color(0xFFEAE1D7),
+    rail: Color(0xFFA3968D),
+    label: Color(0xFF6E625B), // textSub
+    labelHalo: Color(0xFFFAF7F3),
+    shop: Color(0xFF1E8A4C),
+    annexMatsuya: Color(0xFFB58500),
+    soldOut: Color(0xFFCFC8C2),
+    me: Color(0xFF1A73E8),
+    panel: Color(0xFFFFFFFF), // surface と同じ
+    panelBorder: Color(0xFFE7DFD5), // border と同じ
+  );
+
+  static const dark = MapPalette(
+    land: Color(0xFF211A17), // surface と同じ
+    water: Color(0xFF121615),
+    boundaryCountry: Color(0xFF5A4E47),
+    boundaryRegion: Color(0xFF41362F),
+    highway: Color(0xFF41352E),
+    majorRoad: Color(0xFF342A25),
+    rail: Color(0xFF6B5E56),
+    label: Color(0xFFA79A92), // textSub
+    labelHalo: Color(0xFF211A17),
+    shop: Color(0xFF3DBE7A),
+    annexMatsuya: Color(0xFFF2C94C),
+    soldOut: Color(0xFF5A504A),
+    me: Color(0xFF4C8DF6),
+    // ヘッダーと同じ地（bg）。陸（面色）より暗く沈めて浮かせる
+    panel: Color(0xFF16110F),
+    panelBorder: Color(0xFF392F2A), // border と同じ
+  );
+
+  static MapPalette of(AppColors colors) => colors.isDark ? dark : light;
+}
+
 extension AppColorsX on BuildContext {
   AppColors get colors => Theme.of(this).extension<AppColors>()!;
 }
