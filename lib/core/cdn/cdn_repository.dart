@@ -206,12 +206,34 @@ class CdnRepository {
 }
 
 /// JSON 配列を受け取ってモデルのリストにする decode を組み立てる。
+///
+/// **読めない要素は 1 件ずつ落とす。** 1 件が型に合わないだけで一覧ごと
+/// 例外にすると、キャッシュがある時は `CdnRepository.watch` が失敗を握り潰すので
+/// **エラーも出ずに古い一覧のまま黙って止まり**、キャッシュが無ければ全件が
+/// 消える。web は同じ場面で**その記事だけを落として**ビルドを続ける
+/// （`src/models/article.ts` の `articleProblems`）ので、それに揃える。
+///
+/// **ただし全件読めなければ例外にする。** 配信の形そのものが変わった時
+/// （鍵の改名など）まで「0 件」に潰すと、壊れているのに「記事がありません」と
+/// 出る。配列でない本文も同じく例外（形が違う）。
 List<T> Function(String) decodeJsonList<T>(
   T Function(Map<String, dynamic>) fromJson,
-) =>
-    (body) => (jsonDecode(body) as List<dynamic>)
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList(growable: false);
+) => (body) {
+  final raw = jsonDecode(body) as List<dynamic>;
+  final items = <T>[];
+  Object? firstError;
+  for (final e in raw) {
+    try {
+      items.add(fromJson(e as Map<String, dynamic>));
+    } on Object catch (error) {
+      firstError ??= error;
+    }
+  }
+  if (items.isEmpty && firstError != null) {
+    throw FormatException('配信の要素が 1 件も読めない: $firstError');
+  }
+  return List.unmodifiable(items);
+};
 
 /// JSON オブジェクトを受け取ってモデルにする decode を組み立てる。
 T Function(String) decodeJsonObject<T>(

@@ -10,6 +10,32 @@ import 'package:mocktail/mocktail.dart';
 class _MockCdnClient extends Mock implements CdnClient {}
 
 void main() {
+  group('decodeJsonList', () {
+    int parse(Map<String, dynamic> json) => json['n'] as int;
+    final decode = decodeJsonList(parse);
+
+    test('読めない要素だけを落とし、残りは返す', () {
+      // web は同じ場面でその記事だけを落としてビルドを続ける。1 件のために
+      // 一覧ごと消える（キャッシュがあれば黙って古いまま止まる）のを防ぐ
+      expect(decode('[{"n": 1}, {"n": null}, {"n": 3}]'), [1, 3]);
+    });
+
+    test('全件読めなければ例外にする（形そのものが変わった時を 0 件に潰さない）', () {
+      expect(
+        () => decode('[{"n": "a"}, {"n": null}]'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('空の配列は空で返す（翻訳 0 件の正常な形）', () {
+      expect(decode('[]'), isEmpty);
+    });
+
+    test('配列でない本文は例外にする', () {
+      expect(() => decode('{"n": 1}'), throwsA(isA<TypeError>()));
+    });
+  });
+
   late Directory dir;
   late JsonCache cache;
   late _MockCdnClient client;

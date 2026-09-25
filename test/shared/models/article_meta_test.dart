@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tonsoku/core/cdn/cdn_repository.dart';
 import 'package:tonsoku/shared/models/article_meta.dart';
 
 void main() {
@@ -115,5 +116,14 @@ void main() {
       article.thumbnailSmall,
       'https://cdn.ton-soku.com/articles/a/thumbnail.webp',
     );
+  });
+
+  test('created_at が null の記事が 1 件混じっても、一覧は残りを返す', () {
+    // 契約上 `created_at` は null を許す（配信に載るのは配信済みだけなので
+    // 実際には入る）。来た時にその 1 件だけが落ちること
+    final list = decodeJsonList(ArticleMeta.fromJson)(
+      '[$sample, {"slug": "b", "title": "t", "created_at": null}]',
+    );
+    expect(list.map((a) => a.slug), ['kyo53t']);
   });
 }

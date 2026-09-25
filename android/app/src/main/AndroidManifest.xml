@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 配信データ（cdn.ton-soku.com）の取得に要る。Flutter のテンプレートは debug /
+         profile の manifest にしか INTERNET を置かないので、ここに書かないと
+         **release ビルドだけ**が全通信に失敗する。`flutter run`（debug）では再現しない
+         （gyumesy-frontend-app と同じ） -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="とん速"
         android:name="${applicationName}"

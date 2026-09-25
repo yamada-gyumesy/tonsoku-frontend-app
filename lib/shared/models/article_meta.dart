@@ -23,8 +23,12 @@ abstract class ArticleMeta with _$ArticleMeta {
     @Default(true) bool published,
 
     /// 初回配信の時刻。**契約は null を許すが、配信に載るのは配信済みの記事だけ**
-    /// なので実際には必ず入る（web の `models/article.ts` も同じ理由で必須に
-    /// 狭めている）
+    /// なので実際には必ず入る。
+    ///
+    /// **必須に狭めるのは、読めない 1 件を落とす仕組みとセット。** web は
+    /// `articleProblems` がその記事を落とす前提で狭めている（`models/article.ts`）。
+    /// こちらは `decodeJsonList` が 1 件ずつ落とすので、null が来ても一覧ごと
+    /// 消えない
     @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// **記事の編集時刻ではなく DB 行の更新時刻。** `created_at` より前の値に
