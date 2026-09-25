@@ -10,6 +10,9 @@
          FINE しか宣言していないと許可の画面が出ない -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Android 13 以降は通知の表示に実行時の許可が要る。**宣言が無いと
+         許可を求めるダイアログ自体が出ない**（拒否として即座に返る。gyumesy と同じ） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="とん速"
         android:name="${applicationName}"
@@ -31,11 +34,52 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- **Flutter 自身のディープリンク処理を切る**（gyumesy と同じ）。
+                 宣言が無い時の既定は**有効**で、intent の URL を**そのまま
+                 go_router へ渡す**。アプリは受け口を `deepLinkTarget` に
+                 一本化している（`app.dart`）ので、両方が動くと 1 本のリンクが
+                 2 回処理され、あちらが後に来て勝つ（gyumesy の実測: ロケール
+                 付きの URL が「Page Not Found」で行き止まり。背面で落とされた
+                 後は前に踏んだリンクが開く）。
+
+                 **App Links の intent-filter はまだ置かない**（リリース整備の
+                 Issue #9 で web の assetlinks.json と対にして足す）。足す時は
+                 **`deepLinkTarget` が開ける面だけを名乗ること**（開けない面を
+                 名乗ると、外部ブラウザへ逃がした 1 本が自分へ戻って際限なく
+                 往復する。`test/features/notifications/deep_link_test.dart` が
+                 止める）。**iOS 側の同じ設定は `ios/Runner/Info.plist`** -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- **背面に居る時、通知は FCM が自分で出す。** その時に使うアイコン・色・
+             チャンネル（gyumesy-frontend-app と同じ組み）。
+
+             **アイコンはランチャーアイコンを指さない。** 指定しないとランチャー
+             アイコンが使われるが、**カラーのアイコンは不透明なので全面が塗り潰されて
+             白い四角になる**（Android は小アイコンをアルファのマスクとしてしか見ない。
+             gyumesy が踏んだ）。素材は `tool/build_notification_icon.py` が web の
+             badge.png から作る。**`push_bootstrap.dart` の `_smallIcon` と同じ絵**
+             ——ずれると前面と背面で違う絵が出る。
+
+             **チャンネル ID は `push_bootstrap.dart` の `_channel` と同じにすること**
+             ——ずれると前面と背面で別チャンネル扱いになり、端末側のオン・オフが
+             2 つに割れる。**送る側（tonsoku-backend-batch の `app/notify/push.py`）は
+             チャンネル・アイコン・色を指定しない**約束で、ここが既定を持つ -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="tonsoku_default" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

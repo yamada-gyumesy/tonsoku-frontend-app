@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "778104663566",
+    "project_id": "tonsoku",
+    "storage_bucket": "tonsoku.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778104663566:android:1e405a176d5ac06f11965f",
+        "android_client_info": {
+          "package_name": "com.gyumesy.tonsoku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhxUtuxTBZfjgSNFgud3JPNMrIzqm1-vs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -57,6 +57,18 @@ class AppMessages {
     required this.menuOther,
     required this.menuLicenses,
     required this.menuVersion,
+    required this.navNotifications,
+    required this.notificationsTitle,
+    required this.notificationsRssAria,
+    required this.notificationsRssCopied,
+    required this.notificationsIntro1,
+    required this.notificationsIntro2,
+    required this.notificationsLocaleNotice,
+    required this.notificationsSampleLabel,
+    required this.notificationsSampleAlt,
+    required this.notificationsTopicsHeading,
+    required this.notificationsMasterLabel,
+    required this.notificationsMasterHintOs,
     required this.licenseIntro,
     required this.licenseCount,
     required this.commonLoading,
@@ -265,6 +277,48 @@ class AppMessages {
   final String menuOther;
   final String menuLicenses;
   final String menuVersion;
+
+  // ---- 通知設定（web の `nav.notifications` と `notifications` 節） ----
+
+  /// メニューの行（web の `nav.notifications`）。
+  final String navNotifications;
+  final String notificationsTitle;
+
+  /// RSS の導線。**開くのではなく URL を写す**ので、読み上げも「コピー」と言う。
+  final String notificationsRssAria;
+
+  /// 写した後に出す知らせ。
+  final String notificationsRssCopied;
+  final String notificationsIntro1;
+
+  /// web は保存ボタンがあるので「設定を保存してください」まで言うが、アプリは
+  /// トグルを切り替えた時点で購読する（保存ボタンが無い）ので、その部分は言わない。
+  final String notificationsIntro2;
+
+  /// **プッシュの本文は日本語でしか配信しない**ことわり。
+  /// **日本語では空文字**（自明なので出さない）。
+  final String notificationsLocaleNotice;
+  final String notificationsSampleLabel;
+  final String Function(int n) notificationsSampleAlt;
+
+  /// **ここから下の 3 つは web に無い**（web は許可ボタンと保存ボタンの作り）。
+  /// アプリは「マスター 1 行 ＋ カテゴリ行・保存ボタン無し」なので、gyumesy-frontend-app
+  /// の同名の文言を写した（ブランド名を含まない）。
+  ///
+  /// カテゴリ別トグルの見出し。**通知全体の行と見分けるために置く**
+  /// （囲みも地色も使わないので、余白だけでは境目が弱い）。
+  ///
+  /// **「通知設定」とは書かない** —— 画面の見出しが既にそれなので、
+  /// 同じ言葉が 2 つ並ぶと入れ子が分からなくなる。
+  final String notificationsTopicsHeading;
+
+  /// マスターのトグル。**これは OS の許可そのもの**なので、アプリ内に別の
+  /// オン・オフを持たない（2 か所で切れると、届かない理由が説明できなくなる）。
+  final String notificationsMasterLabel;
+
+  /// マスターの下に出す注記。**アプリからは切り替えられず設定アプリへ行く**
+  /// ことを、押す前に伝える。
+  final String notificationsMasterHintOs;
   final String licenseIntro;
 
   /// ライセンス表記の件数。**英語は単数形を持つ**（`1 licenses` は誤り。gyumesy と同じ）。
@@ -523,6 +577,18 @@ class AppMessages {
     menuOther: 'その他',
     menuLicenses: 'ライセンス表記',
     menuVersion: 'バージョン',
+    navNotifications: '通知設定',
+    notificationsTitle: '通知設定',
+    notificationsRssAria: 'RSSのURLをコピー',
+    notificationsRssCopied: 'RSSのURLをコピーしました',
+    notificationsIntro1: 'とん速はわりとどうでもいい通知まで配信する可能性があります。',
+    notificationsIntro2: '興味のあるトピックをONにしてください。',
+    notificationsLocaleNotice: '',
+    notificationsSampleLabel: '通知サンプル',
+    notificationsSampleAlt: (n) => '通知サンプル $n',
+    notificationsTopicsHeading: 'トピック別設定',
+    notificationsMasterLabel: '通知を受け取る',
+    notificationsMasterHintOs: '端末の通知設定と連動します',
     licenseIntro: 'このアプリは次のオープンソースソフトウェアを利用しています。',
     licenseCount: (count) => 'ライセンス $count 件',
     commonLoading: '読み込み中...',
@@ -710,6 +776,20 @@ class AppMessages {
     menuOther: 'More',
     menuLicenses: 'Licenses',
     menuVersion: 'Version',
+    navNotifications: 'Notifications',
+    notificationsTitle: 'Notifications',
+    notificationsRssAria: 'Copy RSS feed URL',
+    notificationsRssCopied: 'RSS feed URL copied',
+    notificationsIntro1:
+        'Tonsoku may send you notifications about fairly trivial things.',
+    notificationsIntro2: 'Turn on the topics you care about.',
+    notificationsLocaleNotice:
+        'Push notifications are delivered in Japanese only.',
+    notificationsSampleLabel: 'Sample notifications',
+    notificationsSampleAlt: (n) => 'Sample notification $n',
+    notificationsTopicsHeading: 'Per-topic settings',
+    notificationsMasterLabel: 'Receive notifications',
+    notificationsMasterHintOs: 'Follows your device notification settings',
     licenseIntro: 'This app uses the following open source software.',
     licenseCount: (count) => count == 1 ? '1 license' : '$count licenses',
     commonLoading: 'Loading...',
@@ -908,6 +988,18 @@ class AppMessages {
     menuOther: '其他',
     menuLicenses: '许可信息',
     menuVersion: '版本',
+    navNotifications: '通知设置',
+    notificationsTitle: '通知设置',
+    notificationsRssAria: '复制 RSS 链接',
+    notificationsRssCopied: '已复制 RSS 链接',
+    notificationsIntro1: '豚速有可能连相当无关紧要的消息也推送给你。',
+    notificationsIntro2: '请打开你感兴趣的主题。',
+    notificationsLocaleNotice: '推送通知的内容仅提供日语版本。',
+    notificationsSampleLabel: '通知示例',
+    notificationsSampleAlt: (n) => '通知示例 $n',
+    notificationsTopicsHeading: '按主题设置',
+    notificationsMasterLabel: '接收通知',
+    notificationsMasterHintOs: '与设备的通知设置联动',
     licenseIntro: '本应用使用了以下开源软件。',
     licenseCount: (count) => '$count 项许可',
     commonLoading: '加载中…',
