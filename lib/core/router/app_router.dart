@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/features/article/presentation/article_page.dart';
+import 'package:tonsoku/features/calendar/presentation/calendar_page.dart';
 import 'package:tonsoku/features/coupon/presentation/coupon_page.dart';
 import 'package:tonsoku/features/ranking/presentation/ranking_page.dart';
 import 'package:tonsoku/features/home/presentation/article_list_page.dart';
@@ -35,6 +36,21 @@ abstract final class AppRoutes {
 
   /// ランキング（web の `/ranking/`）。[prefix] は [branchPrefixes] の 1 つ。
   static String ranking(String prefix) => '$prefix/ranking';
+
+  /// カレンダー（web の `/calendar/`）。[prefix] は [branchPrefixes] の 1 つ。
+  ///
+  /// [category] を渡すとそのカテゴリで絞って開く（`?category=campaign`。
+  /// クーポンの「カレンダーをみる」が使う）。web は `#category=` のハッシュで
+  /// 渡しているが、あれはクエリだと別 URL としてクロールされるのを避けるため
+  /// で、アプリには当たらない。**クエリで持つ**のは、ルートの外（通知・
+  /// Universal Links）から来る時にも同じ形で書けるから。
+  ///
+  /// **省略できる引数しか足さない**（メニューの `_openFromMenu` が
+  /// `String Function(String prefix)` として受け取る）。
+  static String calendar(String prefix, {String? category}) => Uri(
+    path: '$prefix/calendar',
+    queryParameters: category == null ? null : {'category': category},
+  ).toString();
 }
 
 /// 記事詳細のルート。**どのタブの中にも積む**（タブを切り替えても読みかけの記事が
@@ -48,6 +64,20 @@ abstract final class AppRoutes {
 GoRoute rankingRoute(String prefix) => GoRoute(
   path: 'ranking',
   builder: (context, state) => RankingPage(
+    onOpenArticle: (slug) => context.push('$prefix/articles/$slug'),
+  ),
+);
+
+/// カレンダーのルート。**どのタブの中にも積む**（[rankingRoute] と同じ理由）。
+///
+/// **絞るカテゴリは `?category=` で受ける**（[AppRoutes.calendar]）。画面は
+/// 開くたびに積むので、値は画面の `initState` で 1 度読めば足りる
+/// （gyumesy はカレンダーがタブで、同じ画面に何度も値が届くので URL と
+/// 画面を揃え続けていた）。
+GoRoute calendarRoute(String prefix) => GoRoute(
+  path: 'calendar',
+  builder: (context, state) => CalendarPage(
+    initialCategory: state.uri.queryParameters['category'],
     onOpenArticle: (slug) => context.push('$prefix/articles/$slug'),
   ),
 );
@@ -106,6 +136,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   articleRoute(''),
+                  calendarRoute(''),
                   rankingRoute(''),
                 ],
               ),
@@ -123,6 +154,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 // メニューから開く画面と、そこから開く記事を積む
                 routes: [
                   articleRoute(AppRoutes.map),
+                  calendarRoute(AppRoutes.map),
                   rankingRoute(AppRoutes.map),
                 ],
               ),
@@ -137,9 +169,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   // **記事はクーポンタブの上に積む**（戻るとクーポンへ帰る）
                   onOpenArticle: (slug) =>
                       context.push('${AppRoutes.coupon}/articles/$slug'),
+                  // **カレンダーもクーポンタブの上に積む**（記事と同じく、戻ると
+                  // クーポンへ帰る。メニューから開いた時と違い、タブを移っても
+                  // 畳まない —— クーポンの画面から開いたものなので、そのタブに属する）
+                  onOpenCalendar: (category) => context.push(
+                    AppRoutes.calendar(AppRoutes.coupon, category: category),
+                  ),
                 ),
                 routes: [
                   articleRoute(AppRoutes.coupon),
+                  calendarRoute(AppRoutes.coupon),
                   rankingRoute(AppRoutes.coupon),
                 ],
               ),

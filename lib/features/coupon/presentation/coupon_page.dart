@@ -29,6 +29,7 @@ import 'package:tonsoku/shared/models/article_meta.dart';
 import 'package:tonsoku/shared/models/coupon.dart';
 import 'package:tonsoku/shared/widgets/async_list_view.dart';
 import 'package:tonsoku/shared/widgets/section_heading.dart';
+import 'package:tonsoku/shared/widgets/view_calendar_link.dart';
 
 /// クーポンタブ。**web の `/coupon/`（`src/pages/[...locale]/coupon.astro`）と
 /// 同じ構成。**
@@ -36,18 +37,30 @@ import 'package:tonsoku/shared/widgets/section_heading.dart';
 /// 見出し＋共有 → 但し書き → 種類表 → 現在使えるクーポン → 最大還元率 →
 /// 今後の予定 → スケジュール。
 ///
+/// スケジュールの見出しの右に「カレンダーをみる」（web と同じ）。**キャンペーンで
+/// 絞った状態**のカレンダーへ飛ばす（[couponCalendarCategory]）。
+///
 /// ## web との違い
 ///
-/// - **スケジュールの見出しに「カレンダーをみる」を置いていない。** カレンダーは
-///   メニューの Issue で入る（それまでは行き先が無い）。入れる時は web と同じく
-///   **キャンペーンで絞った状態**へ飛ばす
 /// - **記事へのリンクは記事の全件（`index.json`）に居る slug だけ**（web の
 ///   `fetchArticles`）。フィード（200 件）で見ると、古い記事を指す施策が
 ///   リンクにならない
 class CouponPage extends ConsumerStatefulWidget {
-  const CouponPage({required this.onOpenArticle, super.key});
+  const CouponPage({
+    required this.onOpenArticle,
+    required this.onOpenCalendar,
+    super.key,
+  });
 
   final ValueChanged<String> onOpenArticle;
+
+  /// カレンダーを開く。**絞るカテゴリ（slug）を渡す**（[couponCalendarCategory]）。
+  /// 積み方はルートの仕事（`calendarRoute`）。
+  final ValueChanged<String> onOpenCalendar;
+
+  /// 「カレンダーをみる」で絞るカテゴリ。web の `#category=campaign`
+  /// （スケジュールの帯はキャンペーンの施策なので、カレンダーもそこで絞って見せる）。
+  static const couponCalendarCategory = 'campaign';
 
   /// 本文の左右の余白（web の `px-4`）。スケジュールの帯の幅もこれから出す。
   static const pageInset = 16.0;
@@ -132,10 +145,12 @@ class _CouponPageState extends ConsumerState<CouponPage> {
                         AsyncValue(:final value?) => _Body(
                           coupon: value,
                           onOpenArticle: widget.onOpenArticle,
+                          onOpenCalendar: widget.onOpenCalendar,
                         ),
                         AsyncValue(hasValue: true) => _Body(
                           coupon: null,
                           onOpenArticle: widget.onOpenArticle,
+                          onOpenCalendar: widget.onOpenCalendar,
                         ),
                         AsyncError() => LoadFailure(
                           onRetry: () => ref.invalidate(couponProvider),
@@ -164,12 +179,17 @@ class _CouponPageState extends ConsumerState<CouponPage> {
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.coupon, required this.onOpenArticle});
+  const _Body({
+    required this.coupon,
+    required this.onOpenArticle,
+    required this.onOpenCalendar,
+  });
 
   /// **null は「配信が無い」**（`coupon.json` がまだ置かれていない）。
   /// 見出し・但し書き・種類表と「ありません」だけを出す。
   final Coupon? coupon;
   final ValueChanged<String> onOpenArticle;
+  final ValueChanged<String> onOpenCalendar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -325,9 +345,17 @@ class _Body extends ConsumerWidget {
           const SizedBox(height: 32),
         ],
 
-        // 4. スケジュール。**帯が 1 本も無い日は節ごと出さない**
+        // 4. スケジュール。**帯が 1 本も無い日は節ごと出さない**。
+        // 見出しの右からカレンダーへ（web と同じ）。**キャンペーンで絞った状態**へ
+        // 飛ばす（帯はキャンペーンの施策なので、同じものを暦の上で見せる）
         if (schedule != null && schedule.bars.isNotEmpty) ...[
-          SectionHeading(label: t.couponScheduleHeading),
+          SectionHeading(
+            label: t.couponScheduleHeading,
+            trailing: ViewCalendarLink(
+              label: t.calendarViewCalendar,
+              onTap: () => onOpenCalendar(CouponPage.couponCalendarCategory),
+            ),
+          ),
           const SizedBox(height: 12),
           CouponScheduleChart(schedule: schedule),
         ],

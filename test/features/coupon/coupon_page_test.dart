@@ -55,6 +55,7 @@ void main() {
     WidgetTester tester,
     Coupon? coupon, {
     bool dark = false,
+    ValueChanged<String>? onOpenCalendar,
   }) async {
     SharedPreferences.setMockInitialValues({'app_locale': 'ja'});
     final store = await SharedPreferences.getInstance();
@@ -81,7 +82,10 @@ void main() {
           theme: dark
               ? AppTheme.dark(AppLocale.ja)
               : AppTheme.light(AppLocale.ja),
-          home: CouponPage(onOpenArticle: (_) {}),
+          home: CouponPage(
+            onOpenArticle: (_) {},
+            onOpenCalendar: onOpenCalendar ?? (_) {},
+          ),
         ),
       ),
     );
@@ -109,6 +113,35 @@ void main() {
       expect(find.byType(CouponBestCard), findsOneWidget);
       expect(find.byType(CouponScheduleChart), findsOneWidget);
     });
+  });
+
+  /// web の `coupon.astro` と同じく、スケジュールの見出しの右から
+  /// **キャンペーンで絞った**カレンダーへ（web は `#category=campaign`）。
+  testWidgets('スケジュールの見出しからキャンペーンで絞ったカレンダーを開く', (tester) async {
+    await atGeneratedAt(synthetic, () async {
+      final opened = <String>[];
+      await pump(tester, synthetic, onOpenCalendar: opened.add);
+
+      final link = find.text(t.calendarViewCalendar);
+      expect(link, findsOneWidget);
+      // 見出しの行に置く（見出しと同じ高さの帯の中）
+      expect(
+        (tester.getCenter(link).dy -
+                tester.getCenter(find.text(t.couponScheduleHeading)).dy)
+            .abs(),
+        lessThan(12),
+      );
+
+      await tester.ensureVisible(link);
+      await tester.pumpAndSettle();
+      await tester.tap(link);
+      expect(opened, ['campaign']);
+    });
+  });
+
+  testWidgets('スケジュールが出ない日は導線も出ない', (tester) async {
+    await pump(tester, null);
+    expect(find.text(t.calendarViewCalendar), findsNothing);
   });
 
   testWidgets('時点は一覧の見出しに日付まで添える', (tester) async {

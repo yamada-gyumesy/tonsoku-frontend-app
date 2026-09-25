@@ -48,8 +48,8 @@ import 'package:tonsoku/shared/widgets/section_heading.dart';
 /// - **広告** … 広告の Issue（#5）。**web の記事 3 枠（`CoAdSlot`）は写さない**
 ///   （アプリは記事への直接の着地が少なく回遊型なので、下タブの上の固定バナーが
 ///   主軸。記事の中は置いても 1 枠。web の広告の選定セッションの回答）
-/// - **この記事の前後の予定**（web の `CoCalendarSection`）… カレンダーと一緒に
-///   メニューの Issue（#4）
+/// - **この記事の前後の予定**（web の `CoCalendarSection`）… #21（カレンダーの部品を
+///   使う。カレンダー本体は #15 で入った）
 /// - **アプリの案内**（web の `CoAppDownload`）… アプリの中では出さない
 ///   （アプリを入れた人に「アプリを入れよう」と言うことになる）
 /// - **X の返信**（web の `CoXComments`）… 持たない（gyumesy と同じく UGC 判定を避ける）

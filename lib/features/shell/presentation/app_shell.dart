@@ -125,6 +125,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             MenuSheet(
               key: _sheetKey,
               onClose: () => setState(() => _sheetOpen = false),
+              onOpenCalendar: () => _openFromMenu(AppRoutes.calendar),
               onOpenRanking: () => _openFromMenu(AppRoutes.ranking),
             ),
         ],

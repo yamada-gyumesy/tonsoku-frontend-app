@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,10 +10,12 @@ import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/core/theme/theme_mode_controller.dart';
+import 'package:tonsoku/features/calendar/data/calendar_repository.dart';
 import 'package:tonsoku/features/menu/presentation/menu_sheet.dart';
 import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
+import 'package:tonsoku/shared/models/calendar_event.dart';
 
 /// メニューのボトムシート。web の `CoMenuSheet` に合わせている。
 void main() {
@@ -20,6 +23,7 @@ void main() {
     WidgetTester tester, {
     Brightness platform = Brightness.light,
     Map<String, Object> prefs = const {},
+    AsyncValue<List<CalendarEvent>> calendar = const AsyncValue.loading(),
   }) async {
     // **表示言語を固定する。** 既定は端末の言語設定から推定するので、
     // 指定しないと実行環境（テストは en）で文言が変わる
@@ -35,6 +39,8 @@ void main() {
           // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
           // （配信の取得を組まない）
           rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+          // カレンダーの行も同じ（既定は取得中）
+          calendarEventsProvider.overrideWithValue(calendar),
         ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),
@@ -50,6 +56,7 @@ void main() {
                   if (open)
                     MenuSheet(
                       key: key,
+                      onOpenCalendar: () {},
                       onOpenRanking: () {},
                       onClose: () => setState(() => open = false),
                     ),
@@ -82,16 +89,112 @@ void main() {
     expect(find.widgetWithText(MenuListRow, '通知設定'), findsNothing);
   });
 
-  /// **並びはユーザーの指定**: とん速とは → カレンダー → ランキング → 通知設定 →
-  /// 外観 → 言語（カレンダー・通知設定はそれぞれの PR で足す）。
-  testWidgets('メニューの並びはユーザーの指定どおり', (tester) async {
+  /// **並びはユーザーの指定。** web とも gyumesy とも違うので、写し直した時に
+  /// 黙って戻らないよう固定する（通知設定は通知の Issue でランキングの下に入る）。
+  testWidgets('並びは とん速とは → カレンダー → ランキング → 外観 → 言語', (tester) async {
     await pumpSheet(tester);
-    final labels = tester
-        .widgetList<MenuListRow>(find.byType(MenuListRow))
-        .map((row) => row.label)
-        .take(4)
-        .toList();
-    expect(labels, ['とん速とは', 'ランキング', '外観モード', '言語']);
+
+    final labels = ['とん速とは', 'カレンダー', 'ランキング', '外観モード', '言語'];
+    final tops = [
+      for (final label in labels)
+        tester.getTopLeft(find.widgetWithText(MenuListRow, label)).dy,
+    ];
+    for (var i = 1; i < tops.length; i++) {
+      expect(
+        tops[i],
+        greaterThan(tops[i - 1]),
+        reason: '${labels[i - 1]} の下に ${labels[i]}',
+      );
+    }
+  });
+
+  group('カレンダーの行', () {
+    // 行ける月（2026-09〜今月から 3 ヶ月先）の判定を固定するため、今日を決める
+    final today = DateTime.utc(2026, 9, 25, 3);
+
+    CalendarEvent event(String start) => CalendarEvent(
+      id: start,
+      title: 't',
+      category: 'menu',
+      startDate: start,
+    );
+
+    Finder row() => find.widgetWithText(MenuListRow, 'カレンダー');
+
+    testWidgets('取得中は出しておく', (tester) async {
+      await pumpSheet(tester);
+      expect(row(), findsOneWidget);
+    });
+
+    testWidgets('取れなかった時も出しておく（開いた先で再試行できる）', (tester) async {
+      await pumpSheet(
+        tester,
+        calendar: AsyncValue.error(Exception('x'), StackTrace.empty),
+      );
+      expect(row(), findsOneWidget);
+    });
+
+    testWidgets('行ける月に予定があれば出す', (tester) async {
+      await withClock(Clock.fixed(today), () async {
+        await pumpSheet(
+          tester,
+          calendar: AsyncValue.data([event('2026-10-15')]),
+        );
+      });
+      expect(row(), findsOneWidget);
+    });
+
+    testWidgets('予定が 0 件なら出さない', (tester) async {
+      await pumpSheet(tester, calendar: const AsyncValue.data([]));
+      expect(row(), findsNothing);
+      // 並びの残りは崩れない
+      expect(find.widgetWithText(MenuListRow, 'ランキング'), findsOneWidget);
+    });
+
+    /// **件数ではなく、画面に出る範囲で数える**（web の `hasEvents`）。下限
+    /// （2026-09）より前の予定しか無いと、行はあるのに開いたら空になる。
+    testWidgets('行けない月の予定しか無ければ出さない', (tester) async {
+      await withClock(Clock.fixed(today), () async {
+        await pumpSheet(
+          tester,
+          calendar: AsyncValue.data([event('2026-08-20')]),
+        );
+      });
+      expect(row(), findsNothing);
+    });
+
+    testWidgets('押すと開く', (tester) async {
+      SharedPreferences.setMockInitialValues({'app_locale': 'ja'});
+      final store = await SharedPreferences.getInstance();
+      var opened = 0;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(store),
+            rankingWindowsProvider.overrideWithValue(
+              const AsyncValue.loading(),
+            ),
+            calendarEventsProvider.overrideWithValue(
+              const AsyncValue.loading(),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(AppLocale.ja),
+            home: Scaffold(
+              body: MenuSheet(
+                onClose: () {},
+                onOpenCalendar: () => opened++,
+                onOpenRanking: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(row());
+      expect(opened, 1);
+    });
   });
 
   testWidgets('暗幕を押すと閉じる', (tester) async {
@@ -199,6 +302,7 @@ void main() {
           // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
           // （配信の取得を組まない）
           rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+          calendarEventsProvider.overrideWithValue(const AsyncValue.loading()),
         ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),
@@ -207,7 +311,11 @@ void main() {
             body: Stack(
               children: [
                 const SizedBox.expand(child: Text('本文')),
-                MenuSheet(onClose: () {}, onOpenRanking: () {}),
+                MenuSheet(
+                  onClose: () {},
+                  onOpenCalendar: () {},
+                  onOpenRanking: () {},
+                ),
               ],
             ),
             bottomNavigationBar: SizedBox(
@@ -340,6 +448,7 @@ void main() {
           // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
           // （配信の取得を組まない）
           rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+          calendarEventsProvider.overrideWithValue(const AsyncValue.loading()),
         ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),
@@ -354,7 +463,12 @@ void main() {
                       child: const Text('下の記事'),
                     ),
                   ),
-                  if (open) MenuSheet(onClose: () {}, onOpenRanking: () {}),
+                  if (open)
+                    MenuSheet(
+                      onClose: () {},
+                      onOpenCalendar: () {},
+                      onOpenRanking: () {},
+                    ),
                 ],
               ),
               bottomNavigationBar: TextButton(
