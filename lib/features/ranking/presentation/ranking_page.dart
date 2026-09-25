@@ -8,6 +8,7 @@ import 'package:tonsoku/features/article/presentation/widgets/back_to_list.dart'
 import 'package:tonsoku/features/home/data/article_providers.dart';
 import 'package:tonsoku/features/home/data/article_repository.dart';
 import 'package:tonsoku/features/home/presentation/widgets/article_card.dart';
+import 'package:tonsoku/features/home/presentation/header_hide_controller.dart';
 import 'package:tonsoku/features/home/presentation/widgets/article_card_skeleton.dart';
 import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
 import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
@@ -18,7 +19,6 @@ import 'package:tonsoku/shared/models/tag.dart';
 import 'package:tonsoku/shared/utils/pull_to_refresh.dart';
 import 'package:tonsoku/shared/widgets/async_list_view.dart';
 import 'package:tonsoku/shared/widgets/back_header.dart';
-import 'package:tonsoku/shared/widgets/sticky_band.dart';
 
 /// ランキング。web の `/ranking/`（gyumesy-frontend-app の `RankingPage` を写し、
 /// とん速の作りに合わせ直した）。デイリー / ウィークリー / マンスリーの 3 つ。
@@ -29,8 +29,9 @@ import 'package:tonsoku/shared/widgets/sticky_band.dart';
 /// ## gyumesy との違い
 ///
 /// - **メニューから開く画面**（gyumesy は下タブ）。見出しの上に戻るの帯を置く
-/// - **期間タブは記事一覧の絞り込みと同じ帯で貼り付ける**（`StickyBand`。web の
-///   `.sticky-band`）。gyumesy は浮いたカードの `StickyToolbar`
+/// - **「＜ 戻る」の帯はスクロールで退く**（記事詳細と同じ。`HeaderHideController`）
+/// - **期間タブはヘッダーのすぐ下に貼り付ける**（web の `.sticky-band`。枠・影なし、
+///   貼り付いたら紙面の端から端まで線）。gyumesy は浮いたカードの `StickyToolbar`
 /// - **窓を横に並べない**（`PageView` を使わない）。1 本の一覧で選んだ窓だけを描き、
 ///   左右に払うと隣の窓へ送る（web の `data-ranking-swipe` と同じ動き）。web も
 ///   3 つの窓で縦のスクロール位置を共有している
@@ -55,26 +56,39 @@ class _RankingPageState extends ConsumerState<RankingPage> {
   /// 結果（デイリー 0 件）が来ると、空の窓を見せたまま止まる。
   RankingWindow? _chosen;
 
-  /// 帯が貼り付いたか（番兵で判定する。記事一覧と同じ）。
+  /// 「＜ 戻る」の帯の退避量（記事詳細と同じ。スクロールに 1:1 で追従する）。
+  final _headerHidden = HeaderHideController(maxHidden: BackHeader.height);
+
+  /// 期間タブが見出しの帯の裏まで来たか（番兵で判定する）。
   final _stuck = ValueNotifier(false);
   final _sentinel = GlobalKey();
-  final _viewport = GlobalKey();
+  final _stack = GlobalKey();
 
   @override
   void dispose() {
+    _headerHidden.dispose();
     _stuck.dispose();
     super.dispose();
   }
 
-  bool _onScroll(ScrollNotification notification) {
-    final sentinel = _sentinel.currentContext?.findRenderObject() as RenderBox?;
-    final viewport = _viewport.currentContext?.findRenderObject() as RenderBox?;
-    if (sentinel == null || viewport == null || !sentinel.attached) {
-      return false;
-    }
-    final y = sentinel.localToGlobal(Offset.zero, ancestor: viewport).dy;
-    _stuck.value = y <= 0;
+  /// ヘッダーの下端（状態バー＋ヘッダーの見えているぶん）。
+  double get _headerBottom =>
+      MediaQuery.paddingOf(context).top +
+      BackHeader.height -
+      _headerHidden.value;
+
+  bool _onScroll(ScrollUpdateNotification notification) {
+    _headerHidden.handleScroll(notification);
+    _updateStuck();
     return false;
+  }
+
+  void _updateStuck() {
+    final sentinel = _sentinel.currentContext?.findRenderObject() as RenderBox?;
+    final stack = _stack.currentContext?.findRenderObject() as RenderBox?;
+    if (sentinel == null || stack == null || !sentinel.attached) return;
+    final y = sentinel.localToGlobal(Offset.zero, ancestor: stack).dy;
+    _stuck.value = y <= _headerBottom;
   }
 
   /// 引っ張って更新。**集計は日次で更新される**ので、開き直さずに取り直せる必要が
@@ -117,61 +131,102 @@ class _RankingPageState extends ConsumerState<RankingPage> {
     final selected =
         _chosen ??
         (resolved == null ? RankingWindow.daily : initialWindow(resolved));
+    final topInset = MediaQuery.paddingOf(context).top + BackHeader.height;
+
+    Widget tabs() => RankingTabs(
+      selected: selected,
+      stuck: _stuck,
+      onSelect: (window) => setState(() => _chosen = window),
+    );
 
     return Scaffold(
       backgroundColor: colors.page,
-      body: Column(
-        children: [
-          BackHeader(onBack: () => backFromArticle(context)),
-          Expanded(
-            child: RefreshIndicator(
+      body: NotificationListener<ScrollUpdateNotification>(
+        onNotification: _onScroll,
+        child: Stack(
+          key: _stack,
+          children: [
+            RefreshIndicator(
+              // 引っ張って更新の輪はヘッダーの下から出す
+              edgeOffset: topInset,
               onRefresh: _reload,
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _onScroll,
-                child: GestureDetector(
-                  onHorizontalDragEnd: resolved == null
-                      ? null
-                      : (details) => _swipe(details, selected),
-                  child: CustomScrollView(
-                    key: _viewport,
-                    // 中身が短くても引っ張って更新できるようにする
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: RankingHeader(
-                          updatedAt:
-                              ref.watch(rankingProvider).value?.computedAt ??
-                              '',
-                        ),
+              child: GestureDetector(
+                onHorizontalDragEnd: resolved == null
+                    ? null
+                    : (details) => _swipe(details, selected),
+                child: CustomScrollView(
+                  // 中身が短くても引っ張って更新できるようにする
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    // **ヘッダーぶんの余白はスクロールする側が持つ**（記事詳細と
+                    // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
+                    SliverToBoxAdapter(child: SizedBox(height: topInset)),
+                    SliverToBoxAdapter(
+                      child: RankingHeader(
+                        updatedAt:
+                            ref.watch(rankingProvider).value?.computedAt ?? '',
                       ),
-                      SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
-                      StickyBand(
-                        stuck: _stuck,
-                        child: RankingTabs(
-                          selected: selected,
-                          stuck: _stuck,
-                          onSelect: (window) =>
-                              setState(() => _chosen = window),
-                        ),
+                    ),
+                    SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
+                    SliverToBoxAdapter(child: tabs()),
+                    ..._body(
+                      windows: windows,
+                      entries: resolved?[selected],
+                      categories: categories,
+                      tags: tags,
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: MediaQuery.paddingOf(context).bottom + 24,
                       ),
-                      ..._body(
-                        windows: windows,
-                        entries: resolved?[selected],
-                        categories: categories,
-                        tags: tags,
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: MediaQuery.paddingOf(context).bottom + 24,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+            // **貼り付いた期間タブは、ヘッダーのすぐ下に重ねて出す**（web の
+            // `.sticky-band` はヘッダーに隙間なく付き、ヘッダーが退くと一緒に
+            // 上がる）。スクロールの中で `pinned` にすると、貼り付く先が画面の
+            // 上端（＝ヘッダーの裏）になって隠れる。**一覧の中のタブはそのまま
+            // 流し**、見出しの帯の裏まで来たら同じタブをこちらに出す
+            AnimatedBuilder(
+              animation: Listenable.merge([_headerHidden, _stuck]),
+              builder: (context, _) => _stuck.value
+                  ? Positioned(
+                      top: _headerBottom,
+                      left: 0,
+                      right: 0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          // **貼り付いた時の線は紙面の端から端まで**（web の
+                          // ユーザー指定）。外側に描いて高さを変えない
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.border,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: tabs(),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            ValueListenableBuilder<double>(
+              valueListenable: _headerHidden,
+              builder: (context, hidden, _) => Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: BackHeader(
+                  hidden: hidden,
+                  onBack: () => backFromArticle(context),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
