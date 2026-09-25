@@ -148,4 +148,56 @@ void main() {
     await fling(300);
     expect(selected(), RankingWindow.weekly);
   });
+
+  /// **貼り付いた状態で短い期間に切り替えても、帯が 2 段に重ならない**
+  /// （一覧が短くなって位置が詰められた時に貼り付きを測り直す。PR #22 の
+  /// レビューで再現）。
+  testWidgets('貼り付いた状態で件数の少ない期間に切り替えても帯は 1 本', (tester) async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'ja'});
+    final store = await SharedPreferences.getInstance();
+    tester.view.physicalSize = const Size(390 * 3, 800 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(store),
+          rankingProvider.overrideWith(
+            (ref) => Stream.value(payload({'daily': 20, 'weekly': 1})),
+          ),
+          articleIndexProvider.overrideWith(
+            (ref) =>
+                Stream.value([for (var i = 0; i < 20; i++) article('s$i')]),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(AppLocale.ja),
+          home: RankingPage(onOpenArticle: (_) {}),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    // 下へ送って帯を貼り付かせる（一覧の中の帯＋ヘッダーの下に重ねた帯）
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1500));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(RankingPage.stuckTabsKey),
+      findsOneWidget,
+      reason: '前提: 貼り付いている',
+    );
+
+    await tester.tap(find.text('ウィークリー').last);
+    await tester.pumpAndSettle();
+    // 一覧が短くなって先頭まで詰められた。貼り付いた帯は消え、一覧の中の帯だけ
+    expect(
+      find.byKey(RankingPage.stuckTabsKey),
+      findsNothing,
+      reason: '帯が 2 段に重なった',
+    );
+    expect(find.byType(RankingTabs), findsOneWidget);
+  });
 }

@@ -40,6 +40,10 @@ class RankingPage extends ConsumerStatefulWidget {
 
   final ValueChanged<String> onOpenArticle;
 
+  /// ヘッダーの下に重ねて出す（貼り付いた）期間タブ。テストが見分けるための鍵。
+  @visibleForTesting
+  static const stuckTabsKey = ValueKey('ranking-stuck-tabs');
+
   /// 払ったと見なす速さ（px/s）。これ未満は縦のスクロールの揺れとして捨てる。
   static const swipeVelocity = 300.0;
 
@@ -84,6 +88,21 @@ class _RankingPageState extends ConsumerState<RankingPage> {
     // 並べ直す前に届くので、ここで測る番兵の位置は 1 つ前のフレームのもの。
     // 最後の通知でずれたままになると、先頭まで戻したのに貼り付いた帯が残る
     // （カレンダーを作る時にテストで踏んだ。同じ組み方）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateStuck();
+    });
+    return false;
+  }
+
+  /// **中身の長さが変わった時も測り直す。** 期間やカテゴリを切り替えて一覧が
+  /// 短くなると、スクロール位置は詰められるが、その時に届くのは
+  /// `ScrollUpdateNotification` ではなくこちら。拾わないと、貼り付いた帯が残って
+  /// 一覧の中の帯と 2 段に重なり、見出しも隠れたままになった（PR #22 の
+  /// レビューで、ランキングを 0〜1 件の期間に切り替えて再現）。先頭まで詰められた
+  /// ら「＜ 戻る」の帯も出し切る
+  bool _onMetrics(ScrollMetricsNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    if (notification.metrics.pixels <= 0) _headerHidden.value = 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updateStuck();
     });
@@ -148,91 +167,96 @@ class _RankingPageState extends ConsumerState<RankingPage> {
 
     return Scaffold(
       backgroundColor: colors.page,
-      body: NotificationListener<ScrollUpdateNotification>(
-        onNotification: _onScroll,
-        child: Stack(
-          key: _stack,
-          children: [
-            RefreshIndicator(
-              // 引っ張って更新の輪はヘッダーの下から出す
-              edgeOffset: topInset,
-              onRefresh: _reload,
-              child: GestureDetector(
-                onHorizontalDragEnd: resolved == null
-                    ? null
-                    : (details) => _swipe(details, selected),
-                child: CustomScrollView(
-                  // 中身が短くても引っ張って更新できるようにする
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    // **ヘッダーぶんの余白はスクロールする側が持つ**（記事詳細と
-                    // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
-                    SliverToBoxAdapter(child: SizedBox(height: topInset)),
-                    SliverToBoxAdapter(
-                      child: RankingHeader(
-                        updatedAt:
-                            ref.watch(rankingProvider).value?.computedAt ?? '',
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
-                    SliverToBoxAdapter(child: tabs()),
-                    ..._body(
-                      windows: windows,
-                      entries: resolved?[selected],
-                      categories: categories,
-                      tags: tags,
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: MediaQuery.paddingOf(context).bottom + 24,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // **貼り付いた期間タブは、ヘッダーのすぐ下に重ねて出す**（web の
-            // `.sticky-band` はヘッダーに隙間なく付き、ヘッダーが退くと一緒に
-            // 上がる）。スクロールの中で `pinned` にすると、貼り付く先が画面の
-            // 上端（＝ヘッダーの裏）になって隠れる。**一覧の中のタブはそのまま
-            // 流し**、見出しの帯の裏まで来たら同じタブをこちらに出す
-            AnimatedBuilder(
-              animation: Listenable.merge([_headerHidden, _stuck]),
-              builder: (context, _) => _stuck.value
-                  ? Positioned(
-                      top: _headerBottom,
-                      left: 0,
-                      right: 0,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          // **貼り付いた時の線は紙面の端から端まで**（web の
-                          // ユーザー指定）。外側に描いて高さを変えない
-                          boxShadow: [
-                            BoxShadow(
-                              color: colors.border,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
+      body: NotificationListener<ScrollMetricsNotification>(
+        onNotification: _onMetrics,
+        child: NotificationListener<ScrollUpdateNotification>(
+          onNotification: _onScroll,
+          child: Stack(
+            key: _stack,
+            children: [
+              RefreshIndicator(
+                // 引っ張って更新の輪はヘッダーの下から出す
+                edgeOffset: topInset,
+                onRefresh: _reload,
+                child: GestureDetector(
+                  onHorizontalDragEnd: resolved == null
+                      ? null
+                      : (details) => _swipe(details, selected),
+                  child: CustomScrollView(
+                    // 中身が短くても引っ張って更新できるようにする
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      // **ヘッダーぶんの余白はスクロールする側が持つ**（記事詳細と
+                      // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
+                      SliverToBoxAdapter(child: SizedBox(height: topInset)),
+                      SliverToBoxAdapter(
+                        child: RankingHeader(
+                          updatedAt:
+                              ref.watch(rankingProvider).value?.computedAt ??
+                              '',
                         ),
-                        child: tabs(),
                       ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            ValueListenableBuilder<double>(
-              valueListenable: _headerHidden,
-              builder: (context, hidden, _) => Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: BackHeader(
-                  hidden: hidden,
-                  onBack: () => backFromArticle(context),
+                      SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
+                      SliverToBoxAdapter(child: tabs()),
+                      ..._body(
+                        windows: windows,
+                        entries: resolved?[selected],
+                        categories: categories,
+                        tags: tags,
+                      ),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: MediaQuery.paddingOf(context).bottom + 24,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              // **貼り付いた期間タブは、ヘッダーのすぐ下に重ねて出す**（web の
+              // `.sticky-band` はヘッダーに隙間なく付き、ヘッダーが退くと一緒に
+              // 上がる）。スクロールの中で `pinned` にすると、貼り付く先が画面の
+              // 上端（＝ヘッダーの裏）になって隠れる。**一覧の中のタブはそのまま
+              // 流し**、見出しの帯の裏まで来たら同じタブをこちらに出す
+              AnimatedBuilder(
+                animation: Listenable.merge([_headerHidden, _stuck]),
+                builder: (context, _) => _stuck.value
+                    ? Positioned(
+                        key: RankingPage.stuckTabsKey,
+                        top: _headerBottom,
+                        left: 0,
+                        right: 0,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            // **貼り付いた時の線は紙面の端から端まで**（web の
+                            // ユーザー指定）。外側に描いて高さを変えない
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.border,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: tabs(),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              ValueListenableBuilder<double>(
+                valueListenable: _headerHidden,
+                builder: (context, hidden, _) => Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: BackHeader(
+                    hidden: hidden,
+                    onBack: () => backFromArticle(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

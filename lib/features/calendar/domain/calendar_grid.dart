@@ -117,8 +117,20 @@ String _iso(DateTime date) =>
     '${date.month.toString().padLeft(2, '0')}-'
     '${date.day.toString().padLeft(2, '0')}';
 
+/// 2 つの日付（`YYYY-MM-DD`）の日数の差。
+///
+/// **UTC で読むこと。** `DateTime.parse('2026-10-04')` は**端末のローカル時刻の
+/// 0 時**になるので、夏時間の切り替えをまたぐと差が 23 時間になり、`inDays` が
+/// **1 日少なく**数える（シドニーの時刻設定の端末で、10/4〜10/9 の線が 1 日手前で
+/// 終わり、10/10 の印が金曜の列に出た。PR #22 のレビューで再現）。英語・中国語の
+/// 利用者は海外の端末で開きうる。web も UTC で差を取っている
 int _dayIndex(String from, String to) =>
-    DateTime.parse(to).difference(DateTime.parse(from)).inDays;
+    _utcDate(to).difference(_utcDate(from)).inDays;
+
+DateTime _utcDate(String iso) {
+  final [y, m, d] = iso.substring(0, 10).split('-').map(int.parse).toList();
+  return DateTime.utc(y, m, d);
+}
 
 /// 安定な並び替え。**同点は元の並び順を保つ。**
 ///

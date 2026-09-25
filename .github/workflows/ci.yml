@@ -59,6 +59,13 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
       - run: flutter test
+      # **日付の計算は夏時間のある時刻設定でも回す。** 端末のローカル時刻で日付を
+      # 読むと、夏時間の切り替えをまたいだ週で 1 日ずれる（PR #22 で踏んだ）。
+      # CI の既定（UTC）では起きないので、ここで回さないと誰も見ていない
+      - name: flutter test（TZ=Australia/Sydney）
+        run: flutter test test/features/calendar
+        env:
+          TZ: Australia/Sydney
 
   codegen:
     # 生成物（*.freezed.dart / *.g.dart）はリポジトリにコミットしているので、

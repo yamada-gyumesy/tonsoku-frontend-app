@@ -170,6 +170,21 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     return false;
   }
 
+  /// **中身の長さが変わった時も測り直す。** 期間やカテゴリを切り替えて一覧が
+  /// 短くなると、スクロール位置は詰められるが、その時に届くのは
+  /// `ScrollUpdateNotification` ではなくこちら。拾わないと、貼り付いた帯が残って
+  /// 一覧の中の帯と 2 段に重なり、見出しも隠れたままになった（PR #22 の
+  /// レビューで、ランキングを 0〜1 件の期間に切り替えて再現）。先頭まで詰められた
+  /// ら「＜ 戻る」の帯も出し切る
+  bool _onMetrics(ScrollMetricsNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    if (notification.metrics.pixels <= 0) _headerHidden.value = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateStuck();
+    });
+    return false;
+  }
+
   void _updateStuck() {
     final sentinel = _sentinel.currentContext?.findRenderObject() as RenderBox?;
     final stack = _stack.currentContext?.findRenderObject() as RenderBox?;
@@ -395,88 +410,92 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
     return Scaffold(
       backgroundColor: colors.page,
-      body: NotificationListener<ScrollUpdateNotification>(
-        onNotification: _onScroll,
-        child: Stack(
-          key: _stack,
-          children: [
-            RefreshIndicator(
-              // 引っ張って更新の輪はヘッダーの下から出す
-              edgeOffset: topInset,
-              onRefresh: _reload,
-              child: CustomScrollView(
-                // 中身が短くても引っ張って更新できるようにする
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  // **ヘッダーぶんの余白はスクロールする側が持つ**（ランキングと
-                  // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
-                  SliverToBoxAdapter(child: SizedBox(height: topInset)),
-                  const SliverToBoxAdapter(child: CalendarHeader()),
-                  SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
-                  if (toolbar() case final bar?) SliverToBoxAdapter(child: bar),
-                  ..._body(
-                    events: events,
-                    today: today,
-                    month: month,
-                    range: range,
-                    lineMode: lineMode,
-                    categories: categories,
-                    tags: tags,
-                  ),
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: MediaQuery.paddingOf(context).bottom + 24,
+      body: NotificationListener<ScrollMetricsNotification>(
+        onNotification: _onMetrics,
+        child: NotificationListener<ScrollUpdateNotification>(
+          onNotification: _onScroll,
+          child: Stack(
+            key: _stack,
+            children: [
+              RefreshIndicator(
+                // 引っ張って更新の輪はヘッダーの下から出す
+                edgeOffset: topInset,
+                onRefresh: _reload,
+                child: CustomScrollView(
+                  // 中身が短くても引っ張って更新できるようにする
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    // **ヘッダーぶんの余白はスクロールする側が持つ**（ランキングと
+                    // 同じ。外に置くと、ヘッダーが退いた時に空の帯として残る）
+                    SliverToBoxAdapter(child: SizedBox(height: topInset)),
+                    const SliverToBoxAdapter(child: CalendarHeader()),
+                    SliverToBoxAdapter(child: SizedBox(key: _sentinel)),
+                    if (toolbar() case final bar?)
+                      SliverToBoxAdapter(child: bar),
+                    ..._body(
+                      events: events,
+                      today: today,
+                      month: month,
+                      range: range,
+                      lineMode: lineMode,
+                      categories: categories,
+                      tags: tags,
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: MediaQuery.paddingOf(context).bottom + 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // **貼り付いた帯は、ヘッダーのすぐ下に重ねて出す**（ランキングの
+              // 期間タブと同じ作り。スクロールの中で `pinned` にすると、貼り付く先が
+              // 画面の上端＝ヘッダーの裏になって隠れる）。**一覧の中の帯はそのまま
+              // 流し**、見出しの帯の裏まで来たら同じ帯をこちらに出す。
+              //
+              // 同じ帯を 2 つ組むので、**カテゴリの行を横に送った位置だけは
+              // 2 つで別々**になる（貼り付いた側で送っても、戻った時の一覧の中の
+              // 帯は元の位置）。選んでいるものは同じ State から描くので食い違わない
+              AnimatedBuilder(
+                animation: Listenable.merge([_headerHidden, _stuck]),
+                builder: (context, _) => switch ((_stuck.value, toolbar())) {
+                  (true, final bar?) => Positioned(
+                    top: _headerBottom,
+                    left: 0,
+                    right: 0,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        // **貼り付いた時の線は紙面の端から端まで**（web の
+                        // `.sticky-band`）。外側に描いて高さを変えない
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.border,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: bar,
                     ),
                   ),
-                ],
+                  _ => const SizedBox.shrink(),
+                },
               ),
-            ),
-            // **貼り付いた帯は、ヘッダーのすぐ下に重ねて出す**（ランキングの
-            // 期間タブと同じ作り。スクロールの中で `pinned` にすると、貼り付く先が
-            // 画面の上端＝ヘッダーの裏になって隠れる）。**一覧の中の帯はそのまま
-            // 流し**、見出しの帯の裏まで来たら同じ帯をこちらに出す。
-            //
-            // 同じ帯を 2 つ組むので、**カテゴリの行を横に送った位置だけは
-            // 2 つで別々**になる（貼り付いた側で送っても、戻った時の一覧の中の
-            // 帯は元の位置）。選んでいるものは同じ State から描くので食い違わない
-            AnimatedBuilder(
-              animation: Listenable.merge([_headerHidden, _stuck]),
-              builder: (context, _) => switch ((_stuck.value, toolbar())) {
-                (true, final bar?) => Positioned(
-                  top: _headerBottom,
+              ValueListenableBuilder<double>(
+                valueListenable: _headerHidden,
+                builder: (context, hidden, _) => Positioned(
+                  top: 0,
                   left: 0,
                   right: 0,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      // **貼り付いた時の線は紙面の端から端まで**（web の
-                      // `.sticky-band`）。外側に描いて高さを変えない
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors.border,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: bar,
+                  child: BackHeader(
+                    hidden: hidden,
+                    onBack: () => backFromArticle(context),
                   ),
                 ),
-                _ => const SizedBox.shrink(),
-              },
-            ),
-            ValueListenableBuilder<double>(
-              valueListenable: _headerHidden,
-              builder: (context, hidden, _) => Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: BackHeader(
-                  hidden: hidden,
-                  onBack: () => backFromArticle(context),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
