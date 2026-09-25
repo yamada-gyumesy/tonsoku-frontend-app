@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tonsoku/app.dart';
+import 'package:tonsoku/core/ads/ads_controller.dart';
 import 'package:tonsoku/core/licenses/font_licenses.dart';
 import 'package:tonsoku/core/licenses/map_data_license.dart';
 import 'package:tonsoku/core/storage/json_cache.dart';
@@ -37,13 +40,22 @@ Future<void> main() async {
     debugPrint('Firebase の初期化に失敗しました: $error\n$stack');
   }
 
+  final container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      jsonCacheProvider.overrideWithValue(cache),
+    ],
+  );
   runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        jsonCacheProvider.overrideWithValue(cache),
-      ],
-      child: const TonsokuApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const TonsokuApp()),
+  );
+
+  // **広告の SDK は最初のフレームの後に始める**（同意（UMP）→ ATT → 初期化。
+  // `AdsController`）。ATT のダイアログは画面が出る前に求めると出ないことがある。
+  // **ATT を聞く場所はオンボーディング（#7）で決め直す** ―― 決まったら、この
+  // 呼び出しをそこへ移す（呼び出しはここ 1 か所だけ）。出す枠が 1 つも無い時
+  // （本番の ID が空・広告を外す課金）は SDK にも ATT にも触れない
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => unawaited(container.read(adsControllerProvider.notifier).start()),
   );
 }

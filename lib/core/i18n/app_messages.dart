@@ -172,6 +172,8 @@ class AppMessages {
     required this.mapFilter,
     required this.mapHeadingUp,
     required this.mapLocationUnavailable,
+    required this.mapUnlockLimited,
+    required this.mapVideoUnavailable,
     required this.mapOpenInGoogleMaps,
     required this.mapAddress,
     required this.mapHours,
@@ -504,6 +506,13 @@ class AppMessages {
 
   final String mapHeadingUp;
   final String mapLocationUnavailable;
+
+  /// 店舗限定の表示を閉じている時の案内（押すとリワード動画）。**開放の長さ
+  /// （6 時間）は書かない**（ユーザーの指定）。
+  final String mapUnlockLimited;
+
+  /// リワード動画を読み込めなかった。
+  final String mapVideoUnavailable;
   final String mapOpenInGoogleMaps;
   final String mapAddress;
   final String mapHours;
@@ -716,6 +725,8 @@ class AppMessages {
     mapFilter: '絞り込み',
     mapHeadingUp: '進行方向が上',
     mapLocationUnavailable: '現在地を取得できません',
+    mapUnlockLimited: '動画を見て店舗限定を表示',
+    mapVideoUnavailable: '動画を読み込めませんでした',
     mapOpenInGoogleMaps: 'Google マップで開く',
     mapAddress: '住所',
     mapHours: '営業時間',
@@ -928,6 +939,8 @@ class AppMessages {
     mapFilter: 'Filter',
     mapHeadingUp: 'Heading up',
     mapLocationUnavailable: 'Your location is unavailable',
+    mapUnlockLimited: 'Watch a video to show Store Exclusives',
+    mapVideoUnavailable: "Couldn't load the video",
     mapOpenInGoogleMaps: 'Open in Google Maps',
     mapAddress: 'Address',
     mapHours: 'Hours',
@@ -1127,6 +1140,8 @@ class AppMessages {
     mapFilter: '筛选',
     mapHeadingUp: '前进方向朝上',
     mapLocationUnavailable: '无法获取当前位置',
+    mapUnlockLimited: '观看视频以显示店铺限定',
+    mapVideoUnavailable: '无法加载视频',
     mapOpenInGoogleMaps: '在 Google 地图中打开',
     mapAddress: '地址',
     mapHours: '营业时间',

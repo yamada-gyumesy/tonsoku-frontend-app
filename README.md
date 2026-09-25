@@ -35,6 +35,7 @@
 - **flutter_map / vector_map_tiles** - マップ（同梱の背景地図をベクターのまま描く）
 - **geolocator** - マップの現在地
 - **firebase_messaging / flutter_local_notifications** - プッシュ通知（下の「プッシュ通知」）
+- **google_mobile_ads / app_tracking_transparency** - 広告（AdMob）と iOS の ATT
 
 依存は**実際に使う時に足す**（gyumesy と同じ方針）。
 
@@ -127,6 +128,20 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 - **Android の通知の小アイコンは白＋透明の専用の絵**（`ic_stat_notification`）。ランチャーアイコンを指すと白い四角になる。web の `public/badge.png` を `assets/icon/notification_icon.png` に写して `python3 tool/build_notification_icon.py` で作る
 - **通知のタップの行き先は `deepLinkTarget` の 1 本で決める**（`lib/features/notifications/domain/deep_link.dart`）。アプリに無い面は外部ブラウザで開く。ユニバーサルリンク / App Links を足す時も同じ入口に合流させる
 - iOS の最低対応は **15.0**（firebase-core / firebase-messaging が要求する。gyumesy と同じ）
+
+## 広告
+
+AdMob。置き場と方針は [CLAUDE.md](CLAUDE.md) の「広告」。
+
+| 何を | どこに | いまの値 |
+|---|---|---|
+| 広告ユニット ID（枠ごと・OS ごと。アンカー / 記事 / マップのリワード） | `lib/core/config/ad_config.dart` の `productionIos` / `productionAndroid` | **空**（枠を出さない） |
+| AdMob のアプリ ID（iOS） | `ios/Runner/Info.plist` の `GADApplicationIdentifier` | Google のテスト用 |
+| AdMob のアプリ ID（Android） | `android/app/src/main/AndroidManifest.xml` の `com.google.android.gms.ads.APPLICATION_ID` | Google のテスト用 |
+
+- **release 以外（`flutter run`）は枠の ID に関係なく Google のテスト用 ID で出る**（テスト用の広告は数えられない）
+- **リリース前にアプリ ID を 2 つとも差し替える。** ユニット ID だけ入れてアプリ ID がテスト用のままだと広告が配信されない
+- 起動の順は **同意（UMP）→ ATT → SDK の初期化**（`lib/core/ads/ads_controller.dart`。呼ぶのは `main.dart` の 1 か所）
 
 ## 書体
 

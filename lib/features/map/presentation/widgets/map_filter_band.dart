@@ -17,7 +17,8 @@ import 'package:tonsoku/shared/widgets/optical_center.dart';
 ///
 /// 1. **松のや専門店と併設**（横並び。[_BrandChip]）。**畳んでおき、検索バーの右の
 ///    フィルタのボタン（[MapFilterButton]）で開く**（ユーザーの指定。邪魔なので）
-/// 2. **店舗限定の品**（縦並び。[MenuChip]。複数選べる）。品が 1 つも無い週は出さない
+/// 2. **店舗限定の品**（縦並び。[MenuChip]。複数選べる）。品が 1 つも無い週は出さない。
+///    **店舗限定の表示を閉じている間は、代わりに動画の案内（[MapUnlockNotice]）を 1 つ**
 /// 3. 品を選んだ時だけ **「売り切れ・終売の店も含める」**（選んでいない時は意味を持たない）
 ///
 /// 地図の上に浮かせるので、どの部品も面色の地に影を付ける（地が地図の模様に
@@ -28,6 +29,7 @@ class MapFilters extends ConsumerWidget {
     required this.menus,
     required this.onChanged,
     this.showBrands = false,
+    this.notice,
     super.key,
   });
 
@@ -40,6 +42,10 @@ class MapFilters extends ConsumerWidget {
   /// 選べる品（`app/limited.json` の並び）。
   final List<LimitedMenu> menus;
   final ValueChanged<ShopFilter> onChanged;
+
+  /// 品のチップの代わりに置く案内（店舗限定の表示を閉じている時の
+  /// [MapUnlockNotice]）。**渡した時は品のチップを出さない。**
+  final Widget? notice;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,16 +88,22 @@ class MapFilters extends ConsumerWidget {
               ],
             ),
           ),
-        for (final (i, menu) in menus.indexed) ...[
-          if (showBrands || i > 0) const SizedBox(height: 6),
-          MenuChip(
-            menu: menu,
-            selected: filter.menuIds.contains(menu.campaignId),
-            onTap: () => onChanged(
-              filter.copyWith(menuIds: toggle(filter.menuIds, menu.campaignId)),
+        if (notice case final notice?) ...[
+          if (showBrands) const SizedBox(height: 6),
+          notice,
+        ] else
+          for (final (i, menu) in menus.indexed) ...[
+            if (showBrands || i > 0) const SizedBox(height: 6),
+            MenuChip(
+              menu: menu,
+              selected: filter.menuIds.contains(menu.campaignId),
+              onTap: () => onChanged(
+                filter.copyWith(
+                  menuIds: toggle(filter.menuIds, menu.campaignId),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
         if (filter.menuIds.isNotEmpty) ...[
           const SizedBox(height: 6),
           Material(
@@ -113,6 +125,70 @@ class MapFilters extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// 店舗限定の表示を閉じている時に、品のチップの場所に置く案内（ユーザーの指定）。
+/// **押すとリワード動画を出す**（見終えると 6 時間開放。`MapUnlockController`）。
+///
+/// 見た目は品のチップ（[MenuChip]）と同じ角丸の板。文言は状態だけ（開放の長さは
+/// 書かない。ユーザーの指定）。読み込み中は鍵の代わりに回る印を出し、押せなくする。
+class MapUnlockNotice extends ConsumerWidget {
+  const MapUnlockNotice({required this.busy, required this.onTap, super.key});
+
+  final bool busy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final t = ref.watch(messagesProvider);
+    return Semantics(
+      button: true,
+      child: Material(
+        color: MapPalette.of(colors).panel,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: MapPalette.of(colors).panelBorder),
+        ),
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: busy ? null : onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+            child: Row(
+              children: [
+                SizedBox.square(
+                  dimension: 20,
+                  child: busy
+                      ? const Padding(
+                          padding: EdgeInsets.all(2),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          Icons.lock_outline,
+                          size: 20,
+                          color: colors.textSub,
+                        ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    t.mapUnlockLimited,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.2,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
