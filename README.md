@@ -36,6 +36,7 @@
 - **geolocator** - マップの現在地
 - **firebase_messaging / flutter_local_notifications** - プッシュ通知（下の「プッシュ通知」）
 - **google_mobile_ads / app_tracking_transparency** - 広告（AdMob）と iOS の ATT
+- **app_links** - ユニバーサルリンク / App Links（[docs/deep-links.md](docs/deep-links.md)）
 
 依存は**実際に使う時に足す**（gyumesy と同じ方針）。
 
@@ -77,6 +78,7 @@ flutter run --dart-define=LOCALE=en
 | `python3 tool/build_fonts.py` | 同梱書体を web の配布物から作り直す |
 | `tool/build_map.sh` | マップの背景地図と駅（`assets/map/`）を作り直す（下の「マップの背景地図」） |
 | `python3 tool/build_notification_icon.py` | Android の通知の小アイコン（`ic_stat_notification`）を web の `badge.png` から作り直す（下の「プッシュ通知」） |
+| `dart run flutter_native_splash:create` | 起動画面を作り直す（下の「起動画面」） |
 | `python3 tool/build_licenses.py` | ライセンス表記から外すパッケージ（配布物に入らないもの）の一覧を作り直す。依存を変えたら回す（CI が差分を見る） |
 
 **生成物（`*.freezed.dart` / `*.g.dart`）はリポジトリにコミットする。** CI が生成し直して差分が出ないことを確認する。
@@ -126,7 +128,7 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 - **トピックは `tonsoku.category.<slug>`**（`<slug>` は `categories.json` と同じ。ロケールは入れない）。**送る側（tonsoku-backend-batch の `app/notify/push.py`）と web の購読口（tonsoku-frontend-web の `functions/api/fcm/topics.ts`）と同じ名前でないと、購読できるのに届かない。** アプリは web の購読口を通さず、SDK の `subscribeToTopic` で直接購読する（`lib/features/notifications/data/messaging_service.dart`）
 - **Firebase の設定ファイル**（`android/app/google-services.json` / `ios/Runner/GoogleService-Info.plist`）は公開値なのでコミットする（gyumesy と同じ）。作り手は tonsoku-infra-terraform（Firebase プロジェクト `tonsoku`）。APNs の鍵は Firebase に登録済み
 - **Android の通知の小アイコンは白＋透明の専用の絵**（`ic_stat_notification`）。ランチャーアイコンを指すと白い四角になる。web の `public/badge.png` を `assets/icon/notification_icon.png` に写して `python3 tool/build_notification_icon.py` で作る
-- **通知のタップの行き先は `deepLinkTarget` の 1 本で決める**（`lib/features/notifications/domain/deep_link.dart`）。アプリに無い面は外部ブラウザで開く。ユニバーサルリンク / App Links を足す時も同じ入口に合流させる
+- **通知のタップの行き先は `deepLinkTarget` の 1 本で決める**（`lib/features/notifications/domain/deep_link.dart`）。アプリに無い面は外部ブラウザで開く。ユニバーサルリンク / App Links も同じ入口に合流させている（[docs/deep-links.md](docs/deep-links.md)）
 - iOS の最低対応は **15.0**（firebase-core / firebase-messaging が要求する。gyumesy と同じ）
 
 ## 広告
@@ -190,3 +192,33 @@ magick -size 1024x1024 xc:none -fill '#A7232A' -draw 'circle 512,512 512,100' /t
 ```
 
 **生成したら `ios/Runner.xcodeproj/project.pbxproj` の差分を捨てる。** `flutter_launcher_icons` は `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` まで `AppIcon` に書き換える（アイコン名の設定と取り違えている。本来は `YES`）。
+
+## 起動画面
+
+`flutter_native_splash` で作る（設定は `pubspec.yaml` の `flutter_native_splash:`）。**地色は `AppColors` の `bg`**（ライト `#FAF7F3` / ダーク `#16110F`）で、真ん中にアプリアイコンと同じ印を置く。Android 12 以降は OS の起動画面になり、アダプティブアイコンと同じ作り（赤の地に字）で出る。
+
+絵は `assets/icon/` の 2 枚（アイコンの素材から作る）:
+
+```bash
+# iOS / Android 11 以前: 1024 の透過の地の中央に、丸ごとの印を直径 640 で
+magick assets/icon/icon_android.png -resize 640x640 -background none -gravity center -extent 1024x1024 PNG32:assets/icon/splash.png
+# Android 12 以降: 1152 の中央に字だけを 68%（アダプティブの inset 16% と同じ比）で
+magick assets/icon/icon_foreground.png -resize 784x784 -background none -gravity center -extent 1152x1152 PNG32:assets/icon/splash_android12.png
+dart run flutter_native_splash:create
+```
+
+**生成したら `ios/Runner/Info.plist` の差分を捨てる。** 生成器はファイル全体を字下げし直して書き戻す（中身の変化は `UIStatusBarHidden` の 1 キーだけで、それは既に入れてある）。**`LaunchScreen.storyboard` の地色は手で直さない**（生成のたびに白へ戻る。ダークの出し分けは `color_dark` が作る imageset が持つ。理由は `pubspec.yaml` の注記）。
+
+## リリース
+
+作りは gyumesy-frontend-app と同じ（fastlane・`release-<version>` ブランチから配信・epoch 秒のビルド番号）。
+
+| 文書 | 中身 |
+|---|---|
+| [docs/release.md](docs/release.md) | 毎リリースやること（lane・ブランチ・提出前の確認） |
+| [docs/setup-app.md](docs/setup-app.md) | アプリに 1 回だけのこと（Bundle ID・ASC の枠・署名鍵・Play のアプリ・AdMob） |
+| [docs/release-state.md](docs/release-state.md) | **いま何が済んでいて、何が誰待ちか**（ユーザーの手作業の一覧） |
+| [docs/secrets.md](docs/secrets.md) | 認証情報・署名鍵の置き場と同期（`scripts/sync-secrets.sh`） |
+| [docs/deep-links.md](docs/deep-links.md) | ユニバーサルリンク / App Links（名乗る面・web に置くファイルの中身） |
+
+ストアの掲載情報は `ios/fastlane/metadata/` と `android/fastlane/metadata/`（日本語のみ）。**名前・サブタイトルに「松のや」を入れない**（gyumesy は「松屋」で App Store の 4.1(a) を 2 回受けた）。非公式であることは説明文に書く。

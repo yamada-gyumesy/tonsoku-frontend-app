@@ -7,6 +7,7 @@
 const devOnlyPackages = <String>{
   '_fe_analyzer_shared',
   'analyzer',
+  'ansicolor',
   'build',
   'build_config',
   'build_daemon',
@@ -19,6 +20,7 @@ const devOnlyPackages = <String>{
   'dart_style',
   'flutter_launcher_icons',
   'flutter_lints',
+  'flutter_native_splash',
   'freezed',
   'glob',
   'graphs',
@@ -35,6 +37,7 @@ const devOnlyPackages = <String>{
   'source_gen',
   'source_helper',
   'stream_transform',
+  'universal_io',
   'watcher',
   'web_socket',
   'web_socket_channel',

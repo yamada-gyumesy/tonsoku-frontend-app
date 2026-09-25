@@ -142,8 +142,9 @@ void main() {
   /// 1 本と、利用者がもう一度踏んだ 1 本は URL が同じで実行時には見分けられない**
   /// ので、ここで名乗る側を縛る。
   ///
-  /// **App Links はまだ名乗っていない**（リリース整備の Issue #9）。その間は
-  /// 何も検査しないで通るが、intent-filter を足した瞬間から効く。
+  /// **iOS の名乗り（web の `apple-app-site-association`）はここでは見られない**
+  /// （web のリポジトリにある）。中身は `docs/deep-links.md` に置き、同じ範囲に
+  /// 揃えている。
   test('マニフェストが名乗る面は全部アプリで開ける', () {
     for (final path in _claimedPaths()) {
       expect(
@@ -156,7 +157,6 @@ void main() {
 }
 
 /// App Links の intent-filter が名乗るパスを、**開ける URL の形**にして返す。
-/// **まだ無ければ空**（上のテストの doc）。
 ///
 /// - `android:path` は完全一致なのでそのまま
 /// - `android:pathPattern` は末尾 `..*`（1 文字以上）だけを許し、その位置に
@@ -172,11 +172,13 @@ List<String> _claimedPaths() {
     r'<intent-filter android:autoVerify="true">(.*?)</intent-filter>',
     dotAll: true,
   ).firstMatch(manifest);
-  if (filter == null) return const [];
+  // **名乗りが消えたら落とす。** 空で通すと、正規表現が intent-filter の書き方の
+  // 変化（属性の順番など）を拾えなくなった時も黙って緑になる
+  expect(filter, isNotNull, reason: 'autoVerify の intent-filter が見つからない');
 
   final claims = RegExp(
     r'android:path(Pattern|Prefix)?="([^"]+)"',
-  ).allMatches(filter.group(1)!).toList();
+  ).allMatches(filter!.group(1)!).toList();
   expect(claims, isNotEmpty);
 
   return [

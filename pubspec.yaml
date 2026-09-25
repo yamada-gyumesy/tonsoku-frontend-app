@@ -105,6 +105,11 @@ dependencies:
   # iOS の App Tracking Transparency の確認（広告の SDK を始める時に 1 度だけ）
   app_tracking_transparency: ^2.0.7
 
+  # ユニバーサルリンク / App Links（web の `ton-soku.com` のリンクからアプリを開く）。
+  # **版は gyumesy-frontend-app と揃える。** 受け口は通知と同じ `deepLinkTarget`
+  # （`lib/app.dart` の `_listenAppLinks`）
+  app_links: ^7.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -124,6 +129,15 @@ dev_dependencies:
 
   # 時刻を進めるテスト（マップの開放の期限が、開いている間に切れるか）
   fake_async: ^1.3.3
+  # 起動画面の生成（`dart run flutter_native_splash:create`）。設定は末尾の
+  # `flutter_native_splash:` セクション。
+  #
+  # **dev 依存に置く（gyumesy は通常依存）。** アプリのコードからは呼ばない
+  # （`FlutterNativeSplash.preserve` を使っていない）ので、生成器として足りる。
+  # 通常依存にすると `archive` / `image` / `posix` が同梱物の扱いになり、
+  # ライセンス表記（`tool/build_licenses.py`）に載ってしまう（gyumesy の
+  # `docs/release-state.md` が踏んだもの）
+  flutter_native_splash: ^2.4.8
 
 flutter:
   uses-material-design: true
@@ -210,3 +224,45 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   adaptive_icon_background: "#A7232A"
   adaptive_icon_foreground_inset: 16
+
+# 起動画面。**gyumesy-frontend-app の設定を写し、色と絵をとん速に替えた。**
+# 生成は `dart run flutter_native_splash:create`（絵の作り方は README の「起動画面」）。
+flutter_native_splash:
+  # **地色は `AppColors` の `bg`（ライト／ダーク）と同じ値。** 起動画面の地色が
+  # 本体と違うと、起動のたびに地色が切り替わって見える。**`app_colors.dart` の
+  # `bg` を変えたらここも直して生成し直す**（あちらのコメントが指している）
+  color: "#FAF7F3"
+  # 絵は**アプリアイコンと同じ印**（赤い丸＋白い字。web の `public/icon.svg`）を
+  # 1024 の透過の地の中央に直径 640 で置いたもの。**1024 が 4x 扱い**なので、
+  # 画面では直径 160dp / pt の丸になり、Android 12 以降の丸（下）と同じ大きさで出る。
+  #
+  # ダークの地（`#16110F`）の上にも同じ赤い丸を置く。**これはロゴの印で、
+  # 字の色ではない**（CLAUDE.md の「塗りの primary を地の上に置かない」は
+  # 地の上の文字・アイコン・罫線の話。印の中の白い字は赤の上に載っている）。
+  # ヘッダーのロゴもダークで同じ印を出している
+  image: assets/icon/splash.png
+  # **ダークの地色を必ず持たせる**（gyumesy の注記をそのまま写す）。ここが無いと
+  # 生成物が白 1 色になり、**ダークで起動するたびに明るい地が一瞬差し込む**。
+  #
+  # **storyboard を手で直しても戻る。** `flutter_native_splash:create` は
+  # `ios/Runner/Base.lproj/LaunchScreen.storyboard` の `backgroundColor` を
+  # **毎回白のベタ書きに書き戻す**（gyumesy の実測）。storyboard 側で戦っても
+  # 次の生成で必ず負ける。**出し分けを持つのは `LaunchBackground.imageset` の
+  # dark appearance で、それを作るのがこの `color_dark`。直す場所はここ。**
+  color_dark: "#16110F"
+  image_dark: assets/icon/splash.png
+  android_12:
+    # **Android 12 以降の起動画面は OS の SplashScreen API が出す**（上の
+    # `image` は使われない）。絵は円形のマスクで切られ、見えるのは 1152 の
+    # 中央の直径 768（2/3）だけ。
+    #
+    # **アダプティブアイコンと同じ作りにする**: 丸は `icon_background_color` の
+    # 赤が担い、絵は字だけ（`icon_foreground.png` を 1152 の中央に 68% ＝ 784 で
+    # 置いたもの。アダプティブの inset 16% と同じ比）。赤い丸ごとの絵を渡すと、
+    # マスクの縁と丸の縁が重なって髪の毛ほどの地色の輪が出る
+    color: "#FAF7F3"
+    image: assets/icon/splash_android12.png
+    icon_background_color: "#A7232A"
+    color_dark: "#16110F"
+    image_dark: assets/icon/splash_android12.png
+    icon_background_color_dark: "#A7232A"

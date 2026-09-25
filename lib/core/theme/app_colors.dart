@@ -113,6 +113,8 @@ class AppColors extends ThemeExtension<AppColors> {
   bool get isDark => bg.computeLuminance() < 0.5;
 
   static const light = AppColors(
+    // **`pubspec.yaml` の `flutter_native_splash.color`（と `android_12.color`）と
+    // 揃える**（ダークの `bg` の注記と同じ理由）
     bg: Color(0xFFFAF7F3),
     surface: Color(0xFFFFFFFF),
     hover: Color(0xFFF2EDE6),
@@ -137,9 +139,10 @@ class AppColors extends ThemeExtension<AppColors> {
   /// ダーク。**ライトの反転ではなく、暗地で読める値を組み直したもの**（web と同じ値）。
   /// 地と面は無彩色の黒ではなく茶に寄せた黒にして、ライトの生成りと同じ温度を保つ。
   static const dark = AppColors(
-    // **`pubspec.yaml` の `flutter_native_splash.color_dark` を入れる時は
-    // これと揃える**（リリース整備の Issue）。起動画面の地色が違うと、
-    // ダークで起動するたびに地色が切り替わる
+    // **`pubspec.yaml` の `flutter_native_splash.color_dark`（と
+    // `android_12.color_dark`）と揃える。** 起動画面の地色が違うと、ダークで
+    // 起動するたびに地色が切り替わる。変えたら `dart run
+    // flutter_native_splash:create` で生成し直す（ライトの `bg` も同じ）
     bg: Color(0xFF16110F),
     surface: Color(0xFF211A17),
     hover: Color(0xFF2A221E),

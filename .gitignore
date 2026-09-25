@@ -44,9 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# 機密ファイル（署名鍵・API 鍵）。**git に入れない。**
-# 置き場と同期の仕組みはリリース整備の Issue（#9）で gyumesy-frontend-app の
-# `scripts/sync-secrets.sh` / `docs/secrets.md` を写して決める
+# 機密ファイル（署名鍵・API 鍵）。**git に入れない。** 実体は git ではなく Drive で
+# 同期する（`scripts/sync-secrets.sh` / `docs/secrets.md`。gyumesy-frontend-app と同じ）。
+# 鍵の本体は `~/.config/gyumesy/` に置くのでここには来ないが、
+# ビルドが相対パスで読むもの（keystore と key.properties）だけリポジトリ内に降りてくる
 *.p8
 *.jks
 *.keystore
@@ -55,3 +56,9 @@ android/keystore/
 # **Firebase の設定ファイルは gitignore しない（意図的に空けてある）。**
 # あれは秘密ではなくアプリバンドルに同梱される前提のもので、web も
 # `src/config.ts` に平文で持っている（gyumesy-frontend-app と同じ判断）
+
+# fastlane（Ruby。gyumesy-frontend-app と同じ）
+vendor/bundle/
+# fastlane の実行の残骸（走らせるたびに変わる）
+*/fastlane/report.xml
+*/fastlane/README.md

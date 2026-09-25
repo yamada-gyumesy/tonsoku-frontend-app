@@ -1,0 +1,8 @@
+# **ストアアカウントは gyumesy-frontend-app・gyumeshi-rader-app と同じ運営者の
+# アカウント。** Team ID は Firebase の iOS アプリ登録（tonsoku-infra-terraform）と
+# `ios/Runner.xcodeproj` の `DEVELOPMENT_TEAM` と同じ値。
+# `three-frontend-flutter` は職場の別アカウントなので、値を流用しないこと
+# （lane の構成だけを参考にしている）。
+app_identifier("com.gyumesy.tonsoku")
+apple_id("gyumesy@icloud.com")
+team_id("29LP73942P")

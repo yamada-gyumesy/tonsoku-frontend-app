@@ -1,4 +1,5 @@
-/// 外から渡された URL（通知の `data.url`）の開き先の解決。**受け口はここ 1 本。**
+/// 外から渡された URL（通知の `data.url`・ユニバーサルリンク / App Links）の
+/// 開き先の解決。**受け口はここ 1 本。**
 ///
 /// gyumesy-frontend-app の `deep_link.dart`（#90 で一本化したもの）を写し、
 /// とん速の画面構成に合わせ直した。
@@ -11,10 +12,12 @@
 /// **アプリに無い面は外部ブラウザへ逃がす。** 配信側に面が増えた時、アプリの
 /// 更新を待たずに読めるようにする（落とすより開くほうがまし）。
 ///
-/// **ユニバーサルリンク / App Links（リリース整備の Issue #9）もここへ合流させる。**
-/// 入口は別でも行き先の決め方は同じなので、分けて持つと片方だけ面が増えた時に
-/// 食い違う。**名乗る面（`AndroidManifest.xml` の intent-filter）は、ここが開ける
-/// 面だけにすること**（`deep_link_test.dart` が止める）。
+/// **ユニバーサルリンク / App Links もここへ合流させている**（`app.dart` の
+/// `_listenAppLinks`）。入口は別でも行き先の決め方は同じなので、分けて持つと
+/// 片方だけ面が増えた時に食い違う。**名乗る面（`AndroidManifest.xml` の
+/// intent-filter と、web の `apple-app-site-association`）は、ここが開ける面
+/// だけにすること**（Android 側は `deep_link_test.dart` が止める。web 側の
+/// 中身は `docs/deep-links.md`）。**ここで開ける面を増やしたら、両方も広げる。**
 library;
 
 import 'package:tonsoku/core/router/app_router.dart';

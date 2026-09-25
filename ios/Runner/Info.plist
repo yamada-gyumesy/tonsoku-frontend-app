@@ -310,5 +310,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- 起動画面の生成（`flutter_native_splash:create`）が足すキー（gyumesy と同じ値）。
+	     **生成器はこのファイルを丸ごと字下げし直して書き戻す**ので、生成した後は
+	     この 1 キー以外の差分を捨てること（README の「起動画面」） -->
+	<key>UIStatusBarHidden</key>
+	<false/>
 </dict>
 </plist>
