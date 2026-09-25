@@ -156,6 +156,7 @@ class AppMessages {
     required this.mapMyLocation,
     required this.mapNorthUp,
     required this.mapSearchHint,
+    required this.mapFilter,
     required this.mapShopsUnit,
     required this.mapMenuShops,
     required this.mapHeadingUp,
@@ -442,6 +443,9 @@ class AppMessages {
   /// 地図の検索バー（店を店名・ローマ字名・店舗番号で探す）。
   final String mapSearchHint;
 
+  /// 検索バーの右のフィルタのボタン（読み上げ）。
+  final String mapFilter;
+
   /// 出している店の数の丸（`ShopCountBadge`）の、数の下の単位。
   final String mapShopsUnit;
 
@@ -646,6 +650,7 @@ class AppMessages {
     mapMyLocation: '現在地',
     mapNorthUp: '北が上',
     mapSearchHint: '店舗を探す',
+    mapFilter: '絞り込み',
     mapShopsUnit: '店舗',
     mapMenuShops: (total, ended) =>
         ended > 0 ? '$total店舗（終売: $ended件）' : '$total店舗',
@@ -845,6 +850,7 @@ class AppMessages {
     mapMyLocation: 'My location',
     mapNorthUp: 'North up',
     mapSearchHint: 'Search stores',
+    mapFilter: 'Filter',
     mapShopsUnit: 'stores',
     mapMenuShops: (total, ended) =>
         ended > 0 ? '$total stores ($ended ended)' : '$total stores',
@@ -1033,6 +1039,7 @@ class AppMessages {
     mapMyLocation: '当前位置',
     mapNorthUp: '北方朝上',
     mapSearchHint: '搜索门店',
+    mapFilter: '筛选',
     mapShopsUnit: '家门店',
     mapMenuShops: (total, ended) =>
         ended > 0 ? '$total家门店（已停售: $ended家）' : '$total家门店',

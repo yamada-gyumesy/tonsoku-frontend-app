@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ import 'package:tonsoku/features/map/domain/shop_state.dart';
 import 'package:tonsoku/features/map/presentation/map_layers.dart';
 import 'package:tonsoku/features/map/presentation/map_theme.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_filter_band.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_scale_bar.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 import 'package:tonsoku/features/map/presentation/widgets/offscreen_counts.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
@@ -114,6 +116,9 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   /// 端末の向き（度）。現在地の印の扇に使う。**取れるまでは null**。
   double? _heading;
+
+  /// 松のや専門店・併設の段を開いているか（検索バーの右のフィルタのボタン）。
+  bool _brandsOpen = false;
 
   /// 地図の回転（度。ボタンの矢印を北へ向けるのに使う）。
   double _rotation = 0;
@@ -448,20 +453,10 @@ class _MapPageState extends ConsumerState<MapPage> {
                 // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
                 // 入れるので、ここには何も置かない
                 Flexible(child: MapLegend(present: present)),
-                // 文字は地名と同じ色・書体
-                Scalebar(
-                  alignment: Alignment.bottomLeft,
-                  // 凡例から離す（ユーザーの指摘。くっつくと凡例の一部に見える）。
-                  // 長さは中（短いと読みにくい。ユーザーの指摘）
-                  padding: const EdgeInsets.only(left: 20, bottom: 4),
-                  length: ScalebarLength.m,
-                  lineColor: colors.textSub,
-                  strokeWidth: 1.5,
-                  textStyle: TextStyle(
-                    fontSize: 10,
-                    color: colors.textSub,
-                    fontFamily: AppTheme.defaultFontFamily,
-                  ),
+                // 凡例から離して置く（ユーザーの指摘。くっつくと凡例の一部に見える）
+                const Padding(
+                  padding: EdgeInsets.only(left: 20, bottom: 4),
+                  child: MapScaleBar(),
                 ),
               ],
             ),
@@ -477,13 +472,13 @@ class _MapPageState extends ConsumerState<MapPage> {
               if (e.availability != null) LatLng(e.shop.lat, e.shop.lon),
           ],
           // 上は左上の検索と絞り込みの列の下（品の数と「含める」で高さが変わる。
-          // 目安の高さ: 検索 44・併設 34・品 1 つ 52・「含める」42）
+          // 目安の高さ: 検索 44・併設 40（開いた時だけ）・品 1 つ 52・「含める」42）
           padding: EdgeInsets.fromLTRB(
             44,
             12 +
                 44 +
                 8 +
-                34 +
+                (_brandsOpen ? 40 : 0) +
                 menus.length * 52 +
                 (_filter.menuIds.isEmpty ? 0 : 42) +
                 16,
@@ -572,6 +567,11 @@ class _MapPageState extends ConsumerState<MapPage> {
                     // 探すのは地図に出している店（牛めしレーダーと同じ）
                     shops: [for (final e in entries) e.shop],
                     resetKey: _filter,
+                    filter: MapFilterButton(
+                      open: _brandsOpen,
+                      active: _filter.standalone || _filter.brands.isNotEmpty,
+                      onTap: () => setState(() => _brandsOpen = !_brandsOpen),
+                    ),
                     onShop: (shop) {
                       _follow = false;
                       _controller.move(
@@ -582,6 +582,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                     },
                     below: MapFilters(
                       filter: _filter,
+                      showBrands: _brandsOpen,
                       menus: menus,
                       onChanged: (f) => setState(() => _filter = f),
                     ),
@@ -667,10 +668,10 @@ class _LocateButton extends StatelessWidget {
 }
 
 /// 地図の向きのボタン（牛めしレーダーのコンパスのボタンを、とん速の丸いボタンの
-/// 形にしたもの）。
+/// 形にしたもの）。コンパスの針と、その下に「N」。
 ///
-/// - 北が上 … 「N」
-/// - 進行方向が上 … 北を指す矢印（地図の回転に合わせて回る）
+/// - 北が上 … 針は真上（北が赤、南が副テキスト）
+/// - 進行方向が上 … 針が北を指して回る（針全体を赤に）
 class _CompassButton extends StatelessWidget {
   const _CompassButton({
     required this.label,
@@ -702,34 +703,83 @@ class _CompassButton extends StatelessWidget {
           child: SizedBox(
             width: 44,
             height: 44,
-            child: Center(
-              child: headingUp
-                  ? Transform.rotate(
-                      angle: rotation * math.pi / 180,
-                      // 地の上の赤（`primaryText`。塗りの `primary` は地の上に置かない）
-                      child: Icon(
-                        Icons.navigation_rounded,
-                        size: 22,
-                        color: colors.primaryText,
-                      ),
-                    )
-                  : ExcludeSemantics(
-                      child: Text(
-                        'N',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: colors.text,
-                          fontFamily: AppTheme.defaultFontFamily,
-                        ),
+            // **コンパスの針の下に「N」**（ユーザーの指定）。針は北を指す
+            // （北が上の時は真上、進行方向が上の時は地図の回転に合わせて回る）。
+            // 進行方向が上の間は針を地の上の赤で塗り、モードの違いを見せる
+            child: ExcludeSemantics(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Transform.rotate(
+                    angle: headingUp ? rotation * math.pi / 180 : 0,
+                    child: CustomPaint(
+                      size: const Size(10, 22),
+                      painter: _NeedlePainter(
+                        north: colors.primaryText,
+                        south: headingUp ? colors.primaryText : colors.textSub,
+                        southAlpha: headingUp ? 0.35 : 1,
                       ),
                     ),
+                  ),
+                  Text(
+                    'N',
+                    style: TextStyle(
+                      fontSize: 9,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                      fontFamily: AppTheme.defaultFontFamily,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// コンパスの針（上半分が北、下半分が南の菱形）。
+class _NeedlePainter extends CustomPainter {
+  const _NeedlePainter({
+    required this.north,
+    required this.south,
+    this.southAlpha = 1,
+  });
+
+  final Color north;
+  final Color south;
+  final double southAlpha;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final c = Offset(w / 2, h / 2);
+    canvas
+      ..drawPath(
+        ui.Path()
+          ..moveTo(c.dx, 0)
+          ..lineTo(w, c.dy)
+          ..lineTo(0, c.dy)
+          ..close(),
+        Paint()..color = north,
+      )
+      ..drawPath(
+        ui.Path()
+          ..moveTo(c.dx, h)
+          ..lineTo(w, c.dy)
+          ..lineTo(0, c.dy)
+          ..close(),
+        Paint()..color = south.withValues(alpha: southAlpha),
+      );
+  }
+
+  @override
+  bool shouldRepaint(_NeedlePainter old) =>
+      old.north != north || old.south != south || old.southAlpha != southAlpha;
 }
 
 class _LoadFailed extends StatelessWidget {

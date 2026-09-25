@@ -11,7 +11,8 @@ import 'package:tonsoku/shared/widgets/optical_center.dart';
 
 /// 地図の上、検索バーの直下に置く絞り込み（ユーザーの指定）。上から:
 ///
-/// 1. **松のや専門店と併設**（横並び。[_BrandChip]）
+/// 1. **松のや専門店と併設**（横並び。[_BrandChip]）。**畳んでおき、検索バーの右の
+///    フィルタのボタン（[MapFilterButton]）で開く**（ユーザーの指定。邪魔なので）
 /// 2. **店舗限定の品**（縦並び。[MenuChip]。複数選べる）。品が 1 つも無い週は出さない
 /// 3. 品を選んだ時だけ **「終売の店も含める」**（選んでいない時は意味を持たない）
 ///
@@ -22,10 +23,15 @@ class MapFilters extends ConsumerWidget {
     required this.filter,
     required this.menus,
     required this.onChanged,
+    this.showBrands = false,
     super.key,
   });
 
   final ShopFilter filter;
+
+  /// 松のや専門店・併設の段を出すか。**既定は畳む**（ユーザーの指定。地図を
+  /// 塞ぐので、検索バーの右のフィルタのボタン（[MapFilterButton]）で開く）。
+  final bool showBrands;
 
   /// 選べる品（`app/limited.json` の並び）。
   final List<LimitedMenu> menus;
@@ -43,33 +49,35 @@ class MapFilters extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 横に流す（画面が狭い端末・英語の長い名前で溢れさせない）
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          child: Row(
-            children: [
-              _BrandChip(
-                label: t.mapStandalone,
-                selected: filter.standalone,
-                onTap: () =>
-                    onChanged(filter.copyWith(standalone: !filter.standalone)),
-              ),
-              for (final brand in ShopBrand.values) ...[
-                const SizedBox(width: 6),
+        if (showBrands)
+          // 横に流す（画面が狭い端末・英語の長い名前で溢れさせない）
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            child: Row(
+              children: [
                 _BrandChip(
-                  label: brandLabel(brand, t),
-                  selected: filter.brands.contains(brand),
+                  label: t.mapStandalone,
+                  selected: filter.standalone,
                   onTap: () => onChanged(
-                    filter.copyWith(brands: toggle(filter.brands, brand)),
+                    filter.copyWith(standalone: !filter.standalone),
                   ),
                 ),
+                for (final brand in ShopBrand.values) ...[
+                  const SizedBox(width: 6),
+                  _BrandChip(
+                    label: brandLabel(brand, t),
+                    selected: filter.brands.contains(brand),
+                    onTap: () => onChanged(
+                      filter.copyWith(brands: toggle(filter.brands, brand)),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        for (final menu in menus) ...[
-          const SizedBox(height: 6),
+        for (final (i, menu) in menus.indexed) ...[
+          if (showBrands || i > 0) const SizedBox(height: 6),
           MenuChip(
             menu: menu,
             selected: filter.menuIds.contains(menu.campaignId),
@@ -99,6 +107,47 @@ class MapFilters extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// 検索バーの右端のフィルタのボタン。押すと松のや専門店・併設の段を開閉する。
+/// **選んでいる間は印を付ける**（畳んでいても絞っていることが分かるように）。
+class MapFilterButton extends ConsumerWidget {
+  const MapFilterButton({
+    required this.open,
+    required this.active,
+    required this.onTap,
+    super.key,
+  });
+
+  /// 段を開いているか。
+  final bool open;
+
+  /// 松のや専門店・併設のどれかを選んでいるか。
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final t = ref.watch(messagesProvider);
+    return IconButton(
+      onPressed: onTap,
+      tooltip: t.mapFilter,
+      isSelected: open,
+      visualDensity: VisualDensity.compact,
+      icon: Badge(
+        isLabelVisible: active,
+        smallSize: 8,
+        // 地の上の赤（`primaryText`）
+        backgroundColor: colors.primaryText,
+        child: Icon(
+          Icons.tune_rounded,
+          size: 20,
+          color: open || active ? colors.primaryText : colors.textSub,
+        ),
+      ),
     );
   }
 }

@@ -69,6 +69,10 @@ void main() {
     // 品を選ぶまでは「含める」を出さない
     expect(find.text('終売の店も含める'), findsNothing);
 
+    // 松のや専門店・併設は畳んである。検索バーの右のフィルタのボタンで開く
+    expect(find.text('松のや専門店'), findsNothing);
+    await tester.tap(find.byTooltip('絞り込み'));
+    await tester.pump();
     await tester.tap(find.text('松のや専門店'));
     await tester.pump();
     expect(find.bySemanticsLabel('122店舗'), findsOneWidget);

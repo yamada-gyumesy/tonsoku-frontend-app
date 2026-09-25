@@ -23,6 +23,7 @@ class MapSearch extends ConsumerStatefulWidget {
     required this.shops,
     required this.onShop,
     required this.resetKey,
+    this.filter,
     this.below,
     super.key,
   });
@@ -32,6 +33,9 @@ class MapSearch extends ConsumerStatefulWidget {
 
   /// 変わったら検索語を消す値（絞り込み）。
   final Object resetKey;
+
+  /// バーの右端に置くフィルタのボタン（松のや専門店・併設を開く。`MapPage`）。
+  final Widget? filter;
 
   /// バーの下に置くもの（絞り込み）。
   final Widget? below;
@@ -103,6 +107,10 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                   child: TextField(
                     controller: _controller,
                     focusNode: _focus,
+                    // **入力欄の外を押したらカーソルを外す**（ユーザーの指摘。
+                    // 外さないと地図を触っている間もカーソルが点滅し続ける）。
+                    // 候補の一覧は入力欄の一部として扱う（[TextFieldTapRegion]）
+                    onTapOutside: (_) => _focus.unfocus(),
                     textInputAction: TextInputAction.search,
                     style: TextStyle(fontSize: 14, color: colors.text),
                     decoration: InputDecoration(
@@ -113,17 +121,25 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                     ),
                   ),
                 ),
+                // **×は右端に寄せる**（ユーザーの指摘）。フィルタのボタンがある時は
+                // その左に詰めて置き、間に細い区切り線を入れる
                 if (hasText)
                   IconButton(
                     onPressed: _controller.clear,
                     tooltip: t.commonClose,
+                    visualDensity: VisualDensity.compact,
                     icon: Icon(
                       Icons.close_rounded,
                       size: 18,
                       color: colors.textSub,
                     ),
-                  )
-                else
+                  ),
+                if (widget.filter case final filter?) ...[
+                  Container(width: 1, height: 20, color: colors.border),
+                  const SizedBox(width: 2),
+                  filter,
+                  const SizedBox(width: 2),
+                ] else if (!hasText)
                   const SizedBox(width: 12),
               ],
             ),
@@ -131,61 +147,64 @@ class _MapSearchState extends ConsumerState<MapSearch> {
         ),
         if (results.isNotEmpty && _focus.hasFocus) ...[
           const SizedBox(height: 4),
-          Material(
-            color: colors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: colors.border),
-            ),
-            elevation: 2,
-            clipBehavior: Clip.antiAlias,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 240),
-              child: ListView.separated(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: results.length,
-                separatorBuilder: (_, _) =>
-                    Divider(height: 1, color: colors.border),
-                itemBuilder: (context, i) {
-                  final shop = results[i];
-                  // 営業していない店は薄く（地図の印と同じ）
-                  final ink = shopStateOf(shop).isOpen
-                      ? colors.text
-                      : colors.textSub;
-                  return InkWell(
-                    onTap: () => _select(shop),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            displayCode(shop),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textSub,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
+          // 候補を押した時に、先に入力欄の外として扱われて一覧が消えないように
+          TextFieldTapRegion(
+            child: Material(
+              color: colors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: colors.border),
+              ),
+              elevation: 2,
+              clipBehavior: Clip.antiAlias,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 240),
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: results.length,
+                  separatorBuilder: (_, _) =>
+                      Divider(height: 1, color: colors.border),
+                  itemBuilder: (context, i) {
+                    final shop = results[i];
+                    // 営業していない店は薄く（地図の印と同じ）
+                    final ink = shopStateOf(shop).isOpen
+                        ? colors.text
+                        : colors.textSub;
+                    return InkWell(
+                      onTap: () => _select(shop),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              displayCode(shop),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textSub,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              shop.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 14, color: ink),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                shop.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 14, color: ink),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
