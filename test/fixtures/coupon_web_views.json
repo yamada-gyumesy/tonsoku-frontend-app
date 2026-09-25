@@ -1,0 +1,2053 @@
+{
+ "slugs": [
+  "smhkrs",
+  "szoh9n",
+  "h42lkb",
+  "2ha26q",
+  "1zlqt6",
+  "jt8e8p"
+ ],
+ "today": "2026-08-24",
+ "views": {
+  "coupon_production/ja": {
+   "offers": [
+    {
+     "id": "tt-84864170fc33",
+     "name": "食欲の秋",
+     "sourceMark": "【TikTok】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": false,
+     "primary": "280〜360円引き",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "〜9/30 15:00",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+       "label": "QRコード",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "詳細画像",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "9/16"
+    },
+    {
+     "id": "x-2094983665294221779",
+     "name": "秋の丼祭り",
+     "sourceMark": "【X】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/x.webp"
+     },
+     "upcoming": false,
+     "primary": "140〜200円引き",
+     "terms": [
+      "対象: ロースかつ丼ほか計6品",
+      "券売機のみ",
+      "まとめ買いで10%OFF"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "終了未定",
+     "articleSlug": null,
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+       "label": "QRコード",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+       "label": "詳細画像",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://x.com/matsu_noya/status/2094983665294221779",
+        "label": "X"
+       }
+      }
+     ],
+     "startText": "9/6"
+    },
+    {
+     "id": "news-991-9b2949b512",
+     "name": "松弁ネット2倍",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%〜40%",
+     "terms": [
+      "受取日時が基準"
+     ],
+     "timeWindow": "18:00〜23:00",
+     "capText": null,
+     "period": "〜9/28 23:00",
+     "articleSlug": "szoh9n",
+     "links": [],
+     "images": [],
+     "startText": "9/15"
+    }
+   ],
+   "upcoming": [],
+   "best": {
+    "parts": [
+     {
+      "label": "松弁ネット2倍",
+      "percent": 40,
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "noteText": "ブラック会員20%想定"
+     }
+    ],
+    "totalPercent": 40,
+    "targetText": null,
+    "targetSpendYen": null,
+    "patterns": []
+   },
+   "schedule": {
+    "bars": [
+     {
+      "id": "news-991-9b2949b512",
+      "name": "松弁ネット2倍",
+      "value": "12%〜40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 69,
+      "width": 31,
+      "label": "〜9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "tt-84864170fc33",
+      "name": "食欲の秋",
+      "value": "280〜360円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 71.4,
+      "width": 28.6,
+      "label": "〜9/30",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "x-2094983665294221779",
+      "name": "秋の丼祭り",
+      "value": "140〜200円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 47.6,
+      "width": 52.4,
+      "label": "終了未定",
+      "labelAlign": "end",
+      "labelOffset": 0
+     }
+    ],
+    "todayPercent": 16.7,
+    "days": 42,
+    "todayLabel": "8/24"
+   }
+  },
+  "coupon_production/en": {
+   "offers": [
+    {
+     "id": "tt-84864170fc33",
+     "name": "食欲の秋",
+     "sourceMark": "[TikTok] ",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": false,
+     "primary": "¥280–¥360 off",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "until Sep 30 15:00",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+       "label": "QR code",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "Detail image",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "Sep 16"
+    },
+    {
+     "id": "x-2094983665294221779",
+     "name": "秋の丼祭り",
+     "sourceMark": "[X] ",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/x.webp"
+     },
+     "upcoming": false,
+     "primary": "¥140–¥200 off",
+     "terms": [
+      "対象: ロースかつ丼ほか計6品",
+      "券売機のみ",
+      "まとめ買いで10%OFF"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "no end date",
+     "articleSlug": null,
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+       "label": "QR code",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+       "label": "Detail image",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://x.com/matsu_noya/status/2094983665294221779",
+        "label": "X"
+       }
+      }
+     ],
+     "startText": "Sep 6"
+    },
+    {
+     "id": "news-991-9b2949b512",
+     "name": "Matsuben Net 2×",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%–40%",
+     "terms": [
+      "受取日時が基準"
+     ],
+     "timeWindow": "18:00〜23:00",
+     "capText": null,
+     "period": "until Sep 28 23:00",
+     "articleSlug": "szoh9n",
+     "links": [],
+     "images": [],
+     "startText": "Sep 15"
+    }
+   ],
+   "upcoming": [],
+   "best": {
+    "parts": [
+     {
+      "label": "Matsuben Net 2×",
+      "percent": 40,
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "noteText": "Assumes Black (20%)"
+     }
+    ],
+    "totalPercent": 40,
+    "targetText": null,
+    "targetSpendYen": null,
+    "patterns": []
+   },
+   "schedule": {
+    "bars": [
+     {
+      "id": "news-991-9b2949b512",
+      "name": "Matsuben Net 2×",
+      "value": "12%–40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 69,
+      "width": 31,
+      "label": "until Sep 28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "tt-84864170fc33",
+      "name": "食欲の秋",
+      "value": "¥280–¥360 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 71.4,
+      "width": 28.6,
+      "label": "until Sep 30",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "x-2094983665294221779",
+      "name": "秋の丼祭り",
+      "value": "¥140–¥200 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 47.6,
+      "width": 52.4,
+      "label": "no end date",
+      "labelAlign": "end",
+      "labelOffset": 0
+     }
+    ],
+    "todayPercent": 16.7,
+    "days": 42,
+    "todayLabel": "Aug 24"
+   }
+  },
+  "coupon_production/zh": {
+   "offers": [
+    {
+     "id": "tt-84864170fc33",
+     "name": "食欲の秋",
+     "sourceMark": "【TikTok】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": false,
+     "primary": "减280〜360日元",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "至9/30 15:00",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+       "label": "二维码",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "详情图片",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "9/16"
+    },
+    {
+     "id": "x-2094983665294221779",
+     "name": "秋の丼祭り",
+     "sourceMark": "【X】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/x.webp"
+     },
+     "upcoming": false,
+     "primary": "减140〜200日元",
+     "terms": [
+      "対象: ロースかつ丼ほか計6品",
+      "券売機のみ",
+      "まとめ買いで10%OFF"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "结束日未定",
+     "articleSlug": null,
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+       "label": "二维码",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+       "label": "详情图片",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://x.com/matsu_noya/status/2094983665294221779",
+        "label": "X"
+       }
+      }
+     ],
+     "startText": "9/6"
+    },
+    {
+     "id": "news-991-9b2949b512",
+     "name": "松弁网2倍",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%〜40%",
+     "terms": [
+      "受取日時が基準"
+     ],
+     "timeWindow": "18:00〜23:00",
+     "capText": null,
+     "period": "至9/28 23:00",
+     "articleSlug": "szoh9n",
+     "links": [],
+     "images": [],
+     "startText": "9/15"
+    }
+   ],
+   "upcoming": [],
+   "best": {
+    "parts": [
+     {
+      "label": "松弁网2倍",
+      "percent": 40,
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "noteText": "按黑卡会员20%计算"
+     }
+    ],
+    "totalPercent": 40,
+    "targetText": null,
+    "targetSpendYen": null,
+    "patterns": []
+   },
+   "schedule": {
+    "bars": [
+     {
+      "id": "news-991-9b2949b512",
+      "name": "松弁网2倍",
+      "value": "12%〜40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 69,
+      "width": 31,
+      "label": "至9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "tt-84864170fc33",
+      "name": "食欲の秋",
+      "value": "减280〜360日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 71.4,
+      "width": 28.6,
+      "label": "至9/30",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "x-2094983665294221779",
+      "name": "秋の丼祭り",
+      "value": "减140〜200日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 47.6,
+      "width": 52.4,
+      "label": "结束日未定",
+      "labelAlign": "end",
+      "labelOffset": 0
+     }
+    ],
+    "todayPercent": 16.7,
+    "days": 42,
+    "todayLabel": "8/24"
+   }
+  },
+  "coupon_synthetic/ja": {
+   "offers": [
+    {
+     "id": "tt-84864170fc33",
+     "name": "食欲の秋",
+     "sourceMark": "【TikTok】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": false,
+     "primary": "280〜360円引き",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "〜9/30 15:00",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+       "label": "QRコード",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "詳細画像",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "9/16"
+    },
+    {
+     "id": "x-2094983665294221779",
+     "name": "秋の丼祭り",
+     "sourceMark": "【X】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/x.webp"
+     },
+     "upcoming": false,
+     "primary": "140〜200円引き",
+     "terms": [
+      "対象: ロースかつ丼ほか計6品",
+      "券売機のみ",
+      "まとめ買いで10%OFF"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "終了未定",
+     "articleSlug": null,
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+       "label": "QRコード",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+       "label": "詳細画像",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://x.com/matsu_noya/status/2094983665294221779",
+        "label": "X"
+       }
+      }
+     ],
+     "startText": "9/6"
+    },
+    {
+     "id": "news-991-9b2949b512",
+     "name": "松弁ネット2倍",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%〜40%",
+     "terms": [
+      "受取日時が基準"
+     ],
+     "timeWindow": "18:00〜23:00",
+     "capText": null,
+     "period": "〜9/28 23:00",
+     "articleSlug": "szoh9n",
+     "links": [],
+     "images": [],
+     "startText": "9/15"
+    },
+    {
+     "id": "news-1600-4e9302d648",
+     "name": "松弁ネット2倍",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%〜40%",
+     "terms": [
+      "松屋モバイルオーダー・松弁デリバリーは対象外",
+      "キャンペーン対象日時は受取日時が基準",
+      "高速PA店舗・成田空港第3ターミナル店は対象外"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "〜8/31 23:59",
+     "articleSlug": "h42lkb",
+     "links": [],
+     "images": [],
+     "startText": "8/11"
+    },
+    {
+     "id": "news-1591-9bad561554",
+     "name": "PayPayクーポン",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/paypay.webp",
+     "badge": null,
+     "upcoming": false,
+     "primary": "10%〜15%",
+     "terms": [
+      "事前エントリー",
+      "800円以上で10%",
+      "1,200円以上で15%",
+      "期間中何度でも利用可能"
+     ],
+     "timeWindow": null,
+     "capText": "上限 200円",
+     "period": "〜8/31 23:59",
+     "articleSlug": "2ha26q",
+     "links": [
+      {
+       "url": "https://s.paypay.ne.jp/PcaTVZ",
+       "label": "10%エントリー"
+      },
+      {
+       "url": "https://s.paypay.ne.jp/MZq9Jh",
+       "label": "15%エントリー"
+      }
+     ],
+     "images": [],
+     "startText": "8/1"
+    },
+    {
+     "id": "news-1601-6dcb186846",
+     "name": "チキン南蛮定食",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "70円引き",
+     "terms": [],
+     "timeWindow": null,
+     "capText": null,
+     "period": "〜8/25 10:00",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "8/18"
+    },
+    {
+     "id": "news-1577-87378eaacf",
+     "name": "生ジョッキ缶",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "20〜30円引き",
+     "terms": [
+      "店内飲食限定",
+      "株主優待券は利用不可"
+     ],
+     "timeWindow": "11:00〜22:00",
+     "capText": null,
+     "period": "〜9/28 22:00",
+     "articleSlug": "jt8e8p",
+     "links": [],
+     "images": [],
+     "startText": "7/7"
+    },
+    {
+     "id": "news-1577-7421c5ee6f",
+     "name": "ビール中瓶",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "70〜90円引き",
+     "terms": [
+      "店内飲食限定",
+      "株主優待券は利用不可"
+     ],
+     "timeWindow": "11:00〜22:00",
+     "capText": null,
+     "period": "〜9/28 22:00",
+     "articleSlug": "jt8e8p",
+     "links": [],
+     "images": [],
+     "startText": "7/7"
+    },
+    {
+     "id": "news-1595-7aadab2084",
+     "name": "松弁デビュー",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "+300P",
+     "terms": [
+      "松屋モバイルオーダー利用済み・松弁ネット未利用の会員が対象",
+      "松弁デリバリーの利用は対象外",
+      "300ポイント付与はお一人様一回限り",
+      "ポイントは2026年9月8日中までに付与"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "〜8/31",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "8/1"
+    }
+   ],
+   "upcoming": [
+    {
+     "id": "news-1604-e8c05ae3e8",
+     "name": "豚キムチ定食",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": true,
+     "primary": "70円引き",
+     "terms": [],
+     "timeWindow": null,
+     "capText": null,
+     "period": "8/25〜9/1 10:00",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "8/25"
+    },
+    {
+     "id": "tt-upcoming",
+     "name": "食欲の秋",
+     "sourceMark": "【TikTok】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": true,
+     "primary": "280〜360円引き",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "10/5〜10/20",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "詳細画像",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "10/5"
+    }
+   ],
+   "best": {
+    "parts": [
+     {
+      "label": "松弁ネット2倍",
+      "percent": 40,
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "noteText": "ブラック会員20%想定"
+     },
+     {
+      "label": "PayPayクーポン",
+      "percent": 15,
+      "iconUrl": "http://localhost:4000/brands/paypay.webp",
+      "noteText": "上限200円"
+     }
+    ],
+    "totalPercent": 55,
+    "targetText": "※最大1,334円が理論値（これ以上は還元率が下がる）",
+    "targetSpendYen": 1334,
+    "patterns": [
+     {
+      "items": [
+       {
+        "name": "冷や汁チキン南蛮セット",
+        "priceYen": 1300,
+        "articleSlug": "1zlqt6",
+        "thumbnail": "https://cdn.gyumesy.com/menu/hiya_tei_chicken_nanban_hp_260818.webp"
+       }
+      ],
+      "totalYen": 1300,
+      "backYen": 715,
+      "netYen": 585
+     },
+     {
+      "items": [
+       {
+        "name": "松屋オリジナルソースローストビーフ",
+        "priceYen": 880,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/roastbeef_hp_260728.webp"
+       },
+       {
+        "name": "単品冷や汁",
+        "priceYen": 390,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/side_hiyajiru_hp_260804.webp"
+       }
+      ],
+      "totalYen": 1270,
+      "backYen": 698,
+      "netYen": 572
+     },
+     {
+      "items": [
+       {
+        "name": "牛カルビホルモン丼",
+        "priceYen": null,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/don_horumon_hp_260811.webp"
+       },
+       {
+        "name": "豚汁単品",
+        "priceYen": 240,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/sidemenu_tonjiru_hp_240716.webp"
+       }
+      ],
+      "totalYen": 1230,
+      "backYen": null,
+      "netYen": null
+     }
+    ]
+   },
+   "schedule": {
+    "bars": [
+     {
+      "id": "news-1601-6dcb186846",
+      "name": "チキン南蛮定食",
+      "value": "70円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 2.4,
+      "width": 19,
+      "label": "〜8/25",
+      "labelAlign": "end",
+      "labelOffset": 78.6
+     },
+     {
+      "id": "news-1600-4e9302d648",
+      "name": "松弁ネット2倍",
+      "value": "12%〜40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "〜8/31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1591-9bad561554",
+      "name": "PayPayクーポン",
+      "value": "10%〜15%",
+      "iconUrl": "http://localhost:4000/brands/paypay.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "〜8/31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1595-7aadab2084",
+      "name": "松弁デビュー",
+      "value": "+300P",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "〜8/31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1604-e8c05ae3e8",
+      "name": "豚キムチ定食",
+      "value": "70円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": true,
+      "left": 19,
+      "width": 19,
+      "label": "8/25〜",
+      "labelAlign": "start",
+      "labelOffset": 19
+     },
+     {
+      "id": "news-991-9b2949b512",
+      "name": "松弁ネット2倍",
+      "value": "12%〜40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 69,
+      "width": 31,
+      "label": "〜9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1577-87378eaacf",
+      "name": "生ジョッキ缶",
+      "value": "20〜30円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 100,
+      "label": "〜9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1577-7421c5ee6f",
+      "name": "ビール中瓶",
+      "value": "70〜90円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 100,
+      "label": "〜9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "tt-84864170fc33",
+      "name": "食欲の秋",
+      "value": "280〜360円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 71.4,
+      "width": 28.6,
+      "label": "〜9/30",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "x-2094983665294221779",
+      "name": "秋の丼祭り",
+      "value": "140〜200円引き",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 47.6,
+      "width": 52.4,
+      "label": "終了未定",
+      "labelAlign": "end",
+      "labelOffset": 0
+     }
+    ],
+    "todayPercent": 16.7,
+    "days": 42,
+    "todayLabel": "8/24"
+   }
+  },
+  "coupon_synthetic/en": {
+   "offers": [
+    {
+     "id": "tt-84864170fc33",
+     "name": "食欲の秋",
+     "sourceMark": "[TikTok] ",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": false,
+     "primary": "¥280–¥360 off",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "until Sep 30 15:00",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+       "label": "QR code",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "Detail image",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "Sep 16"
+    },
+    {
+     "id": "x-2094983665294221779",
+     "name": "秋の丼祭り",
+     "sourceMark": "[X] ",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/x.webp"
+     },
+     "upcoming": false,
+     "primary": "¥140–¥200 off",
+     "terms": [
+      "対象: ロースかつ丼ほか計6品",
+      "券売機のみ",
+      "まとめ買いで10%OFF"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "no end date",
+     "articleSlug": null,
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+       "label": "QR code",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+       "label": "Detail image",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://x.com/matsu_noya/status/2094983665294221779",
+        "label": "X"
+       }
+      }
+     ],
+     "startText": "Sep 6"
+    },
+    {
+     "id": "news-991-9b2949b512",
+     "name": "Matsuben Net 2×",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%–40%",
+     "terms": [
+      "受取日時が基準"
+     ],
+     "timeWindow": "18:00〜23:00",
+     "capText": null,
+     "period": "until Sep 28 23:00",
+     "articleSlug": "szoh9n",
+     "links": [],
+     "images": [],
+     "startText": "Sep 15"
+    },
+    {
+     "id": "news-1600-4e9302d648",
+     "name": "Matsuben Net 2×",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%–40%",
+     "terms": [
+      "松屋モバイルオーダー・松弁デリバリーは対象外",
+      "キャンペーン対象日時は受取日時が基準",
+      "高速PA店舗・成田空港第3ターミナル店は対象外"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "until Aug 31 23:59",
+     "articleSlug": "h42lkb",
+     "links": [],
+     "images": [],
+     "startText": "Aug 11"
+    },
+    {
+     "id": "news-1591-9bad561554",
+     "name": "PayPay coupon",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/paypay.webp",
+     "badge": null,
+     "upcoming": false,
+     "primary": "10%–15%",
+     "terms": [
+      "Sign up first",
+      "10% from ¥800",
+      "15% from ¥1,200",
+      "期間中何度でも利用可能"
+     ],
+     "timeWindow": null,
+     "capText": "Cap ¥200",
+     "period": "until Aug 31 23:59",
+     "articleSlug": "2ha26q",
+     "links": [
+      {
+       "url": "https://s.paypay.ne.jp/PcaTVZ",
+       "label": "Get 10%"
+      },
+      {
+       "url": "https://s.paypay.ne.jp/MZq9Jh",
+       "label": "Get 15%"
+      }
+     ],
+     "images": [],
+     "startText": "Aug 1"
+    },
+    {
+     "id": "news-1601-6dcb186846",
+     "name": "チキン南蛮定食",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "¥70 off",
+     "terms": [],
+     "timeWindow": null,
+     "capText": null,
+     "period": "until Aug 25 10:00",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "Aug 18"
+    },
+    {
+     "id": "news-1577-87378eaacf",
+     "name": "生ジョッキ缶",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "¥20–¥30 off",
+     "terms": [
+      "店内飲食限定",
+      "株主優待券は利用不可"
+     ],
+     "timeWindow": "11:00〜22:00",
+     "capText": null,
+     "period": "until Sep 28 22:00",
+     "articleSlug": "jt8e8p",
+     "links": [],
+     "images": [],
+     "startText": "Jul 7"
+    },
+    {
+     "id": "news-1577-7421c5ee6f",
+     "name": "ビール中瓶",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "¥70–¥90 off",
+     "terms": [
+      "店内飲食限定",
+      "株主優待券は利用不可"
+     ],
+     "timeWindow": "11:00〜22:00",
+     "capText": null,
+     "period": "until Sep 28 22:00",
+     "articleSlug": "jt8e8p",
+     "links": [],
+     "images": [],
+     "startText": "Jul 7"
+    },
+    {
+     "id": "news-1595-7aadab2084",
+     "name": "松弁デビュー",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "+300 pts",
+     "terms": [
+      "松屋モバイルオーダー利用済み・松弁ネット未利用の会員が対象",
+      "松弁デリバリーの利用は対象外",
+      "300ポイント付与はお一人様一回限り",
+      "ポイントは2026年9月8日中までに付与"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "until Aug 31",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "Aug 1"
+    }
+   ],
+   "upcoming": [
+    {
+     "id": "news-1604-e8c05ae3e8",
+     "name": "豚キムチ定食",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": true,
+     "primary": "¥70 off",
+     "terms": [],
+     "timeWindow": null,
+     "capText": null,
+     "period": "Aug 25 – Sep 1 10:00",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "Aug 25"
+    },
+    {
+     "id": "tt-upcoming",
+     "name": "食欲の秋",
+     "sourceMark": "[TikTok] ",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": true,
+     "primary": "¥280–¥360 off",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "Oct 5 – Oct 20",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "Detail image",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "Oct 5"
+    }
+   ],
+   "best": {
+    "parts": [
+     {
+      "label": "Matsuben Net 2×",
+      "percent": 40,
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "noteText": "Assumes Black (20%)"
+     },
+     {
+      "label": "PayPay coupon",
+      "percent": 15,
+      "iconUrl": "http://localhost:4000/brands/paypay.webp",
+      "noteText": "Cap ¥200"
+     }
+    ],
+    "totalPercent": 55,
+    "targetText": "* ¥1,334 is the sweet spot — spend more and the rate drops",
+    "targetSpendYen": 1334,
+    "patterns": [
+     {
+      "items": [
+       {
+        "name": "冷や汁チキン南蛮セット",
+        "priceYen": 1300,
+        "articleSlug": "1zlqt6",
+        "thumbnail": "https://cdn.gyumesy.com/menu/hiya_tei_chicken_nanban_hp_260818.webp"
+       }
+      ],
+      "totalYen": 1300,
+      "backYen": 715,
+      "netYen": 585
+     },
+     {
+      "items": [
+       {
+        "name": "松屋オリジナルソースローストビーフ",
+        "priceYen": 880,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/roastbeef_hp_260728.webp"
+       },
+       {
+        "name": "単品冷や汁",
+        "priceYen": 390,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/side_hiyajiru_hp_260804.webp"
+       }
+      ],
+      "totalYen": 1270,
+      "backYen": 698,
+      "netYen": 572
+     },
+     {
+      "items": [
+       {
+        "name": "牛カルビホルモン丼",
+        "priceYen": null,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/don_horumon_hp_260811.webp"
+       },
+       {
+        "name": "豚汁単品",
+        "priceYen": 240,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/sidemenu_tonjiru_hp_240716.webp"
+       }
+      ],
+      "totalYen": 1230,
+      "backYen": null,
+      "netYen": null
+     }
+    ]
+   },
+   "schedule": {
+    "bars": [
+     {
+      "id": "news-1601-6dcb186846",
+      "name": "チキン南蛮定食",
+      "value": "¥70 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 2.4,
+      "width": 19,
+      "label": "until Aug 25",
+      "labelAlign": "start",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1600-4e9302d648",
+      "name": "Matsuben Net 2×",
+      "value": "12%–40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "until Aug 31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1591-9bad561554",
+      "name": "PayPay coupon",
+      "value": "10%–15%",
+      "iconUrl": "http://localhost:4000/brands/paypay.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "until Aug 31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1595-7aadab2084",
+      "name": "松弁デビュー",
+      "value": "+300 pts",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "until Aug 31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1604-e8c05ae3e8",
+      "name": "豚キムチ定食",
+      "value": "¥70 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": true,
+      "left": 19,
+      "width": 19,
+      "label": "From Aug 25",
+      "labelAlign": "start",
+      "labelOffset": 19
+     },
+     {
+      "id": "news-991-9b2949b512",
+      "name": "Matsuben Net 2×",
+      "value": "12%–40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 69,
+      "width": 31,
+      "label": "until Sep 28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1577-87378eaacf",
+      "name": "生ジョッキ缶",
+      "value": "¥20–¥30 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 100,
+      "label": "until Sep 28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1577-7421c5ee6f",
+      "name": "ビール中瓶",
+      "value": "¥70–¥90 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 100,
+      "label": "until Sep 28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "tt-84864170fc33",
+      "name": "食欲の秋",
+      "value": "¥280–¥360 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 71.4,
+      "width": 28.6,
+      "label": "until Sep 30",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "x-2094983665294221779",
+      "name": "秋の丼祭り",
+      "value": "¥140–¥200 off",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 47.6,
+      "width": 52.4,
+      "label": "no end date",
+      "labelAlign": "end",
+      "labelOffset": 0
+     }
+    ],
+    "todayPercent": 16.7,
+    "days": 42,
+    "todayLabel": "Aug 24"
+   }
+  },
+  "coupon_synthetic/zh": {
+   "offers": [
+    {
+     "id": "tt-84864170fc33",
+     "name": "食欲の秋",
+     "sourceMark": "【TikTok】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": false,
+     "primary": "减280〜360日元",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "至9/30 15:00",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+       "label": "二维码",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "详情图片",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "9/16"
+    },
+    {
+     "id": "x-2094983665294221779",
+     "name": "秋の丼祭り",
+     "sourceMark": "【X】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/x.webp"
+     },
+     "upcoming": false,
+     "primary": "减140〜200日元",
+     "terms": [
+      "対象: ロースかつ丼ほか計6品",
+      "券売機のみ",
+      "まとめ買いで10%OFF"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "结束日未定",
+     "articleSlug": null,
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+       "label": "二维码",
+       "icon": "qr_code_2",
+       "isCode": true,
+       "source": null
+      },
+      {
+       "url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+       "label": "详情图片",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://x.com/matsu_noya/status/2094983665294221779",
+        "label": "X"
+       }
+      }
+     ],
+     "startText": "9/6"
+    },
+    {
+     "id": "news-991-9b2949b512",
+     "name": "松弁网2倍",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%〜40%",
+     "terms": [
+      "受取日時が基準"
+     ],
+     "timeWindow": "18:00〜23:00",
+     "capText": null,
+     "period": "至9/28 23:00",
+     "articleSlug": "szoh9n",
+     "links": [],
+     "images": [],
+     "startText": "9/15"
+    },
+    {
+     "id": "news-1600-4e9302d648",
+     "name": "松弁网2倍",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "12%〜40%",
+     "terms": [
+      "松屋モバイルオーダー・松弁デリバリーは対象外",
+      "キャンペーン対象日時は受取日時が基準",
+      "高速PA店舗・成田空港第3ターミナル店は対象外"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "至8/31 23:59",
+     "articleSlug": "h42lkb",
+     "links": [],
+     "images": [],
+     "startText": "8/11"
+    },
+    {
+     "id": "news-1591-9bad561554",
+     "name": "PayPay优惠券",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/paypay.webp",
+     "badge": null,
+     "upcoming": false,
+     "primary": "10%〜15%",
+     "terms": [
+      "需事先报名",
+      "满800日元为10%",
+      "满1,200日元为15%",
+      "期間中何度でも利用可能"
+     ],
+     "timeWindow": null,
+     "capText": "上限 200日元",
+     "period": "至8/31 23:59",
+     "articleSlug": "2ha26q",
+     "links": [
+      {
+       "url": "https://s.paypay.ne.jp/PcaTVZ",
+       "label": "领取10%"
+      },
+      {
+       "url": "https://s.paypay.ne.jp/MZq9Jh",
+       "label": "领取15%"
+      }
+     ],
+     "images": [],
+     "startText": "8/1"
+    },
+    {
+     "id": "news-1601-6dcb186846",
+     "name": "チキン南蛮定食",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "减70日元",
+     "terms": [],
+     "timeWindow": null,
+     "capText": null,
+     "period": "至8/25 10:00",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "8/18"
+    },
+    {
+     "id": "news-1577-87378eaacf",
+     "name": "生ジョッキ缶",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "减20〜30日元",
+     "terms": [
+      "店内飲食限定",
+      "株主優待券は利用不可"
+     ],
+     "timeWindow": "11:00〜22:00",
+     "capText": null,
+     "period": "至9/28 22:00",
+     "articleSlug": "jt8e8p",
+     "links": [],
+     "images": [],
+     "startText": "7/7"
+    },
+    {
+     "id": "news-1577-7421c5ee6f",
+     "name": "ビール中瓶",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "减70〜90日元",
+     "terms": [
+      "店内飲食限定",
+      "株主優待券は利用不可"
+     ],
+     "timeWindow": "11:00〜22:00",
+     "capText": null,
+     "period": "至9/28 22:00",
+     "articleSlug": "jt8e8p",
+     "links": [],
+     "images": [],
+     "startText": "7/7"
+    },
+    {
+     "id": "news-1595-7aadab2084",
+     "name": "松弁デビュー",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "shopping_bag",
+      "imageUrl": null
+     },
+     "upcoming": false,
+     "primary": "+300积分",
+     "terms": [
+      "松屋モバイルオーダー利用済み・松弁ネット未利用の会員が対象",
+      "松弁デリバリーの利用は対象外",
+      "300ポイント付与はお一人様一回限り",
+      "ポイントは2026年9月8日中までに付与"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "至8/31",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "8/1"
+    }
+   ],
+   "upcoming": [
+    {
+     "id": "news-1604-e8c05ae3e8",
+     "name": "豚キムチ定食",
+     "sourceMark": null,
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": "sell",
+      "imageUrl": null
+     },
+     "upcoming": true,
+     "primary": "减70日元",
+     "terms": [],
+     "timeWindow": null,
+     "capText": null,
+     "period": "8/25〜9/1 10:00",
+     "articleSlug": null,
+     "links": [],
+     "images": [],
+     "startText": "8/25"
+    },
+    {
+     "id": "tt-upcoming",
+     "name": "食欲の秋",
+     "sourceMark": "【TikTok】",
+     "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+     "badge": {
+      "icon": null,
+      "imageUrl": "http://localhost:4000/brands/tiktok.webp"
+     },
+     "upcoming": true,
+     "primary": "减280〜360日元",
+     "terms": [
+      "対象: ダブルロースかつ定食ほか計3品",
+      "券売機のみ",
+      "一部店舗を除く松のや・松屋松のや併設店で利用可"
+     ],
+     "timeWindow": null,
+     "capText": null,
+     "period": "10/5〜10/20",
+     "articleSlug": "smhkrs",
+     "links": [],
+     "images": [
+      {
+       "url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+       "label": "详情图片",
+       "icon": "zoom_in",
+       "isCode": false,
+       "source": {
+        "url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+        "label": "TikTok"
+       }
+      }
+     ],
+     "startText": "10/5"
+    }
+   ],
+   "best": {
+    "parts": [
+     {
+      "label": "松弁网2倍",
+      "percent": 40,
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "noteText": "按黑卡会员20%计算"
+     },
+     {
+      "label": "PayPay优惠券",
+      "percent": 15,
+      "iconUrl": "http://localhost:4000/brands/paypay.webp",
+      "noteText": "上限200日元"
+     }
+    ],
+    "totalPercent": 55,
+    "targetText": "※1,334日元为理论最大值（超过后返还比例下降）",
+    "targetSpendYen": 1334,
+    "patterns": [
+     {
+      "items": [
+       {
+        "name": "冷や汁チキン南蛮セット",
+        "priceYen": 1300,
+        "articleSlug": "1zlqt6",
+        "thumbnail": "https://cdn.gyumesy.com/menu/hiya_tei_chicken_nanban_hp_260818.webp"
+       }
+      ],
+      "totalYen": 1300,
+      "backYen": 715,
+      "netYen": 585
+     },
+     {
+      "items": [
+       {
+        "name": "松屋オリジナルソースローストビーフ",
+        "priceYen": 880,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/roastbeef_hp_260728.webp"
+       },
+       {
+        "name": "単品冷や汁",
+        "priceYen": 390,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/side_hiyajiru_hp_260804.webp"
+       }
+      ],
+      "totalYen": 1270,
+      "backYen": 698,
+      "netYen": 572
+     },
+     {
+      "items": [
+       {
+        "name": "牛カルビホルモン丼",
+        "priceYen": null,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/don_horumon_hp_260811.webp"
+       },
+       {
+        "name": "豚汁単品",
+        "priceYen": 240,
+        "articleSlug": null,
+        "thumbnail": "https://cdn.gyumesy.com/menu/sidemenu_tonjiru_hp_240716.webp"
+       }
+      ],
+      "totalYen": 1230,
+      "backYen": null,
+      "netYen": null
+     }
+    ]
+   },
+   "schedule": {
+    "bars": [
+     {
+      "id": "news-1601-6dcb186846",
+      "name": "チキン南蛮定食",
+      "value": "减70日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 2.4,
+      "width": 19,
+      "label": "至8/25",
+      "labelAlign": "end",
+      "labelOffset": 78.6
+     },
+     {
+      "id": "news-1600-4e9302d648",
+      "name": "松弁网2倍",
+      "value": "12%〜40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "至8/31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1591-9bad561554",
+      "name": "PayPay优惠券",
+      "value": "10%〜15%",
+      "iconUrl": "http://localhost:4000/brands/paypay.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "至8/31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1595-7aadab2084",
+      "name": "松弁デビュー",
+      "value": "+300积分",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 35.7,
+      "label": "至8/31",
+      "labelAlign": "end",
+      "labelOffset": 64.3
+     },
+     {
+      "id": "news-1604-e8c05ae3e8",
+      "name": "豚キムチ定食",
+      "value": "减70日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": true,
+      "left": 19,
+      "width": 19,
+      "label": "8/25起",
+      "labelAlign": "start",
+      "labelOffset": 19
+     },
+     {
+      "id": "news-991-9b2949b512",
+      "name": "松弁网2倍",
+      "value": "12%〜40%",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 69,
+      "width": 31,
+      "label": "至9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1577-87378eaacf",
+      "name": "生ジョッキ缶",
+      "value": "减20〜30日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 100,
+      "label": "至9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "news-1577-7421c5ee6f",
+      "name": "ビール中瓶",
+      "value": "减70〜90日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 0,
+      "width": 100,
+      "label": "至9/28",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "tt-84864170fc33",
+      "name": "食欲の秋",
+      "value": "减280〜360日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 71.4,
+      "width": 28.6,
+      "label": "至9/30",
+      "labelAlign": "end",
+      "labelOffset": 0
+     },
+     {
+      "id": "x-2094983665294221779",
+      "name": "秋の丼祭り",
+      "value": "减140〜200日元",
+      "iconUrl": "http://localhost:4000/brands/matsuya.webp",
+      "upcoming": false,
+      "left": 47.6,
+      "width": 52.4,
+      "label": "结束日未定",
+      "labelAlign": "end",
+      "labelOffset": 0
+     }
+    ],
+    "todayPercent": 16.7,
+    "days": 42,
+    "todayLabel": "8/24"
+   }
+  }
+ }
+}

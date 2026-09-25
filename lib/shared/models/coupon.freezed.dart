@@ -17,7 +17,8 @@ mixin _$Coupon {
 
 @JsonKey(name: 'generated_at') String get generatedAt; List<CouponRank> get ranks;/// 今使えるぶん。**並びは配信の順をそのまま使う**（並べ替えは配信側の仕事）。
  List<CouponOffer> get offers;/// これから始まるぶん。**契約上 `start_date` 昇順**で届く。
- List<CouponOffer> get upcoming;
+ List<CouponOffer> get upcoming;/// 最大還元の組み合わせ。**無い日がある。**
+@JsonKey(name: 'best_deal') CouponBestDeal? get bestDeal;
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,16 +31,16 @@ $CouponCopyWith<Coupon> get copyWith => _$CouponCopyWithImpl<Coupon>(this as Cou
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coupon&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.ranks, ranks)&&const DeepCollectionEquality().equals(other.offers, offers)&&const DeepCollectionEquality().equals(other.upcoming, upcoming));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coupon&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.ranks, ranks)&&const DeepCollectionEquality().equals(other.offers, offers)&&const DeepCollectionEquality().equals(other.upcoming, upcoming)&&(identical(other.bestDeal, bestDeal) || other.bestDeal == bestDeal));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,generatedAt,const DeepCollectionEquality().hash(ranks),const DeepCollectionEquality().hash(offers),const DeepCollectionEquality().hash(upcoming));
+int get hashCode => Object.hash(runtimeType,generatedAt,const DeepCollectionEquality().hash(ranks),const DeepCollectionEquality().hash(offers),const DeepCollectionEquality().hash(upcoming),bestDeal);
 
 @override
 String toString() {
-  return 'Coupon(generatedAt: $generatedAt, ranks: $ranks, offers: $offers, upcoming: $upcoming)';
+  return 'Coupon(generatedAt: $generatedAt, ranks: $ranks, offers: $offers, upcoming: $upcoming, bestDeal: $bestDeal)';
 }
 
 
@@ -50,11 +51,11 @@ abstract mixin class $CouponCopyWith<$Res>  {
   factory $CouponCopyWith(Coupon value, $Res Function(Coupon) _then) = _$CouponCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'generated_at') String generatedAt, List<CouponRank> ranks, List<CouponOffer> offers, List<CouponOffer> upcoming
+@JsonKey(name: 'generated_at') String generatedAt, List<CouponRank> ranks, List<CouponOffer> offers, List<CouponOffer> upcoming,@JsonKey(name: 'best_deal') CouponBestDeal? bestDeal
 });
 
 
-
+$CouponBestDealCopyWith<$Res>? get bestDeal;
 
 }
 /// @nodoc
@@ -67,16 +68,29 @@ class _$CouponCopyWithImpl<$Res>
 
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? generatedAt = null,Object? ranks = null,Object? offers = null,Object? upcoming = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? generatedAt = null,Object? ranks = null,Object? offers = null,Object? upcoming = null,Object? bestDeal = freezed,}) {
   return _then(_self.copyWith(
 generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
 as String,ranks: null == ranks ? _self.ranks : ranks // ignore: cast_nullable_to_non_nullable
 as List<CouponRank>,offers: null == offers ? _self.offers : offers // ignore: cast_nullable_to_non_nullable
 as List<CouponOffer>,upcoming: null == upcoming ? _self.upcoming : upcoming // ignore: cast_nullable_to_non_nullable
-as List<CouponOffer>,
+as List<CouponOffer>,bestDeal: freezed == bestDeal ? _self.bestDeal : bestDeal // ignore: cast_nullable_to_non_nullable
+as CouponBestDeal?,
   ));
 }
+/// Create a copy of Coupon
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CouponBestDealCopyWith<$Res>? get bestDeal {
+    if (_self.bestDeal == null) {
+    return null;
+  }
 
+  return $CouponBestDealCopyWith<$Res>(_self.bestDeal!, (value) {
+    return _then(_self.copyWith(bestDeal: value));
+  });
+}
 }
 
 
@@ -158,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'generated_at')  String generatedAt,  List<CouponRank> ranks,  List<CouponOffer> offers,  List<CouponOffer> upcoming)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'generated_at')  String generatedAt,  List<CouponRank> ranks,  List<CouponOffer> offers,  List<CouponOffer> upcoming, @JsonKey(name: 'best_deal')  CouponBestDeal? bestDeal)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Coupon() when $default != null:
-return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming);case _:
+return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming,_that.bestDeal);case _:
   return orElse();
 
 }
@@ -179,10 +193,10 @@ return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'generated_at')  String generatedAt,  List<CouponRank> ranks,  List<CouponOffer> offers,  List<CouponOffer> upcoming)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'generated_at')  String generatedAt,  List<CouponRank> ranks,  List<CouponOffer> offers,  List<CouponOffer> upcoming, @JsonKey(name: 'best_deal')  CouponBestDeal? bestDeal)  $default,) {final _that = this;
 switch (_that) {
 case _Coupon():
-return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming);case _:
+return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming,_that.bestDeal);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +213,10 @@ return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'generated_at')  String generatedAt,  List<CouponRank> ranks,  List<CouponOffer> offers,  List<CouponOffer> upcoming)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'generated_at')  String generatedAt,  List<CouponRank> ranks,  List<CouponOffer> offers,  List<CouponOffer> upcoming, @JsonKey(name: 'best_deal')  CouponBestDeal? bestDeal)?  $default,) {final _that = this;
 switch (_that) {
 case _Coupon() when $default != null:
-return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming);case _:
+return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming,_that.bestDeal);case _:
   return null;
 
 }
@@ -214,7 +228,7 @@ return $default(_that.generatedAt,_that.ranks,_that.offers,_that.upcoming);case 
 @JsonSerializable()
 
 class _Coupon implements Coupon {
-  const _Coupon({@JsonKey(name: 'generated_at') required this.generatedAt, final  List<CouponRank> ranks = const <CouponRank>[], final  List<CouponOffer> offers = const <CouponOffer>[], final  List<CouponOffer> upcoming = const <CouponOffer>[]}): _ranks = ranks,_offers = offers,_upcoming = upcoming;
+  const _Coupon({@JsonKey(name: 'generated_at') required this.generatedAt, final  List<CouponRank> ranks = const <CouponRank>[], final  List<CouponOffer> offers = const <CouponOffer>[], final  List<CouponOffer> upcoming = const <CouponOffer>[], @JsonKey(name: 'best_deal') this.bestDeal}): _ranks = ranks,_offers = offers,_upcoming = upcoming;
   factory _Coupon.fromJson(Map<String, dynamic> json) => _$CouponFromJson(json);
 
 @override@JsonKey(name: 'generated_at') final  String generatedAt;
@@ -243,6 +257,8 @@ class _Coupon implements Coupon {
   return EqualUnmodifiableListView(_upcoming);
 }
 
+/// 最大還元の組み合わせ。**無い日がある。**
+@override@JsonKey(name: 'best_deal') final  CouponBestDeal? bestDeal;
 
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
@@ -257,16 +273,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coupon&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other._ranks, _ranks)&&const DeepCollectionEquality().equals(other._offers, _offers)&&const DeepCollectionEquality().equals(other._upcoming, _upcoming));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coupon&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other._ranks, _ranks)&&const DeepCollectionEquality().equals(other._offers, _offers)&&const DeepCollectionEquality().equals(other._upcoming, _upcoming)&&(identical(other.bestDeal, bestDeal) || other.bestDeal == bestDeal));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,generatedAt,const DeepCollectionEquality().hash(_ranks),const DeepCollectionEquality().hash(_offers),const DeepCollectionEquality().hash(_upcoming));
+int get hashCode => Object.hash(runtimeType,generatedAt,const DeepCollectionEquality().hash(_ranks),const DeepCollectionEquality().hash(_offers),const DeepCollectionEquality().hash(_upcoming),bestDeal);
 
 @override
 String toString() {
-  return 'Coupon(generatedAt: $generatedAt, ranks: $ranks, offers: $offers, upcoming: $upcoming)';
+  return 'Coupon(generatedAt: $generatedAt, ranks: $ranks, offers: $offers, upcoming: $upcoming, bestDeal: $bestDeal)';
 }
 
 
@@ -277,11 +293,11 @@ abstract mixin class _$CouponCopyWith<$Res> implements $CouponCopyWith<$Res> {
   factory _$CouponCopyWith(_Coupon value, $Res Function(_Coupon) _then) = __$CouponCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'generated_at') String generatedAt, List<CouponRank> ranks, List<CouponOffer> offers, List<CouponOffer> upcoming
+@JsonKey(name: 'generated_at') String generatedAt, List<CouponRank> ranks, List<CouponOffer> offers, List<CouponOffer> upcoming,@JsonKey(name: 'best_deal') CouponBestDeal? bestDeal
 });
 
 
-
+@override $CouponBestDealCopyWith<$Res>? get bestDeal;
 
 }
 /// @nodoc
@@ -294,17 +310,30 @@ class __$CouponCopyWithImpl<$Res>
 
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? generatedAt = null,Object? ranks = null,Object? offers = null,Object? upcoming = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? generatedAt = null,Object? ranks = null,Object? offers = null,Object? upcoming = null,Object? bestDeal = freezed,}) {
   return _then(_Coupon(
 generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
 as String,ranks: null == ranks ? _self._ranks : ranks // ignore: cast_nullable_to_non_nullable
 as List<CouponRank>,offers: null == offers ? _self._offers : offers // ignore: cast_nullable_to_non_nullable
 as List<CouponOffer>,upcoming: null == upcoming ? _self._upcoming : upcoming // ignore: cast_nullable_to_non_nullable
-as List<CouponOffer>,
+as List<CouponOffer>,bestDeal: freezed == bestDeal ? _self.bestDeal : bestDeal // ignore: cast_nullable_to_non_nullable
+as CouponBestDeal?,
   ));
 }
 
+/// Create a copy of Coupon
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CouponBestDealCopyWith<$Res>? get bestDeal {
+    if (_self.bestDeal == null) {
+    return null;
+  }
 
+  return $CouponBestDealCopyWith<$Res>(_self.bestDeal!, (value) {
+    return _then(_self.copyWith(bestDeal: value));
+  });
+}
 }
 
 
@@ -1500,6 +1529,1126 @@ url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as String,ratePercent: freezed == ratePercent ? _self.ratePercent : ratePercent // ignore: cast_nullable_to_non_nullable
 as double?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$CouponBestDeal {
+
+ String get channel;/// 前提にしている会員ランク。**倍率クーポンの率はこれに掛かっている。**
+ String get rank; List<CouponBestDealPart> get parts;@JsonKey(name: 'total_percent') double get totalPercent;/// 効いている付与上限。**null なら上限が無い**（率が下がらないので、
+/// 「これ以上は還元率が下がる」の但し書きを出してはいけない）。
+@JsonKey(name: 'cap_yen') int? get capYen;/// その率で頼める上限の金額。**`cap_yen` があっても null を取りうる。**
+@JsonKey(name: 'target_spend_yen') int? get targetSpendYen; List<CouponPattern> get patterns;
+/// Create a copy of CouponBestDeal
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CouponBestDealCopyWith<CouponBestDeal> get copyWith => _$CouponBestDealCopyWithImpl<CouponBestDeal>(this as CouponBestDeal, _$identity);
+
+  /// Serializes this CouponBestDeal to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CouponBestDeal&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.rank, rank) || other.rank == rank)&&const DeepCollectionEquality().equals(other.parts, parts)&&(identical(other.totalPercent, totalPercent) || other.totalPercent == totalPercent)&&(identical(other.capYen, capYen) || other.capYen == capYen)&&(identical(other.targetSpendYen, targetSpendYen) || other.targetSpendYen == targetSpendYen)&&const DeepCollectionEquality().equals(other.patterns, patterns));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,channel,rank,const DeepCollectionEquality().hash(parts),totalPercent,capYen,targetSpendYen,const DeepCollectionEquality().hash(patterns));
+
+@override
+String toString() {
+  return 'CouponBestDeal(channel: $channel, rank: $rank, parts: $parts, totalPercent: $totalPercent, capYen: $capYen, targetSpendYen: $targetSpendYen, patterns: $patterns)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CouponBestDealCopyWith<$Res>  {
+  factory $CouponBestDealCopyWith(CouponBestDeal value, $Res Function(CouponBestDeal) _then) = _$CouponBestDealCopyWithImpl;
+@useResult
+$Res call({
+ String channel, String rank, List<CouponBestDealPart> parts,@JsonKey(name: 'total_percent') double totalPercent,@JsonKey(name: 'cap_yen') int? capYen,@JsonKey(name: 'target_spend_yen') int? targetSpendYen, List<CouponPattern> patterns
+});
+
+
+
+
+}
+/// @nodoc
+class _$CouponBestDealCopyWithImpl<$Res>
+    implements $CouponBestDealCopyWith<$Res> {
+  _$CouponBestDealCopyWithImpl(this._self, this._then);
+
+  final CouponBestDeal _self;
+  final $Res Function(CouponBestDeal) _then;
+
+/// Create a copy of CouponBestDeal
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? channel = null,Object? rank = null,Object? parts = null,Object? totalPercent = null,Object? capYen = freezed,Object? targetSpendYen = freezed,Object? patterns = null,}) {
+  return _then(_self.copyWith(
+channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+as String,rank: null == rank ? _self.rank : rank // ignore: cast_nullable_to_non_nullable
+as String,parts: null == parts ? _self.parts : parts // ignore: cast_nullable_to_non_nullable
+as List<CouponBestDealPart>,totalPercent: null == totalPercent ? _self.totalPercent : totalPercent // ignore: cast_nullable_to_non_nullable
+as double,capYen: freezed == capYen ? _self.capYen : capYen // ignore: cast_nullable_to_non_nullable
+as int?,targetSpendYen: freezed == targetSpendYen ? _self.targetSpendYen : targetSpendYen // ignore: cast_nullable_to_non_nullable
+as int?,patterns: null == patterns ? _self.patterns : patterns // ignore: cast_nullable_to_non_nullable
+as List<CouponPattern>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [CouponBestDeal].
+extension CouponBestDealPatterns on CouponBestDeal {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CouponBestDeal value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CouponBestDeal() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CouponBestDeal value)  $default,){
+final _that = this;
+switch (_that) {
+case _CouponBestDeal():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CouponBestDeal value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CouponBestDeal() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String channel,  String rank,  List<CouponBestDealPart> parts, @JsonKey(name: 'total_percent')  double totalPercent, @JsonKey(name: 'cap_yen')  int? capYen, @JsonKey(name: 'target_spend_yen')  int? targetSpendYen,  List<CouponPattern> patterns)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CouponBestDeal() when $default != null:
+return $default(_that.channel,_that.rank,_that.parts,_that.totalPercent,_that.capYen,_that.targetSpendYen,_that.patterns);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String channel,  String rank,  List<CouponBestDealPart> parts, @JsonKey(name: 'total_percent')  double totalPercent, @JsonKey(name: 'cap_yen')  int? capYen, @JsonKey(name: 'target_spend_yen')  int? targetSpendYen,  List<CouponPattern> patterns)  $default,) {final _that = this;
+switch (_that) {
+case _CouponBestDeal():
+return $default(_that.channel,_that.rank,_that.parts,_that.totalPercent,_that.capYen,_that.targetSpendYen,_that.patterns);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String channel,  String rank,  List<CouponBestDealPart> parts, @JsonKey(name: 'total_percent')  double totalPercent, @JsonKey(name: 'cap_yen')  int? capYen, @JsonKey(name: 'target_spend_yen')  int? targetSpendYen,  List<CouponPattern> patterns)?  $default,) {final _that = this;
+switch (_that) {
+case _CouponBestDeal() when $default != null:
+return $default(_that.channel,_that.rank,_that.parts,_that.totalPercent,_that.capYen,_that.targetSpendYen,_that.patterns);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _CouponBestDeal implements CouponBestDeal {
+  const _CouponBestDeal({required this.channel, required this.rank, final  List<CouponBestDealPart> parts = const <CouponBestDealPart>[], @JsonKey(name: 'total_percent') required this.totalPercent, @JsonKey(name: 'cap_yen') this.capYen, @JsonKey(name: 'target_spend_yen') this.targetSpendYen, final  List<CouponPattern> patterns = const <CouponPattern>[]}): _parts = parts,_patterns = patterns;
+  factory _CouponBestDeal.fromJson(Map<String, dynamic> json) => _$CouponBestDealFromJson(json);
+
+@override final  String channel;
+/// 前提にしている会員ランク。**倍率クーポンの率はこれに掛かっている。**
+@override final  String rank;
+ final  List<CouponBestDealPart> _parts;
+@override@JsonKey() List<CouponBestDealPart> get parts {
+  if (_parts is EqualUnmodifiableListView) return _parts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_parts);
+}
+
+@override@JsonKey(name: 'total_percent') final  double totalPercent;
+/// 効いている付与上限。**null なら上限が無い**（率が下がらないので、
+/// 「これ以上は還元率が下がる」の但し書きを出してはいけない）。
+@override@JsonKey(name: 'cap_yen') final  int? capYen;
+/// その率で頼める上限の金額。**`cap_yen` があっても null を取りうる。**
+@override@JsonKey(name: 'target_spend_yen') final  int? targetSpendYen;
+ final  List<CouponPattern> _patterns;
+@override@JsonKey() List<CouponPattern> get patterns {
+  if (_patterns is EqualUnmodifiableListView) return _patterns;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_patterns);
+}
+
+
+/// Create a copy of CouponBestDeal
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CouponBestDealCopyWith<_CouponBestDeal> get copyWith => __$CouponBestDealCopyWithImpl<_CouponBestDeal>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CouponBestDealToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CouponBestDeal&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.rank, rank) || other.rank == rank)&&const DeepCollectionEquality().equals(other._parts, _parts)&&(identical(other.totalPercent, totalPercent) || other.totalPercent == totalPercent)&&(identical(other.capYen, capYen) || other.capYen == capYen)&&(identical(other.targetSpendYen, targetSpendYen) || other.targetSpendYen == targetSpendYen)&&const DeepCollectionEquality().equals(other._patterns, _patterns));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,channel,rank,const DeepCollectionEquality().hash(_parts),totalPercent,capYen,targetSpendYen,const DeepCollectionEquality().hash(_patterns));
+
+@override
+String toString() {
+  return 'CouponBestDeal(channel: $channel, rank: $rank, parts: $parts, totalPercent: $totalPercent, capYen: $capYen, targetSpendYen: $targetSpendYen, patterns: $patterns)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CouponBestDealCopyWith<$Res> implements $CouponBestDealCopyWith<$Res> {
+  factory _$CouponBestDealCopyWith(_CouponBestDeal value, $Res Function(_CouponBestDeal) _then) = __$CouponBestDealCopyWithImpl;
+@override @useResult
+$Res call({
+ String channel, String rank, List<CouponBestDealPart> parts,@JsonKey(name: 'total_percent') double totalPercent,@JsonKey(name: 'cap_yen') int? capYen,@JsonKey(name: 'target_spend_yen') int? targetSpendYen, List<CouponPattern> patterns
+});
+
+
+
+
+}
+/// @nodoc
+class __$CouponBestDealCopyWithImpl<$Res>
+    implements _$CouponBestDealCopyWith<$Res> {
+  __$CouponBestDealCopyWithImpl(this._self, this._then);
+
+  final _CouponBestDeal _self;
+  final $Res Function(_CouponBestDeal) _then;
+
+/// Create a copy of CouponBestDeal
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? channel = null,Object? rank = null,Object? parts = null,Object? totalPercent = null,Object? capYen = freezed,Object? targetSpendYen = freezed,Object? patterns = null,}) {
+  return _then(_CouponBestDeal(
+channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+as String,rank: null == rank ? _self.rank : rank // ignore: cast_nullable_to_non_nullable
+as String,parts: null == parts ? _self._parts : parts // ignore: cast_nullable_to_non_nullable
+as List<CouponBestDealPart>,totalPercent: null == totalPercent ? _self.totalPercent : totalPercent // ignore: cast_nullable_to_non_nullable
+as double,capYen: freezed == capYen ? _self.capYen : capYen // ignore: cast_nullable_to_non_nullable
+as int?,targetSpendYen: freezed == targetSpendYen ? _self.targetSpendYen : targetSpendYen // ignore: cast_nullable_to_non_nullable
+as int?,patterns: null == patterns ? _self._patterns : patterns // ignore: cast_nullable_to_non_nullable
+as List<CouponPattern>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$CouponBestDealPart {
+
+@JsonKey(name: 'offer_id') String? get offerId; String? get brand; double get percent;
+/// Create a copy of CouponBestDealPart
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CouponBestDealPartCopyWith<CouponBestDealPart> get copyWith => _$CouponBestDealPartCopyWithImpl<CouponBestDealPart>(this as CouponBestDealPart, _$identity);
+
+  /// Serializes this CouponBestDealPart to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CouponBestDealPart&&(identical(other.offerId, offerId) || other.offerId == offerId)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.percent, percent) || other.percent == percent));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,offerId,brand,percent);
+
+@override
+String toString() {
+  return 'CouponBestDealPart(offerId: $offerId, brand: $brand, percent: $percent)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CouponBestDealPartCopyWith<$Res>  {
+  factory $CouponBestDealPartCopyWith(CouponBestDealPart value, $Res Function(CouponBestDealPart) _then) = _$CouponBestDealPartCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'offer_id') String? offerId, String? brand, double percent
+});
+
+
+
+
+}
+/// @nodoc
+class _$CouponBestDealPartCopyWithImpl<$Res>
+    implements $CouponBestDealPartCopyWith<$Res> {
+  _$CouponBestDealPartCopyWithImpl(this._self, this._then);
+
+  final CouponBestDealPart _self;
+  final $Res Function(CouponBestDealPart) _then;
+
+/// Create a copy of CouponBestDealPart
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? offerId = freezed,Object? brand = freezed,Object? percent = null,}) {
+  return _then(_self.copyWith(
+offerId: freezed == offerId ? _self.offerId : offerId // ignore: cast_nullable_to_non_nullable
+as String?,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
+as String?,percent: null == percent ? _self.percent : percent // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [CouponBestDealPart].
+extension CouponBestDealPartPatterns on CouponBestDealPart {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CouponBestDealPart value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CouponBestDealPart() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CouponBestDealPart value)  $default,){
+final _that = this;
+switch (_that) {
+case _CouponBestDealPart():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CouponBestDealPart value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CouponBestDealPart() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'offer_id')  String? offerId,  String? brand,  double percent)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CouponBestDealPart() when $default != null:
+return $default(_that.offerId,_that.brand,_that.percent);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'offer_id')  String? offerId,  String? brand,  double percent)  $default,) {final _that = this;
+switch (_that) {
+case _CouponBestDealPart():
+return $default(_that.offerId,_that.brand,_that.percent);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'offer_id')  String? offerId,  String? brand,  double percent)?  $default,) {final _that = this;
+switch (_that) {
+case _CouponBestDealPart() when $default != null:
+return $default(_that.offerId,_that.brand,_that.percent);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _CouponBestDealPart implements CouponBestDealPart {
+  const _CouponBestDealPart({@JsonKey(name: 'offer_id') this.offerId, this.brand, required this.percent});
+  factory _CouponBestDealPart.fromJson(Map<String, dynamic> json) => _$CouponBestDealPartFromJson(json);
+
+@override@JsonKey(name: 'offer_id') final  String? offerId;
+@override final  String? brand;
+@override final  double percent;
+
+/// Create a copy of CouponBestDealPart
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CouponBestDealPartCopyWith<_CouponBestDealPart> get copyWith => __$CouponBestDealPartCopyWithImpl<_CouponBestDealPart>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CouponBestDealPartToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CouponBestDealPart&&(identical(other.offerId, offerId) || other.offerId == offerId)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.percent, percent) || other.percent == percent));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,offerId,brand,percent);
+
+@override
+String toString() {
+  return 'CouponBestDealPart(offerId: $offerId, brand: $brand, percent: $percent)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CouponBestDealPartCopyWith<$Res> implements $CouponBestDealPartCopyWith<$Res> {
+  factory _$CouponBestDealPartCopyWith(_CouponBestDealPart value, $Res Function(_CouponBestDealPart) _then) = __$CouponBestDealPartCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'offer_id') String? offerId, String? brand, double percent
+});
+
+
+
+
+}
+/// @nodoc
+class __$CouponBestDealPartCopyWithImpl<$Res>
+    implements _$CouponBestDealPartCopyWith<$Res> {
+  __$CouponBestDealPartCopyWithImpl(this._self, this._then);
+
+  final _CouponBestDealPart _self;
+  final $Res Function(_CouponBestDealPart) _then;
+
+/// Create a copy of CouponBestDealPart
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? offerId = freezed,Object? brand = freezed,Object? percent = null,}) {
+  return _then(_CouponBestDealPart(
+offerId: freezed == offerId ? _self.offerId : offerId // ignore: cast_nullable_to_non_nullable
+as String?,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
+as String?,percent: null == percent ? _self.percent : percent // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$CouponPattern {
+
+ List<CouponPatternItem> get items;@JsonKey(name: 'total_yen') int get totalYen;@JsonKey(name: 'back_yen') int? get backYen;@JsonKey(name: 'net_yen') int? get netYen;
+/// Create a copy of CouponPattern
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CouponPatternCopyWith<CouponPattern> get copyWith => _$CouponPatternCopyWithImpl<CouponPattern>(this as CouponPattern, _$identity);
+
+  /// Serializes this CouponPattern to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CouponPattern&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.totalYen, totalYen) || other.totalYen == totalYen)&&(identical(other.backYen, backYen) || other.backYen == backYen)&&(identical(other.netYen, netYen) || other.netYen == netYen));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),totalYen,backYen,netYen);
+
+@override
+String toString() {
+  return 'CouponPattern(items: $items, totalYen: $totalYen, backYen: $backYen, netYen: $netYen)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CouponPatternCopyWith<$Res>  {
+  factory $CouponPatternCopyWith(CouponPattern value, $Res Function(CouponPattern) _then) = _$CouponPatternCopyWithImpl;
+@useResult
+$Res call({
+ List<CouponPatternItem> items,@JsonKey(name: 'total_yen') int totalYen,@JsonKey(name: 'back_yen') int? backYen,@JsonKey(name: 'net_yen') int? netYen
+});
+
+
+
+
+}
+/// @nodoc
+class _$CouponPatternCopyWithImpl<$Res>
+    implements $CouponPatternCopyWith<$Res> {
+  _$CouponPatternCopyWithImpl(this._self, this._then);
+
+  final CouponPattern _self;
+  final $Res Function(CouponPattern) _then;
+
+/// Create a copy of CouponPattern
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalYen = null,Object? backYen = freezed,Object? netYen = freezed,}) {
+  return _then(_self.copyWith(
+items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
+as List<CouponPatternItem>,totalYen: null == totalYen ? _self.totalYen : totalYen // ignore: cast_nullable_to_non_nullable
+as int,backYen: freezed == backYen ? _self.backYen : backYen // ignore: cast_nullable_to_non_nullable
+as int?,netYen: freezed == netYen ? _self.netYen : netYen // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [CouponPattern].
+extension CouponPatternPatterns on CouponPattern {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CouponPattern value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CouponPattern() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CouponPattern value)  $default,){
+final _that = this;
+switch (_that) {
+case _CouponPattern():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CouponPattern value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CouponPattern() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<CouponPatternItem> items, @JsonKey(name: 'total_yen')  int totalYen, @JsonKey(name: 'back_yen')  int? backYen, @JsonKey(name: 'net_yen')  int? netYen)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CouponPattern() when $default != null:
+return $default(_that.items,_that.totalYen,_that.backYen,_that.netYen);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<CouponPatternItem> items, @JsonKey(name: 'total_yen')  int totalYen, @JsonKey(name: 'back_yen')  int? backYen, @JsonKey(name: 'net_yen')  int? netYen)  $default,) {final _that = this;
+switch (_that) {
+case _CouponPattern():
+return $default(_that.items,_that.totalYen,_that.backYen,_that.netYen);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<CouponPatternItem> items, @JsonKey(name: 'total_yen')  int totalYen, @JsonKey(name: 'back_yen')  int? backYen, @JsonKey(name: 'net_yen')  int? netYen)?  $default,) {final _that = this;
+switch (_that) {
+case _CouponPattern() when $default != null:
+return $default(_that.items,_that.totalYen,_that.backYen,_that.netYen);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _CouponPattern implements CouponPattern {
+  const _CouponPattern({final  List<CouponPatternItem> items = const <CouponPatternItem>[], @JsonKey(name: 'total_yen') required this.totalYen, @JsonKey(name: 'back_yen') this.backYen, @JsonKey(name: 'net_yen') this.netYen}): _items = items;
+  factory _CouponPattern.fromJson(Map<String, dynamic> json) => _$CouponPatternFromJson(json);
+
+ final  List<CouponPatternItem> _items;
+@override@JsonKey() List<CouponPatternItem> get items {
+  if (_items is EqualUnmodifiableListView) return _items;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_items);
+}
+
+@override@JsonKey(name: 'total_yen') final  int totalYen;
+@override@JsonKey(name: 'back_yen') final  int? backYen;
+@override@JsonKey(name: 'net_yen') final  int? netYen;
+
+/// Create a copy of CouponPattern
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CouponPatternCopyWith<_CouponPattern> get copyWith => __$CouponPatternCopyWithImpl<_CouponPattern>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CouponPatternToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CouponPattern&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.totalYen, totalYen) || other.totalYen == totalYen)&&(identical(other.backYen, backYen) || other.backYen == backYen)&&(identical(other.netYen, netYen) || other.netYen == netYen));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalYen,backYen,netYen);
+
+@override
+String toString() {
+  return 'CouponPattern(items: $items, totalYen: $totalYen, backYen: $backYen, netYen: $netYen)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CouponPatternCopyWith<$Res> implements $CouponPatternCopyWith<$Res> {
+  factory _$CouponPatternCopyWith(_CouponPattern value, $Res Function(_CouponPattern) _then) = __$CouponPatternCopyWithImpl;
+@override @useResult
+$Res call({
+ List<CouponPatternItem> items,@JsonKey(name: 'total_yen') int totalYen,@JsonKey(name: 'back_yen') int? backYen,@JsonKey(name: 'net_yen') int? netYen
+});
+
+
+
+
+}
+/// @nodoc
+class __$CouponPatternCopyWithImpl<$Res>
+    implements _$CouponPatternCopyWith<$Res> {
+  __$CouponPatternCopyWithImpl(this._self, this._then);
+
+  final _CouponPattern _self;
+  final $Res Function(_CouponPattern) _then;
+
+/// Create a copy of CouponPattern
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalYen = null,Object? backYen = freezed,Object? netYen = freezed,}) {
+  return _then(_CouponPattern(
+items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
+as List<CouponPatternItem>,totalYen: null == totalYen ? _self.totalYen : totalYen // ignore: cast_nullable_to_non_nullable
+as int,backYen: freezed == backYen ? _self.backYen : backYen // ignore: cast_nullable_to_non_nullable
+as int?,netYen: freezed == netYen ? _self.netYen : netYen // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$CouponPatternItem {
+
+ String get name;@JsonKey(name: 'price_yen') int? get priceYen;@JsonKey(name: 'article_slug') String? get articleSlug; String get thumbnail;
+/// Create a copy of CouponPatternItem
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CouponPatternItemCopyWith<CouponPatternItem> get copyWith => _$CouponPatternItemCopyWithImpl<CouponPatternItem>(this as CouponPatternItem, _$identity);
+
+  /// Serializes this CouponPatternItem to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CouponPatternItem&&(identical(other.name, name) || other.name == name)&&(identical(other.priceYen, priceYen) || other.priceYen == priceYen)&&(identical(other.articleSlug, articleSlug) || other.articleSlug == articleSlug)&&(identical(other.thumbnail, thumbnail) || other.thumbnail == thumbnail));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,priceYen,articleSlug,thumbnail);
+
+@override
+String toString() {
+  return 'CouponPatternItem(name: $name, priceYen: $priceYen, articleSlug: $articleSlug, thumbnail: $thumbnail)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CouponPatternItemCopyWith<$Res>  {
+  factory $CouponPatternItemCopyWith(CouponPatternItem value, $Res Function(CouponPatternItem) _then) = _$CouponPatternItemCopyWithImpl;
+@useResult
+$Res call({
+ String name,@JsonKey(name: 'price_yen') int? priceYen,@JsonKey(name: 'article_slug') String? articleSlug, String thumbnail
+});
+
+
+
+
+}
+/// @nodoc
+class _$CouponPatternItemCopyWithImpl<$Res>
+    implements $CouponPatternItemCopyWith<$Res> {
+  _$CouponPatternItemCopyWithImpl(this._self, this._then);
+
+  final CouponPatternItem _self;
+  final $Res Function(CouponPatternItem) _then;
+
+/// Create a copy of CouponPatternItem
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? priceYen = freezed,Object? articleSlug = freezed,Object? thumbnail = null,}) {
+  return _then(_self.copyWith(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,priceYen: freezed == priceYen ? _self.priceYen : priceYen // ignore: cast_nullable_to_non_nullable
+as int?,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug // ignore: cast_nullable_to_non_nullable
+as String?,thumbnail: null == thumbnail ? _self.thumbnail : thumbnail // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [CouponPatternItem].
+extension CouponPatternItemPatterns on CouponPatternItem {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CouponPatternItem value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CouponPatternItem() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CouponPatternItem value)  $default,){
+final _that = this;
+switch (_that) {
+case _CouponPatternItem():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CouponPatternItem value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CouponPatternItem() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CouponPatternItem() when $default != null:
+return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)  $default,) {final _that = this;
+switch (_that) {
+case _CouponPatternItem():
+return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)?  $default,) {final _that = this;
+switch (_that) {
+case _CouponPatternItem() when $default != null:
+return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _CouponPatternItem implements CouponPatternItem {
+  const _CouponPatternItem({required this.name, @JsonKey(name: 'price_yen') this.priceYen, @JsonKey(name: 'article_slug') this.articleSlug, this.thumbnail = ''});
+  factory _CouponPatternItem.fromJson(Map<String, dynamic> json) => _$CouponPatternItemFromJson(json);
+
+@override final  String name;
+@override@JsonKey(name: 'price_yen') final  int? priceYen;
+@override@JsonKey(name: 'article_slug') final  String? articleSlug;
+@override@JsonKey() final  String thumbnail;
+
+/// Create a copy of CouponPatternItem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CouponPatternItemCopyWith<_CouponPatternItem> get copyWith => __$CouponPatternItemCopyWithImpl<_CouponPatternItem>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CouponPatternItemToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CouponPatternItem&&(identical(other.name, name) || other.name == name)&&(identical(other.priceYen, priceYen) || other.priceYen == priceYen)&&(identical(other.articleSlug, articleSlug) || other.articleSlug == articleSlug)&&(identical(other.thumbnail, thumbnail) || other.thumbnail == thumbnail));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,priceYen,articleSlug,thumbnail);
+
+@override
+String toString() {
+  return 'CouponPatternItem(name: $name, priceYen: $priceYen, articleSlug: $articleSlug, thumbnail: $thumbnail)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CouponPatternItemCopyWith<$Res> implements $CouponPatternItemCopyWith<$Res> {
+  factory _$CouponPatternItemCopyWith(_CouponPatternItem value, $Res Function(_CouponPatternItem) _then) = __$CouponPatternItemCopyWithImpl;
+@override @useResult
+$Res call({
+ String name,@JsonKey(name: 'price_yen') int? priceYen,@JsonKey(name: 'article_slug') String? articleSlug, String thumbnail
+});
+
+
+
+
+}
+/// @nodoc
+class __$CouponPatternItemCopyWithImpl<$Res>
+    implements _$CouponPatternItemCopyWith<$Res> {
+  __$CouponPatternItemCopyWithImpl(this._self, this._then);
+
+  final _CouponPatternItem _self;
+  final $Res Function(_CouponPatternItem) _then;
+
+/// Create a copy of CouponPatternItem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? priceYen = freezed,Object? articleSlug = freezed,Object? thumbnail = null,}) {
+  return _then(_CouponPatternItem(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,priceYen: freezed == priceYen ? _self.priceYen : priceYen // ignore: cast_nullable_to_non_nullable
+as int?,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug // ignore: cast_nullable_to_non_nullable
+as String?,thumbnail: null == thumbnail ? _self.thumbnail : thumbnail // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

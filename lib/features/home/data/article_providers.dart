@@ -153,3 +153,36 @@ Future<void> refreshArchiveLists(ProviderContainer container) async {
   if (categoriesChanged) container.invalidate(categoriesProvider);
   if (tagsChanged) container.invalidate(tagsProvider);
 }
+
+/// クーポンタブの配信をまとめて取り直す（[refreshHomeLists] と同じ作り）。
+///
+/// **記事の全件とタグも取り直す。** 施策の名前（ブランドのタグ名）と記事への
+/// リンク（全件に居る slug だけ）がこの 2 つに依っている。
+Future<void> refreshCouponLists(ProviderContainer container) async {
+  final articles = container.read(articleRepositoryProvider);
+
+  var couponChanged = false;
+  var indexChanged = false;
+  var tagsChanged = false;
+
+  Future<void> run(Future<bool> task, void Function(bool) store) async {
+    try {
+      store(await task);
+    } on Object {
+      // 取れなかった物は貼り直さない（前に出ていた値をそのまま残す）
+    }
+  }
+
+  await Future.wait([
+    run(
+      container.read(couponRepositoryProvider).refreshCouponIfChanged(),
+      (v) => couponChanged = v,
+    ),
+    run(articles.refreshArticleIndex(), (v) => indexChanged = v),
+    run(articles.refreshTags(), (v) => tagsChanged = v),
+  ]);
+
+  if (couponChanged) container.invalidate(couponProvider);
+  if (indexChanged) container.invalidate(articleIndexProvider);
+  if (tagsChanged) container.invalidate(tagsProvider);
+}

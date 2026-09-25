@@ -147,6 +147,11 @@ bool isBrandOffer(CouponOffer offer) {
   return offer.brand != null && offer.brand != 'matsuya-point';
 }
 
+/// 決済ブランドのアイコンのキー（web の `brandIconUrl`）。**絵を持たないブランドは
+/// null**（呼ぶ側が松屋へ落とすかどうかを決める）。
+String? brandIconKey(String brand) =>
+    _brandIconIds.contains(brand) ? cdnIconKey(brand) : null;
+
 /// 行のアイコン。**下地が答えるのは「誰の施策か」だけ**（種類と配布元はバッジ）。
 ///
 /// - 松屋自身の施策 → 松屋アイコン（**松屋に属するものは全部これ 1 つ**）

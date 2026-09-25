@@ -1,0 +1,2122 @@
+{
+ "generated_at": "2026-09-25T19:17:01.798049+09:00",
+ "rank_source": {
+  "url": "https://bento.matsuyafoods.co.jp/matsuben-net/app/point.html",
+  "effective_from": "2026-08-01"
+ },
+ "ranks": [
+  {
+   "id": "bronze",
+   "order": 1,
+   "official": true,
+   "min_monthly_yen": 0,
+   "max_monthly_yen": 1499,
+   "rates": {
+    "matsuben": 6.0,
+    "mobile_order": 1.0
+   }
+  },
+  {
+   "id": "silver",
+   "order": 2,
+   "official": true,
+   "min_monthly_yen": 1500,
+   "max_monthly_yen": 2999,
+   "rates": {
+    "matsuben": 10.0,
+    "mobile_order": 3.0
+   }
+  },
+  {
+   "id": "gold",
+   "order": 3,
+   "official": true,
+   "min_monthly_yen": 3000,
+   "max_monthly_yen": 4499,
+   "rates": {
+    "matsuben": 11.0,
+    "mobile_order": 4.0
+   }
+  },
+  {
+   "id": "platinum",
+   "order": 4,
+   "official": true,
+   "min_monthly_yen": 4500,
+   "max_monthly_yen": 9999,
+   "rates": {
+    "matsuben": 12.0,
+    "mobile_order": 5.0
+   }
+  },
+  {
+   "id": "diamond",
+   "order": 5,
+   "official": true,
+   "min_monthly_yen": 10000,
+   "max_monthly_yen": null,
+   "rates": {
+    "matsuben": 15.0,
+    "mobile_order": 7.0
+   }
+  },
+  {
+   "id": "black",
+   "order": 6,
+   "official": false,
+   "min_monthly_yen": 20000,
+   "max_monthly_yen": null,
+   "rates": {
+    "matsuben": 20.0,
+    "mobile_order": 10.0
+   }
+  }
+ ],
+ "offers": [
+  {
+   "id": "tt-84864170fc33",
+   "brand": null,
+   "title": "食欲の秋クーポン",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 280,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "discount_max_yen": 360,
+   "effective_rate_percent": 28.28,
+   "basis": {
+    "menu_name": "ロースかつ＆本格唐揚げ定食",
+    "price_yen": 990
+   },
+   "channels": [
+    "store"
+   ],
+   "how_to_get": "tiktok",
+   "stack_group": "coupon",
+   "start_date": "2026-09-16",
+   "end_date": "2026-09-30",
+   "end_at": "2026-09-30T06:00:00+00:00",
+   "time_window": null,
+   "requires_entry": false,
+   "tiers": [],
+   "notes": [
+    "対象: ダブルロースかつ定食ほか計3品",
+    "券売機のみ",
+    "一部店舗を除く松のや・松屋松のや併設店で利用可"
+   ],
+   "links": [],
+   "image_url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+   "qr_image_url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33-qr.png",
+   "article_slug": "smhkrs",
+   "source_url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+   "source_label": "official_tiktok"
+  },
+  {
+   "id": "x-2094983665294221779",
+   "brand": null,
+   "title": "秋の丼祭りクーポン",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 140,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "discount_max_yen": 200,
+   "effective_rate_percent": 20.29,
+   "basis": {
+    "menu_name": "ロースかつ丼",
+    "price_yen": 690
+   },
+   "channels": [
+    "store"
+   ],
+   "how_to_get": "x",
+   "stack_group": "coupon",
+   "start_date": "2026-09-06",
+   "end_date": null,
+   "end_at": null,
+   "time_window": null,
+   "requires_entry": false,
+   "tiers": [],
+   "notes": [
+    "対象: ロースかつ丼ほか計6品",
+    "券売機のみ",
+    "まとめ買いで10%OFF"
+   ],
+   "links": [],
+   "image_url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779.webp",
+   "qr_image_url": "https://cdn.ton-soku.com/coupons/x-2094983665294221779-qr.png",
+   "article_slug": "sa84lt",
+   "source_url": "https://x.com/matsu_noya/status/2094983665294221779",
+   "source_label": "official_x"
+  },
+  {
+   "id": "news-991-9b2949b512",
+   "brand": "matsuya-point",
+   "title": null,
+   "kind": "point_bonus",
+   "benefit_type": "point",
+   "rate_percent": null,
+   "rate_multiplier": 2.0,
+   "point_amount": null,
+   "discount_yen": null,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "discount_max_yen": null,
+   "effective_rate_percent": 20.0,
+   "basis": null,
+   "channels": [
+    "matsuben_net"
+   ],
+   "how_to_get": "auto",
+   "stack_group": "matsuya_point",
+   "start_date": "2026-09-15",
+   "end_date": "2026-09-28",
+   "end_at": "2026-09-28T14:00:00+00:00",
+   "time_window": "18:00〜23:00",
+   "requires_entry": false,
+   "tiers": [],
+   "notes": [
+    "受取日時が基準"
+   ],
+   "links": [],
+   "image_url": null,
+   "qr_image_url": null,
+   "article_slug": "szoh9n",
+   "source_url": "https://www.matsuyafoods.co.jp/matsunoya/whatsnew/campaign/176440.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "news-1600-4e9302d648",
+   "brand": "matsuya-point",
+   "title": null,
+   "kind": "point_bonus",
+   "benefit_type": "point",
+   "rate_percent": null,
+   "rate_multiplier": 2.0,
+   "point_amount": null,
+   "discount_yen": null,
+   "discount_max_yen": null,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "tiers": [],
+   "requires_entry": false,
+   "effective_rate_percent": 20.0,
+   "basis": null,
+   "channels": [
+    "matsuben_net"
+   ],
+   "how_to_get": "auto",
+   "stack_group": "matsuya_point",
+   "start_date": "2026-08-11",
+   "end_date": "2026-08-31",
+   "end_at": "2026-08-31T23:59:00+09:00",
+   "time_window": null,
+   "links": [],
+   "image_url": null,
+   "notes": [
+    "松屋モバイルオーダー・松弁デリバリーは対象外",
+    "キャンペーン対象日時は受取日時が基準",
+    "高速PA店舗・成田空港第3ターミナル店は対象外"
+   ],
+   "article_slug": "h42lkb",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/campaign/169839.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "news-1591-9bad561554",
+   "brand": "paypay",
+   "title": null,
+   "kind": "payment_campaign",
+   "benefit_type": "point",
+   "rate_percent": 15.0,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": null,
+   "discount_max_yen": null,
+   "cap_yen": 200,
+   "min_spend_yen": null,
+   "tiers": [
+    {
+     "rate_percent": 10.0,
+     "min_spend_yen": 800
+    },
+    {
+     "rate_percent": 15.0,
+     "min_spend_yen": 1200
+    }
+   ],
+   "requires_entry": true,
+   "effective_rate_percent": 15.0,
+   "basis": null,
+   "channels": [
+    "mobile_order",
+    "matsuben_net",
+    "matsuben_delivery"
+   ],
+   "how_to_get": "app",
+   "stack_group": "payment",
+   "start_date": "2026-08-01",
+   "end_date": "2026-08-31",
+   "end_at": "2026-08-31T23:59:00+09:00",
+   "time_window": null,
+   "links": [
+    {
+     "url": "https://s.paypay.ne.jp/PcaTVZ",
+     "kind": "entry",
+     "rate_percent": 10
+    },
+    {
+     "url": "https://s.paypay.ne.jp/MZq9Jh",
+     "kind": "entry",
+     "rate_percent": 15
+    }
+   ],
+   "image_url": null,
+   "notes": [
+    "期間中何度でも利用可能"
+   ],
+   "article_slug": "2ha26q",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/campaign/167214.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "news-1601-6dcb186846",
+   "brand": null,
+   "title": "チキン南蛮定食70円引き",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 70,
+   "discount_max_yen": null,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "tiers": [],
+   "requires_entry": false,
+   "effective_rate_percent": 7.14,
+   "basis": {
+    "menu_name": "チキン南蛮定食",
+    "price_yen": 980
+   },
+   "channels": [],
+   "how_to_get": "app",
+   "stack_group": "coupon",
+   "start_date": "2026-08-18",
+   "end_date": "2026-08-25",
+   "end_at": "2026-08-25T10:00:00+09:00",
+   "time_window": null,
+   "links": [],
+   "image_url": null,
+   "notes": [],
+   "article_slug": "opwlio",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/menu/169322.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "news-1577-87378eaacf",
+   "brand": null,
+   "title": "生ジョッキ缶20円引き",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 20,
+   "discount_max_yen": 30,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "tiers": [],
+   "requires_entry": false,
+   "effective_rate_percent": 6.9,
+   "basis": {
+    "menu_name": "生ジョッキ缶",
+    "price_yen": 290
+   },
+   "channels": [
+    "store",
+    "mobile_order"
+   ],
+   "how_to_get": "auto",
+   "stack_group": "coupon",
+   "start_date": "2026-07-07",
+   "end_date": "2026-09-28",
+   "end_at": "2026-09-28T22:00:00+09:00",
+   "time_window": "11:00〜22:00",
+   "links": [],
+   "image_url": null,
+   "notes": [
+    "店内飲食限定",
+    "株主優待券は利用不可"
+   ],
+   "article_slug": "jt8e8p",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/campaign/162869.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "news-1577-7421c5ee6f",
+   "brand": null,
+   "title": "ビール中瓶70円引き",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 70,
+   "discount_max_yen": 90,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "tiers": [],
+   "requires_entry": false,
+   "effective_rate_percent": null,
+   "basis": null,
+   "channels": [
+    "store",
+    "mobile_order"
+   ],
+   "how_to_get": "auto",
+   "stack_group": "coupon",
+   "start_date": "2026-07-07",
+   "end_date": "2026-09-28",
+   "end_at": "2026-09-28T22:00:00+09:00",
+   "time_window": "11:00〜22:00",
+   "links": [],
+   "image_url": null,
+   "notes": [
+    "店内飲食限定",
+    "株主優待券は利用不可"
+   ],
+   "article_slug": "jt8e8p",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/campaign/162869.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "news-1595-7aadab2084",
+   "brand": "matsuya-point",
+   "title": "松弁デビューキャンペーン",
+   "kind": "point_bonus",
+   "benefit_type": "point",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": 300,
+   "discount_yen": null,
+   "discount_max_yen": null,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "tiers": [],
+   "requires_entry": false,
+   "effective_rate_percent": null,
+   "basis": null,
+   "channels": [
+    "matsuben_net"
+   ],
+   "how_to_get": "auto",
+   "stack_group": "matsuya_point",
+   "start_date": "2026-08-01",
+   "end_date": "2026-08-31",
+   "end_at": null,
+   "time_window": null,
+   "links": [],
+   "image_url": null,
+   "notes": [
+    "松屋モバイルオーダー利用済み・松弁ネット未利用の会員が対象",
+    "松弁デリバリーの利用は対象外",
+    "300ポイント付与はお一人様一回限り",
+    "ポイントは2026年9月8日中までに付与"
+   ],
+   "article_slug": "kiuqkw",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/campaign/168924.html",
+   "source_label": "official_news"
+  }
+ ],
+ "upcoming": [
+  {
+   "id": "news-1604-e8c05ae3e8",
+   "brand": null,
+   "title": "豚キムチ定食70円引き",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 70,
+   "discount_max_yen": null,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "tiers": [],
+   "requires_entry": false,
+   "effective_rate_percent": null,
+   "basis": null,
+   "channels": [],
+   "how_to_get": "app",
+   "stack_group": "coupon",
+   "start_date": "2026-08-25",
+   "end_date": "2026-09-01",
+   "end_at": "2026-09-01T10:00:00+09:00",
+   "time_window": null,
+   "links": [],
+   "image_url": null,
+   "notes": [],
+   "article_slug": "g0mnub",
+   "source_url": "https://www.matsuyafoods.co.jp/matsuya/whatsnew/menu/170117.html",
+   "source_label": "official_news"
+  },
+  {
+   "id": "tt-upcoming",
+   "brand": null,
+   "title": "食欲の秋クーポン",
+   "kind": "coupon",
+   "benefit_type": "discount",
+   "rate_percent": null,
+   "rate_multiplier": null,
+   "point_amount": null,
+   "discount_yen": 280,
+   "cap_yen": null,
+   "min_spend_yen": null,
+   "discount_max_yen": 360,
+   "effective_rate_percent": 28.28,
+   "basis": {
+    "menu_name": "ロースかつ＆本格唐揚げ定食",
+    "price_yen": 990
+   },
+   "channels": [
+    "store"
+   ],
+   "how_to_get": "tiktok",
+   "stack_group": "coupon",
+   "start_date": "2026-10-05",
+   "end_date": "2026-10-20",
+   "end_at": null,
+   "time_window": null,
+   "requires_entry": false,
+   "tiers": [],
+   "notes": [
+    "対象: ダブルロースかつ定食ほか計3品",
+    "券売機のみ",
+    "一部店舗を除く松のや・松屋松のや併設店で利用可"
+   ],
+   "links": [],
+   "image_url": "https://cdn.ton-soku.com/coupons/tt-84864170fc33.webp",
+   "qr_image_url": null,
+   "article_slug": "smhkrs",
+   "source_url": "https://www.tiktok.com/@matsu_noya/video/7685668051202641159",
+   "source_label": "official_tiktok"
+  }
+ ],
+ "best_deal": {
+  "channel": "matsuben_net",
+  "rank": "black",
+  "parts": [
+   {
+    "offer_id": "news-1600-4e9302d648",
+    "brand": null,
+    "percent": 40.0
+   },
+   {
+    "offer_id": "news-1591-9bad561554",
+    "brand": "paypay",
+    "percent": 15.0
+   }
+  ],
+  "total_percent": 55.0,
+  "cap_yen": 200,
+  "target_spend_yen": 1334,
+  "patterns": [
+   {
+    "items": [
+     {
+      "name": "冷や汁チキン南蛮セット",
+      "price_yen": 1300,
+      "article_slug": "1zlqt6",
+      "thumbnail": "https://cdn.gyumesy.com/menu/hiya_tei_chicken_nanban_hp_260818.webp"
+     }
+    ],
+    "total_yen": 1300,
+    "back_yen": 715,
+    "net_yen": 585
+   },
+   {
+    "items": [
+     {
+      "name": "松屋オリジナルソースローストビーフ",
+      "price_yen": 880,
+      "article_slug": "hinj2h",
+      "thumbnail": "https://cdn.gyumesy.com/menu/roastbeef_hp_260728.webp"
+     },
+     {
+      "name": "単品冷や汁",
+      "price_yen": 390,
+      "article_slug": "17ba46",
+      "thumbnail": "https://cdn.gyumesy.com/menu/side_hiyajiru_hp_260804.webp"
+     }
+    ],
+    "total_yen": 1270,
+    "back_yen": 698,
+    "net_yen": 572
+   },
+   {
+    "items": [
+     {
+      "name": "牛カルビホルモン丼",
+      "price_yen": null,
+      "article_slug": "e82ac0",
+      "thumbnail": "https://cdn.gyumesy.com/menu/don_horumon_hp_260811.webp"
+     },
+     {
+      "name": "豚汁単品",
+      "price_yen": 240,
+      "article_slug": null,
+      "thumbnail": "https://cdn.gyumesy.com/menu/sidemenu_tonjiru_hp_240716.webp"
+     }
+    ],
+    "total_yen": 1230,
+    "back_yen": null,
+    "net_yen": null
+   }
+  ]
+ },
+ "combos": [
+  {
+   "channel": "mobile_order",
+   "rank": "bronze",
+   "base_point_percent": 1.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 1.0,
+     "offer_percent": 0.0,
+     "total_percent": 1.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 10
+      }
+     ],
+     "total_back_yen": 10,
+     "net_yen": 990,
+     "effective_percent": 1.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 1.0,
+     "offer_percent": 0.0,
+     "total_percent": 1.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 20
+      }
+     ],
+     "total_back_yen": 20,
+     "net_yen": 1980,
+     "effective_percent": 1.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 1.0,
+     "offer_percent": 0.0,
+     "total_percent": 1.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 50
+      }
+     ],
+     "total_back_yen": 50,
+     "net_yen": 4950,
+     "effective_percent": 1.0
+    }
+   ]
+  },
+  {
+   "channel": "mobile_order",
+   "rank": "silver",
+   "base_point_percent": 3.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 3.0,
+     "offer_percent": 0.0,
+     "total_percent": 3.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 30
+      }
+     ],
+     "total_back_yen": 30,
+     "net_yen": 970,
+     "effective_percent": 3.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 3.0,
+     "offer_percent": 0.0,
+     "total_percent": 3.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 60
+      }
+     ],
+     "total_back_yen": 60,
+     "net_yen": 1940,
+     "effective_percent": 3.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 3.0,
+     "offer_percent": 0.0,
+     "total_percent": 3.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 150
+      }
+     ],
+     "total_back_yen": 150,
+     "net_yen": 4850,
+     "effective_percent": 3.0
+    }
+   ]
+  },
+  {
+   "channel": "mobile_order",
+   "rank": "gold",
+   "base_point_percent": 4.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 4.0,
+     "offer_percent": 0.0,
+     "total_percent": 4.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 40
+      }
+     ],
+     "total_back_yen": 40,
+     "net_yen": 960,
+     "effective_percent": 4.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 4.0,
+     "offer_percent": 0.0,
+     "total_percent": 4.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 80
+      }
+     ],
+     "total_back_yen": 80,
+     "net_yen": 1920,
+     "effective_percent": 4.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 4.0,
+     "offer_percent": 0.0,
+     "total_percent": 4.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 200
+      }
+     ],
+     "total_back_yen": 200,
+     "net_yen": 4800,
+     "effective_percent": 4.0
+    }
+   ]
+  },
+  {
+   "channel": "mobile_order",
+   "rank": "platinum",
+   "base_point_percent": 5.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 5.0,
+     "offer_percent": 0.0,
+     "total_percent": 5.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 50
+      }
+     ],
+     "total_back_yen": 50,
+     "net_yen": 950,
+     "effective_percent": 5.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 5.0,
+     "offer_percent": 0.0,
+     "total_percent": 5.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 100
+      }
+     ],
+     "total_back_yen": 100,
+     "net_yen": 1900,
+     "effective_percent": 5.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 5.0,
+     "offer_percent": 0.0,
+     "total_percent": 5.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 250
+      }
+     ],
+     "total_back_yen": 250,
+     "net_yen": 4750,
+     "effective_percent": 5.0
+    }
+   ]
+  },
+  {
+   "channel": "mobile_order",
+   "rank": "diamond",
+   "base_point_percent": 7.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 7.0,
+     "offer_percent": 0.0,
+     "total_percent": 7.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 70
+      }
+     ],
+     "total_back_yen": 70,
+     "net_yen": 930,
+     "effective_percent": 7.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 7.0,
+     "offer_percent": 0.0,
+     "total_percent": 7.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 140
+      }
+     ],
+     "total_back_yen": 140,
+     "net_yen": 1860,
+     "effective_percent": 7.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 7.0,
+     "offer_percent": 0.0,
+     "total_percent": 7.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 350
+      }
+     ],
+     "total_back_yen": 350,
+     "net_yen": 4650,
+     "effective_percent": 7.0
+    }
+   ]
+  },
+  {
+   "channel": "mobile_order",
+   "rank": "black",
+   "base_point_percent": 10.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 10.0,
+     "offer_percent": 0.0,
+     "total_percent": 10.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 100
+      }
+     ],
+     "total_back_yen": 100,
+     "net_yen": 900,
+     "effective_percent": 10.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 10.0,
+     "offer_percent": 0.0,
+     "total_percent": 10.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 200
+      }
+     ],
+     "total_back_yen": 200,
+     "net_yen": 1800,
+     "effective_percent": 10.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 10.0,
+     "offer_percent": 0.0,
+     "total_percent": 10.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 500
+      }
+     ],
+     "total_back_yen": 500,
+     "net_yen": 4500,
+     "effective_percent": 10.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_net",
+   "rank": "bronze",
+   "base_point_percent": 6.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 12.0,
+     "offer_percent": 0.0,
+     "total_percent": 12.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 120
+      }
+     ],
+     "total_back_yen": 120,
+     "net_yen": 880,
+     "effective_percent": 12.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 12.0,
+     "offer_percent": 0.0,
+     "total_percent": 12.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 240
+      }
+     ],
+     "total_back_yen": 240,
+     "net_yen": 1760,
+     "effective_percent": 12.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 12.0,
+     "offer_percent": 0.0,
+     "total_percent": 12.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 600
+      }
+     ],
+     "total_back_yen": 600,
+     "net_yen": 4400,
+     "effective_percent": 12.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_net",
+   "rank": "silver",
+   "base_point_percent": 10.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 20.0,
+     "offer_percent": 0.0,
+     "total_percent": 20.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 200
+      }
+     ],
+     "total_back_yen": 200,
+     "net_yen": 800,
+     "effective_percent": 20.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 20.0,
+     "offer_percent": 0.0,
+     "total_percent": 20.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 400
+      }
+     ],
+     "total_back_yen": 400,
+     "net_yen": 1600,
+     "effective_percent": 20.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 20.0,
+     "offer_percent": 0.0,
+     "total_percent": 20.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 1000
+      }
+     ],
+     "total_back_yen": 1000,
+     "net_yen": 4000,
+     "effective_percent": 20.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_net",
+   "rank": "gold",
+   "base_point_percent": 11.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 22.0,
+     "offer_percent": 0.0,
+     "total_percent": 22.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 220
+      }
+     ],
+     "total_back_yen": 220,
+     "net_yen": 780,
+     "effective_percent": 22.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 22.0,
+     "offer_percent": 0.0,
+     "total_percent": 22.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 440
+      }
+     ],
+     "total_back_yen": 440,
+     "net_yen": 1560,
+     "effective_percent": 22.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 22.0,
+     "offer_percent": 0.0,
+     "total_percent": 22.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 1100
+      }
+     ],
+     "total_back_yen": 1100,
+     "net_yen": 3900,
+     "effective_percent": 22.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_net",
+   "rank": "platinum",
+   "base_point_percent": 12.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 24.0,
+     "offer_percent": 0.0,
+     "total_percent": 24.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 240
+      }
+     ],
+     "total_back_yen": 240,
+     "net_yen": 760,
+     "effective_percent": 24.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 24.0,
+     "offer_percent": 0.0,
+     "total_percent": 24.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 480
+      }
+     ],
+     "total_back_yen": 480,
+     "net_yen": 1520,
+     "effective_percent": 24.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 24.0,
+     "offer_percent": 0.0,
+     "total_percent": 24.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 1200
+      }
+     ],
+     "total_back_yen": 1200,
+     "net_yen": 3800,
+     "effective_percent": 24.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_net",
+   "rank": "diamond",
+   "base_point_percent": 15.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 30.0,
+     "offer_percent": 0.0,
+     "total_percent": 30.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 300
+      }
+     ],
+     "total_back_yen": 300,
+     "net_yen": 700,
+     "effective_percent": 30.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 30.0,
+     "offer_percent": 0.0,
+     "total_percent": 30.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 600
+      }
+     ],
+     "total_back_yen": 600,
+     "net_yen": 1400,
+     "effective_percent": 30.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 30.0,
+     "offer_percent": 0.0,
+     "total_percent": 30.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 1500
+      }
+     ],
+     "total_back_yen": 1500,
+     "net_yen": 3500,
+     "effective_percent": 30.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_net",
+   "rank": "black",
+   "base_point_percent": 20.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 40.0,
+     "offer_percent": 0.0,
+     "total_percent": 40.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 400
+      }
+     ],
+     "total_back_yen": 400,
+     "net_yen": 600,
+     "effective_percent": 40.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 40.0,
+     "offer_percent": 0.0,
+     "total_percent": 40.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 800
+      }
+     ],
+     "total_back_yen": 800,
+     "net_yen": 1200,
+     "effective_percent": 40.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "news-991-9b2949b512"
+     ],
+     "min_spend_yen": null,
+     "point_percent": 40.0,
+     "offer_percent": 0.0,
+     "total_percent": 40.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 2000
+      }
+     ],
+     "total_back_yen": 2000,
+     "net_yen": 3000,
+     "effective_percent": 40.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_delivery",
+   "rank": "bronze",
+   "base_point_percent": 6.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 6.0,
+     "offer_percent": 0.0,
+     "total_percent": 6.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 60
+      }
+     ],
+     "total_back_yen": 60,
+     "net_yen": 940,
+     "effective_percent": 6.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 6.0,
+     "offer_percent": 0.0,
+     "total_percent": 6.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 120
+      }
+     ],
+     "total_back_yen": 120,
+     "net_yen": 1880,
+     "effective_percent": 6.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 6.0,
+     "offer_percent": 0.0,
+     "total_percent": 6.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 300
+      }
+     ],
+     "total_back_yen": 300,
+     "net_yen": 4700,
+     "effective_percent": 6.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_delivery",
+   "rank": "silver",
+   "base_point_percent": 10.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 10.0,
+     "offer_percent": 0.0,
+     "total_percent": 10.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 100
+      }
+     ],
+     "total_back_yen": 100,
+     "net_yen": 900,
+     "effective_percent": 10.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 10.0,
+     "offer_percent": 0.0,
+     "total_percent": 10.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 200
+      }
+     ],
+     "total_back_yen": 200,
+     "net_yen": 1800,
+     "effective_percent": 10.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 10.0,
+     "offer_percent": 0.0,
+     "total_percent": 10.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 500
+      }
+     ],
+     "total_back_yen": 500,
+     "net_yen": 4500,
+     "effective_percent": 10.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_delivery",
+   "rank": "gold",
+   "base_point_percent": 11.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 11.0,
+     "offer_percent": 0.0,
+     "total_percent": 11.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 110
+      }
+     ],
+     "total_back_yen": 110,
+     "net_yen": 890,
+     "effective_percent": 11.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 11.0,
+     "offer_percent": 0.0,
+     "total_percent": 11.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 220
+      }
+     ],
+     "total_back_yen": 220,
+     "net_yen": 1780,
+     "effective_percent": 11.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 11.0,
+     "offer_percent": 0.0,
+     "total_percent": 11.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 550
+      }
+     ],
+     "total_back_yen": 550,
+     "net_yen": 4450,
+     "effective_percent": 11.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_delivery",
+   "rank": "platinum",
+   "base_point_percent": 12.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 12.0,
+     "offer_percent": 0.0,
+     "total_percent": 12.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 120
+      }
+     ],
+     "total_back_yen": 120,
+     "net_yen": 880,
+     "effective_percent": 12.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 12.0,
+     "offer_percent": 0.0,
+     "total_percent": 12.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 240
+      }
+     ],
+     "total_back_yen": 240,
+     "net_yen": 1760,
+     "effective_percent": 12.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 12.0,
+     "offer_percent": 0.0,
+     "total_percent": 12.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 600
+      }
+     ],
+     "total_back_yen": 600,
+     "net_yen": 4400,
+     "effective_percent": 12.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_delivery",
+   "rank": "diamond",
+   "base_point_percent": 15.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 15.0,
+     "offer_percent": 0.0,
+     "total_percent": 15.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 150
+      }
+     ],
+     "total_back_yen": 150,
+     "net_yen": 850,
+     "effective_percent": 15.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 15.0,
+     "offer_percent": 0.0,
+     "total_percent": 15.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 300
+      }
+     ],
+     "total_back_yen": 300,
+     "net_yen": 1700,
+     "effective_percent": 15.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 15.0,
+     "offer_percent": 0.0,
+     "total_percent": 15.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 750
+      }
+     ],
+     "total_back_yen": 750,
+     "net_yen": 4250,
+     "effective_percent": 15.0
+    }
+   ]
+  },
+  {
+   "channel": "matsuben_delivery",
+   "rank": "black",
+   "base_point_percent": 20.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 20.0,
+     "offer_percent": 0.0,
+     "total_percent": 20.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 200
+      }
+     ],
+     "total_back_yen": 200,
+     "net_yen": 800,
+     "effective_percent": 20.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 20.0,
+     "offer_percent": 0.0,
+     "total_percent": 20.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 400
+      }
+     ],
+     "total_back_yen": 400,
+     "net_yen": 1600,
+     "effective_percent": 20.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [],
+     "min_spend_yen": null,
+     "point_percent": 20.0,
+     "offer_percent": 0.0,
+     "total_percent": 20.0,
+     "breakdown": [
+      {
+       "offer_id": null,
+       "source": "matsuya_point",
+       "yen": 1000
+      }
+     ],
+     "total_back_yen": 1000,
+     "net_yen": 4000,
+     "effective_percent": 20.0
+    }
+   ]
+  },
+  {
+   "channel": "store",
+   "rank": "bronze",
+   "base_point_percent": 0.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 28.0,
+     "total_percent": 28.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 720,
+     "effective_percent": 28.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 14.0,
+     "total_percent": 14.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 1720,
+     "effective_percent": 14.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 5.6,
+     "total_percent": 5.6,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 4720,
+     "effective_percent": 5.6
+    }
+   ]
+  },
+  {
+   "channel": "store",
+   "rank": "silver",
+   "base_point_percent": 0.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 28.0,
+     "total_percent": 28.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 720,
+     "effective_percent": 28.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 14.0,
+     "total_percent": 14.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 1720,
+     "effective_percent": 14.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 5.6,
+     "total_percent": 5.6,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 4720,
+     "effective_percent": 5.6
+    }
+   ]
+  },
+  {
+   "channel": "store",
+   "rank": "gold",
+   "base_point_percent": 0.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 28.0,
+     "total_percent": 28.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 720,
+     "effective_percent": 28.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 14.0,
+     "total_percent": 14.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 1720,
+     "effective_percent": 14.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 5.6,
+     "total_percent": 5.6,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 4720,
+     "effective_percent": 5.6
+    }
+   ]
+  },
+  {
+   "channel": "store",
+   "rank": "platinum",
+   "base_point_percent": 0.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 28.0,
+     "total_percent": 28.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 720,
+     "effective_percent": 28.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 14.0,
+     "total_percent": 14.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 1720,
+     "effective_percent": 14.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 5.6,
+     "total_percent": 5.6,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 4720,
+     "effective_percent": 5.6
+    }
+   ]
+  },
+  {
+   "channel": "store",
+   "rank": "diamond",
+   "base_point_percent": 0.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 28.0,
+     "total_percent": 28.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 720,
+     "effective_percent": 28.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 14.0,
+     "total_percent": 14.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 1720,
+     "effective_percent": 14.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 5.6,
+     "total_percent": 5.6,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 4720,
+     "effective_percent": 5.6
+    }
+   ]
+  },
+  {
+   "channel": "store",
+   "rank": "black",
+   "base_point_percent": 0.0,
+   "examples": [
+    {
+     "spend_yen": 1000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 28.0,
+     "total_percent": 28.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 720,
+     "effective_percent": 28.0
+    },
+    {
+     "spend_yen": 2000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 14.0,
+     "total_percent": 14.0,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 1720,
+     "effective_percent": 14.0
+    },
+    {
+     "spend_yen": 5000,
+     "offer_ids": [
+      "tt-84864170fc33"
+     ],
+     "min_spend_yen": 280,
+     "point_percent": 0.0,
+     "offer_percent": 5.6,
+     "total_percent": 5.6,
+     "breakdown": [
+      {
+       "offer_id": "tt-84864170fc33",
+       "source": "offer",
+       "yen": 280
+      }
+     ],
+     "total_back_yen": 280,
+     "net_yen": 4720,
+     "effective_percent": 5.6
+    }
+   ]
+  }
+ ]
+}

@@ -23,6 +23,9 @@ _Coupon _$CouponFromJson(Map<String, dynamic> json) => _Coupon(
           ?.map((e) => CouponOffer.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <CouponOffer>[],
+  bestDeal: json['best_deal'] == null
+      ? null
+      : CouponBestDeal.fromJson(json['best_deal'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$CouponToJson(_Coupon instance) => <String, dynamic>{
@@ -30,6 +33,7 @@ Map<String, dynamic> _$CouponToJson(_Coupon instance) => <String, dynamic>{
   'ranks': instance.ranks,
   'offers': instance.offers,
   'upcoming': instance.upcoming,
+  'best_deal': instance.bestDeal,
 };
 
 _CouponRank _$CouponRankFromJson(Map<String, dynamic> json) => _CouponRank(
@@ -142,4 +146,88 @@ Map<String, dynamic> _$CouponLinkToJson(_CouponLink instance) =>
       'url': instance.url,
       'kind': instance.kind,
       'rate_percent': instance.ratePercent,
+    };
+
+_CouponBestDeal _$CouponBestDealFromJson(Map<String, dynamic> json) =>
+    _CouponBestDeal(
+      channel: json['channel'] as String,
+      rank: json['rank'] as String,
+      parts:
+          (json['parts'] as List<dynamic>?)
+              ?.map(
+                (e) => CouponBestDealPart.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          const <CouponBestDealPart>[],
+      totalPercent: (json['total_percent'] as num).toDouble(),
+      capYen: (json['cap_yen'] as num?)?.toInt(),
+      targetSpendYen: (json['target_spend_yen'] as num?)?.toInt(),
+      patterns:
+          (json['patterns'] as List<dynamic>?)
+              ?.map((e) => CouponPattern.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <CouponPattern>[],
+    );
+
+Map<String, dynamic> _$CouponBestDealToJson(_CouponBestDeal instance) =>
+    <String, dynamic>{
+      'channel': instance.channel,
+      'rank': instance.rank,
+      'parts': instance.parts,
+      'total_percent': instance.totalPercent,
+      'cap_yen': instance.capYen,
+      'target_spend_yen': instance.targetSpendYen,
+      'patterns': instance.patterns,
+    };
+
+_CouponBestDealPart _$CouponBestDealPartFromJson(Map<String, dynamic> json) =>
+    _CouponBestDealPart(
+      offerId: json['offer_id'] as String?,
+      brand: json['brand'] as String?,
+      percent: (json['percent'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$CouponBestDealPartToJson(_CouponBestDealPart instance) =>
+    <String, dynamic>{
+      'offer_id': instance.offerId,
+      'brand': instance.brand,
+      'percent': instance.percent,
+    };
+
+_CouponPattern _$CouponPatternFromJson(Map<String, dynamic> json) =>
+    _CouponPattern(
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map(
+                (e) => CouponPatternItem.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          const <CouponPatternItem>[],
+      totalYen: (json['total_yen'] as num).toInt(),
+      backYen: (json['back_yen'] as num?)?.toInt(),
+      netYen: (json['net_yen'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$CouponPatternToJson(_CouponPattern instance) =>
+    <String, dynamic>{
+      'items': instance.items,
+      'total_yen': instance.totalYen,
+      'back_yen': instance.backYen,
+      'net_yen': instance.netYen,
+    };
+
+_CouponPatternItem _$CouponPatternItemFromJson(Map<String, dynamic> json) =>
+    _CouponPatternItem(
+      name: json['name'] as String,
+      priceYen: (json['price_yen'] as num?)?.toInt(),
+      articleSlug: json['article_slug'] as String?,
+      thumbnail: json['thumbnail'] as String? ?? '',
+    );
+
+Map<String, dynamic> _$CouponPatternItemToJson(_CouponPatternItem instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'price_yen': instance.priceYen,
+      'article_slug': instance.articleSlug,
+      'thumbnail': instance.thumbnail,
     };

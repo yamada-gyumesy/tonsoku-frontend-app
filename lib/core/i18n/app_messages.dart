@@ -82,6 +82,35 @@ class AppMessages {
     required this.couponCapNote,
     required this.couponStartsOnUntil,
     required this.couponUntil,
+    required this.couponPageTitle,
+    required this.couponUpdatedAt,
+    required this.couponDisclaimer,
+    required this.couponOffersHeading,
+    required this.couponOffersEmpty,
+    required this.couponPeriodLabel,
+    required this.couponTimeWindowLabel,
+    required this.couponConditionsLabel,
+    required this.couponUpcomingHeading,
+    required this.couponBestHeading,
+    required this.couponCapOnlyNote,
+    required this.couponRankAssumeNote,
+    required this.couponTargetNote,
+    required this.couponPatternsLead,
+    required this.couponPatternsLeadPlain,
+    required this.couponRewardLabel,
+    required this.couponTotalLabel,
+    required this.couponBackLabel,
+    required this.couponNetLabel,
+    required this.couponScheduleHeading,
+    required this.couponTypesHeading,
+    required this.couponTypeMobileOrder,
+    required this.couponTypeMatsubenNet,
+    required this.couponTypeXCoupon,
+    required this.couponTypeTiktokCoupon,
+    required this.couponTypeDiscountFair,
+    required this.couponRankNames,
+    required this.couponStartBracket,
+    required this.couponStartsOn,
   });
 
   /// アプリ名・ヘッダーのロゴの右（web の `site.name`）。
@@ -200,6 +229,49 @@ class AppMessages {
   final String Function(String start, String end) couponStartsOnUntil;
   final String Function(String date) couponUntil;
 
+  // ── クーポン画面（web の `coupon.*`。`pages/[...locale]/coupon.astro` と
+  // `CoCoupon*`）────────────────────────────────────────────
+  final String couponPageTitle;
+
+  /// 一覧の見出しに添える時点。**日付と「時点」の間は空ける**（詰めると
+  /// 「2026年9月25日時点」の末尾が時刻に見える）。
+  final String Function(String date) couponUpdatedAt;
+  final String couponDisclaimer;
+  final String couponOffersHeading;
+  final String couponOffersEmpty;
+  final String couponPeriodLabel;
+  final String couponTimeWindowLabel;
+  final String couponConditionsLabel;
+  final String couponUpcomingHeading;
+  final String couponBestHeading;
+  final String Function(String cap) couponCapOnlyNote;
+  final String Function(String rank, String percent) couponRankAssumeNote;
+  final String Function(String target) couponTargetNote;
+  final String Function(String target) couponPatternsLead;
+  final String couponPatternsLeadPlain;
+  final String couponRewardLabel;
+  final String couponTotalLabel;
+  final String couponBackLabel;
+  final String couponNetLabel;
+  final String couponScheduleHeading;
+  final String couponTypesHeading;
+
+  /// 種類表（`CouponTypesTable`）の 1 行。**一覧の行に用語を書く代わりに、
+  /// ここで一度だけ説明する。**
+  final CouponTypeText couponTypeMobileOrder;
+  final CouponTypeText couponTypeMatsubenNet;
+  final CouponTypeText couponTypeXCoupon;
+  final CouponTypeText couponTypeTiktokCoupon;
+  final CouponTypeText couponTypeDiscountFair;
+
+  /// 会員ランクの表示名。**表に無い ID はそのまま出る**（`_pick`）。
+  final Map<String, String> couponRankNames;
+  final String Function(String start) couponStartBracket;
+
+  /// スケジュールの帯の開始日（`9/5〜`）。**「〜」を落とさないこと**
+  /// （日付だけだとその日限りの予定に見える）。
+  final String Function(String start) couponStartsOn;
+
   static AppMessages of(AppLocale locale) => switch (locale) {
     AppLocale.ja => ja,
     AppLocale.en => en,
@@ -277,6 +349,54 @@ class AppMessages {
     couponCapNote: (yen) => '上限 $yen',
     couponStartsOnUntil: (start, end) => '$start〜$end',
     couponUntil: (date) => '〜$date',
+    couponPageTitle: '松のやのクーポン',
+    couponUpdatedAt: (date) => '$date 時点',
+    couponDisclaimer: '公開情報をもとにした独自まとめです。条件は各社の公式情報もあわせて確認してください。',
+    couponOffersHeading: '現在使えるクーポン',
+    couponOffersEmpty: '現在使用できるクーポンはありません。',
+    couponPeriodLabel: '期限',
+    couponTimeWindowLabel: '時間帯',
+    couponConditionsLabel: '条件',
+    couponUpcomingHeading: '今後の予定',
+    couponBestHeading: '現在の最大還元率',
+    couponCapOnlyNote: (cap) => '上限$cap',
+    couponRankAssumeNote: (rank, percent) => '$rank会員$percent想定',
+    couponTargetNote: (target) => '※最大$targetが理論値（これ以上は還元率が下がる）',
+    couponPatternsLead: (target) => '$targetに近い注文の例',
+    couponPatternsLeadPlain: '注文の例',
+    couponRewardLabel: '還元',
+    couponTotalLabel: '合計',
+    couponBackLabel: '還元',
+    couponNetLabel: '実質',
+    couponScheduleHeading: 'スケジュール',
+    couponTypesHeading: 'キャンペーンの種類',
+    couponTypeMobileOrder: (
+      name: 'モバイルオーダー',
+      description: '松屋フーズ公式アプリで注文して店舗で受け取る（店内・持ち帰り）',
+    ),
+    couponTypeMatsubenNet: (
+      name: '松弁ネット',
+      description: '松屋フーズ公式アプリで受取時間を指定するテイクアウトの事前予約（配達は松弁デリバリー）',
+    ),
+    couponTypeXCoupon: (
+      name: 'Xクーポン',
+      description: '公式X（@matsu_noya）で配られる、券売機のみで使用できるクーポン',
+    ),
+    couponTypeTiktokCoupon: (
+      name: 'TikTokクーポン',
+      description: '公式TikTok（@matsu_noya）で配られる、券売機のみで使用できるクーポン',
+    ),
+    couponTypeDiscountFair: (name: '割引フェア', description: '対象商品が期間限定で値引きになるもの'),
+    couponRankNames: {
+      'bronze': 'ブロンズ',
+      'silver': 'シルバー',
+      'gold': 'ゴールド',
+      'platinum': 'プラチナ',
+      'diamond': 'ダイヤモンド',
+      'black': 'ブラック',
+    },
+    couponStartBracket: (start) => '[$start]',
+    couponStartsOn: (start) => '$start〜',
   );
 
   static final en = AppMessages(
@@ -352,6 +472,63 @@ class AppMessages {
     couponCapNote: (yen) => 'Cap $yen',
     couponStartsOnUntil: (start, end) => '$start – $end',
     couponUntil: (date) => 'until $date',
+    couponPageTitle: 'Matsunoya coupons',
+    couponUpdatedAt: (date) => 'As of $date',
+    couponDisclaimer:
+        'Compiled independently from public sources. Please check the official announcements for the exact terms.',
+    couponOffersHeading: 'Available now',
+    couponOffersEmpty: 'No coupons are available right now.',
+    couponPeriodLabel: 'Period',
+    couponTimeWindowLabel: 'Hours',
+    couponConditionsLabel: 'Conditions',
+    couponUpcomingHeading: 'Coming up',
+    couponBestHeading: 'Best rate right now',
+    couponCapOnlyNote: (cap) => 'Cap $cap',
+    couponRankAssumeNote: (rank, percent) => 'Assumes $rank ($percent)',
+    couponTargetNote: (target) =>
+        '* $target is the sweet spot — spend more and the rate drops',
+    couponPatternsLead: (target) => 'Orders close to $target',
+    couponPatternsLeadPlain: 'Example orders',
+    couponRewardLabel: 'back',
+    couponTotalLabel: 'Total',
+    couponBackLabel: 'Back',
+    couponNetLabel: 'Net',
+    couponScheduleHeading: 'Schedule',
+    couponTypesHeading: 'Types of campaign',
+    couponTypeMobileOrder: (
+      name: 'Mobile Order',
+      description:
+          'Order in the Matsuya Foods app and pick it up in store (eat in or take away)',
+    ),
+    couponTypeMatsubenNet: (
+      name: 'Matsuben Net',
+      description:
+          'Takeaway pre-order in the Matsuya Foods app with a pickup time (delivery is Matsuben Delivery)',
+    ),
+    couponTypeXCoupon: (
+      name: 'X coupon',
+      description:
+          'Coupons handed out on the official X account (@matsu_noya); usable only at the ticket machine',
+    ),
+    couponTypeTiktokCoupon: (
+      name: 'TikTok coupon',
+      description:
+          'Coupons handed out on the official TikTok account (@matsu_noya); usable only at the ticket machine',
+    ),
+    couponTypeDiscountFair: (
+      name: 'Discount fair',
+      description: 'A set price cut on selected items for a limited period',
+    ),
+    couponRankNames: {
+      'bronze': 'Bronze',
+      'silver': 'Silver',
+      'gold': 'Gold',
+      'platinum': 'Platinum',
+      'diamond': 'Diamond',
+      'black': 'Black',
+    },
+    couponStartBracket: (start) => '[$start]',
+    couponStartsOn: (start) => 'From $start',
   );
 
   static final zh = AppMessages(
@@ -425,8 +602,59 @@ class AppMessages {
     couponCapNote: (yen) => '上限 $yen',
     couponStartsOnUntil: (start, end) => '$start〜$end',
     couponUntil: (date) => '至$date',
+    couponPageTitle: '松乃家的优惠券',
+    couponUpdatedAt: (date) => '截至$date',
+    couponDisclaimer: '本页依据公开信息独立整理，具体条件请同时确认各公司的官方说明。',
+    couponOffersHeading: '当前可用的优惠券',
+    couponOffersEmpty: '当前没有可用的优惠券。',
+    couponPeriodLabel: '期限',
+    couponTimeWindowLabel: '时段',
+    couponConditionsLabel: '条件',
+    couponUpcomingHeading: '今后的日程',
+    couponBestHeading: '当前最高返还比例',
+    couponCapOnlyNote: (cap) => '上限$cap',
+    couponRankAssumeNote: (rank, percent) => '按$rank会员$percent计算',
+    couponTargetNote: (target) => '※$target为理论最大值（超过后返还比例下降）',
+    couponPatternsLead: (target) => '接近$target的点单示例',
+    couponPatternsLeadPlain: '点单示例',
+    couponRewardLabel: '返还',
+    couponTotalLabel: '合计',
+    couponBackLabel: '返还',
+    couponNetLabel: '实付',
+    couponScheduleHeading: '日程',
+    couponTypesHeading: '活动类型',
+    couponTypeMobileOrder: (
+      name: '手机点餐',
+      description: '在松屋食品官方应用下单后到店取餐（堂食或外带）',
+    ),
+    couponTypeMatsubenNet: (
+      name: '松弁网',
+      description: '在松屋食品官方应用指定取餐时间的外带预约（配送为松弁外送）',
+    ),
+    couponTypeXCoupon: (
+      name: 'X优惠券',
+      description: '官方X（@matsu_noya）发放、仅可在售票机使用的优惠券',
+    ),
+    couponTypeTiktokCoupon: (
+      name: 'TikTok优惠券',
+      description: '官方TikTok（@matsu_noya）发放、仅可在售票机使用的优惠券',
+    ),
+    couponTypeDiscountFair: (name: '折扣活动', description: '指定商品在限定期间内降价'),
+    couponRankNames: {
+      'bronze': '青铜',
+      'silver': '白银',
+      'gold': '黄金',
+      'platinum': '铂金',
+      'diamond': '钻石',
+      'black': '黑卡',
+    },
+    couponStartBracket: (start) => '[$start]',
+    couponStartsOn: (start) => '$start起',
   );
 }
+
+/// 種類表の 1 行（名前と説明）。
+typedef CouponTypeText = ({String name, String description});
 
 /// 仮訳の断り。web の `REFERENCE_TRANSLATION`（`src/i18n/messages/en.ts` / `zh.ts`）。
 const _enReferenceTranslation =
