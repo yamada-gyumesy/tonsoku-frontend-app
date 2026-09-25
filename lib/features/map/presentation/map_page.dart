@@ -447,7 +447,9 @@ class _MapPageState extends ConsumerState<MapPage> {
             padding: const EdgeInsets.fromLTRB(8, 0, 104, 8),
             // 狭い画面では縮尺を凡例の上へ折り返す（はみ出させない）
             child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.end,
+              // 縮尺は凡例の縦の中心に揃える（下端に揃えると持ち上がって見える。
+              // ユーザーの指摘）
+              crossAxisAlignment: WrapCrossAlignment.center,
               verticalDirection: VerticalDirection.up,
               children: [
                 // ── 動画広告（リワード。#5）─────────────────────
@@ -457,7 +459,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                 MapLegend(present: present),
                 // 凡例から離して置く（ユーザーの指摘。くっつくと凡例の一部に見える）
                 const Padding(
-                  padding: EdgeInsets.only(left: 12, bottom: 4),
+                  padding: EdgeInsets.only(left: 12),
                   child: MapScaleBar(),
                 ),
               ],

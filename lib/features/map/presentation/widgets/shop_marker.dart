@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:tonsoku/core/theme/app_colors.dart';
@@ -5,13 +8,13 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 
 /// 店の印。**店舗限定を扱う店がひと目で分かる**ことが要件（Issue #8）。
 ///
-/// - **普通の店** … 緑（`MapPalette.shop`）の小さな点に面色の縁。681 軒が
-///   全国に散るので、引いた時に地図を埋めない大きさにする
+/// - **普通の店** … 小さな点に面色の縁。**併設で塗り分ける**（[ShopDot]）。
+///   681 軒が全国に散るので、引いた時に地図を埋めない大きさにする
 /// - **店舗限定の店** … 一回り大きな丸にアイコン。状態で塗りを変える:
 ///   - 販売中 … **赤の塗り（`primary`）に白**。唯一の塗りなので一番目立つ
 ///   - 発売前 … 面色の地に赤（`primaryText`）の縁とアイコン
-///   - 売り切れ … 販売中の★を沈めた形（hover の地に罫線の縁、副テキストの★）。
-///     一時的な状態なので形は販売中のまま
+///   - 売り切れ … 灰（副テキスト）の塗りに白★。一時的な状態なので形は販売中の
+///     まま、色だけ止まった見た目にする
 ///   - 終売 … 同じ地に×（形で売り切れと分ける）
 ///
 /// **塗りの赤（`primary`）は白を載せる塗りにだけ使う。** 地図の上に直接置く赤
@@ -25,13 +28,18 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 class ShopMarker extends StatelessWidget {
   const ShopMarker({
     this.availability,
+    this.brands = const [],
     this.dimmed = false,
     this.small = false,
     super.key,
   });
 
+  /// 併設しているブランド（配信の `brands`）。**普通の店の点の塗り分け**に使う
+  /// （[ShopDot]）。
+
   /// 店舗限定の状態。**普通の店は null。**
   final LimitedAvailability? availability;
+  final List<String> brands;
   final bool dimmed;
 
   /// 引いた時（全国が入る倍率）の小さい点。
@@ -54,18 +62,8 @@ class ShopMarker extends StatelessWidget {
     );
   }
 
-  Widget _dot(AppColors colors) {
-    final size = small ? 7.0 : 11.0;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: MapPalette.of(colors).shop,
-        shape: BoxShape.circle,
-        border: Border.all(color: colors.surface, width: small ? 1 : 1.5),
-      ),
-    );
-  }
+  Widget _dot(AppColors colors) =>
+      ShopDot(colors: ShopDot.colorsFor(brands, colors), size: small ? 8 : 12);
 }
 
 /// 店舗限定の印（丸とアイコン）。凡例でも同じものを使う。
@@ -99,10 +97,12 @@ class LimitedMark extends StatelessWidget {
         colors.primaryText,
         colors.primaryText,
       ),
+      // 灰の塗りに白★（ユーザーの指定。販売中の赤の塗りを灰にした形で、
+      // 押せない・止まっている見た目にする）
       LimitedAvailability.soldOut => (
-        colors.hover,
-        colors.border,
         colors.textSub,
+        colors.surface,
+        colors.surface,
       ),
       LimitedAvailability.ended => (
         colors.hover,
@@ -128,4 +128,76 @@ class LimitedMark extends StatelessWidget {
       child: Icon(iconOf(availability), size: size * 0.62, color: ink),
     );
   }
+}
+
+/// 普通の店の点。**併設で塗り分ける**（ユーザーの指定）:
+///
+/// - 松のや専門店 … 緑
+/// - 松屋併設 … 黄
+/// - マイカリー食堂併設 … 茶
+/// - 両方を併設（本番で 10 軒）… 左半分が黄、右半分が茶
+///
+/// 一度「左半分を緑にして右半分に併設の色」の形にしたが、見分けにくかった
+/// （ユーザーの指摘）ので 1 色にした。絞り込みのチップにも同じ点を付ける
+/// （`MapFilters`）。縁は面色。
+class ShopDot extends StatelessWidget {
+  const ShopDot({required this.colors, this.size = 12, super.key});
+
+  /// 塗る色（1 色、または左右の 2 色）。
+  final List<Color> colors;
+  final double size;
+
+  /// [brands]（配信の `brands`）の塗り分け。**`matsunoya` と知らないブランドは
+  /// 数えない**（`ShopBrand` と同じ扱い）。
+  static List<Color> colorsFor(List<String> brands, AppColors app) {
+    final p = MapPalette.of(app);
+    final annex = [
+      if (brands.contains('matsuya')) p.annexMatsuya,
+      if (brands.contains('mycurry')) app.brown,
+    ];
+    return annex.isEmpty ? [p.shop] : annex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ring = context.colors.surface;
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _DotPainter(colors: colors, ring: ring),
+    );
+  }
+}
+
+class _DotPainter extends CustomPainter {
+  const _DotPainter({required this.colors, required this.ring});
+
+  final List<Color> colors;
+  final Color ring;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.width / 2;
+    final ringWidth = size.width >= 12 ? 1.5 : 1.0;
+    canvas.drawCircle(c, r, Paint()..color = ring);
+    final inner = Rect.fromCircle(center: c, radius: r - ringWidth);
+    if (colors.length == 1) {
+      canvas.drawOval(inner, Paint()..color = colors[0]);
+    } else {
+      // 左半分が先頭、右半分が 2 番目。drawArc の 0 は右（3 時）
+      canvas
+        ..drawArc(inner, math.pi / 2, math.pi, true, Paint()..color = colors[0])
+        ..drawArc(
+          inner,
+          -math.pi / 2,
+          math.pi,
+          true,
+          Paint()..color = colors[1],
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotPainter old) =>
+      old.ring != ring || !listEquals(old.colors, colors);
 }

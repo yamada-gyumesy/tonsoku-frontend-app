@@ -80,6 +80,7 @@ class ShopsLayer extends StatelessWidget {
                 onTap: () => onTap(e),
                 child: ShopMarker(
                   availability: e.availability,
+                  brands: e.shop.brands,
                   dimmed: !e.state.isOpen,
                   small: small,
                 ),

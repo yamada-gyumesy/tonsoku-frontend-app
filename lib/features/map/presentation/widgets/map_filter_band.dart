@@ -5,6 +5,7 @@ import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/map/domain/map_format.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
+import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
 import 'package:tonsoku/shared/widgets/cdn_image.dart';
 import 'package:tonsoku/shared/widgets/optical_center.dart';
@@ -57,6 +58,7 @@ class MapFilters extends ConsumerWidget {
             child: Row(
               children: [
                 _BrandChip(
+                  dot: ShopDot.colorsFor(const [], colors),
                   label: t.mapStandalone,
                   selected: filter.standalone,
                   onTap: () => onChanged(
@@ -66,6 +68,7 @@ class MapFilters extends ConsumerWidget {
                 for (final brand in ShopBrand.values) ...[
                   const SizedBox(width: 6),
                   _BrandChip(
+                    dot: ShopDot.colorsFor([brand.key], colors),
                     label: brandLabel(brand, t),
                     selected: filter.brands.contains(brand),
                     onTap: () => onChanged(
@@ -157,11 +160,14 @@ class MapFilterButton extends ConsumerWidget {
 /// 選ばれていない時も面色の地を敷く。
 class _BrandChip extends StatelessWidget {
   const _BrandChip({
+    required this.dot,
     required this.label,
     required this.selected,
     required this.onTap,
   });
 
+  /// 地図の点と同じ塗り分け（[ShopDot]。ユーザーの指定）。
+  final List<Color> dot;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -183,14 +189,21 @@ class _BrandChip extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.2,
-                color: selected ? colors.surface : colors.textSub,
-              ),
+            padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShopDot(colors: dot, size: 10),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.2,
+                    color: selected ? colors.surface : colors.textSub,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

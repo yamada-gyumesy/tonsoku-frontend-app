@@ -372,6 +372,7 @@ class MapPalette {
     required this.label,
     required this.labelHalo,
     required this.shop,
+    required this.annexMatsuya,
     required this.me,
   });
 
@@ -393,7 +394,8 @@ class MapPalette {
   /// 地名・駅名の縁取り（陸と同じ色）。
   final Color labelHalo;
 
-  /// **普通の店の点**（店舗限定を扱っていない店）。緑（ユーザーの指定）。
+  /// **松のや専門店の点**（店舗限定の印が無い時。併設の店は [annexMatsuya] /
+  /// `AppColors.brown`。`ShopDot`）。緑（ユーザーの指定）。
   ///
   /// 茶（`AppColors.brown`）は地図の地・道路と同じ系統の色で馴染みすぎ、
   /// 黄土色も見分けにくかった（どちらもユーザーの指摘）。緑は地図のどの色とも
@@ -404,6 +406,12 @@ class MapPalette {
   /// | ライト `#1E8A4C` | 4.10 | 3.37 |
   /// | ダーク `#3DBE7A` | 7.22 | 7.68 |
   final Color shop;
+
+  /// 松屋併設の店の点。黄（ユーザーの指定。専門店は [shop] の緑、マイカリー
+  /// 食堂併設は `AppColors.brown` の茶）。
+  /// ライトは地との比が 3:1 に届く濃い黄（`#B58500` 陸 3.11。明るい黄は 2.3 で
+  /// 地に溶けた）、ダークは `#F2C94C`（10.8）。
+  final Color annexMatsuya;
 
   /// **現在地の印**と向きの扇。地図アプリで定番の青（ユーザーの判断。店の緑・
   /// 店舗限定の赤と取り違えない）。地との比（計算値）: ライト `#1A73E8` 4.22 /
@@ -421,6 +429,7 @@ class MapPalette {
     label: Color(0xFF6E625B), // textSub
     labelHalo: Color(0xFFFAF7F3),
     shop: Color(0xFF1E8A4C),
+    annexMatsuya: Color(0xFFB58500),
     me: Color(0xFF1A73E8),
   );
 
@@ -435,6 +444,7 @@ class MapPalette {
     label: Color(0xFFA79A92), // textSub
     labelHalo: Color(0xFF211A17),
     shop: Color(0xFF3DBE7A),
+    annexMatsuya: Color(0xFFF2C94C),
     me: Color(0xFF4C8DF6),
   );
 
