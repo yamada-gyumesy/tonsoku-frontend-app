@@ -46,8 +46,13 @@ class DealCouponSection extends ConsumerWidget {
   static bool dealCouponWhere(CouponOffer offer) =>
       offer.howToGet == 'x' || offer.howToGet == 'tiktok';
 
-  /// web の `w-[44%]`。
+  /// web の `w-[44%]`。**左右の余白を除いた幅に対する比**（画面幅に掛けると
+  /// 3 枚目が画面の外へ押し出され、横に送れることが分からなくなる。理由の全文は
+  /// `LimitedWeeksSection._cardWidthRatio`）。
   static const _cardWidthRatio = 0.44;
+
+  /// 横に流す器の左右の余白（web の `px-4`）。
+  static const _inset = 16.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,7 +77,8 @@ class DealCouponSection extends ConsumerWidget {
     if (rows.isEmpty) return const SizedBox.shrink();
 
     final colors = context.colors;
-    final cardWidth = MediaQuery.sizeOf(context).width * _cardWidthRatio;
+    final cardWidth =
+        (MediaQuery.sizeOf(context).width - _inset * 2) * _cardWidthRatio;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 32),
@@ -93,7 +99,7 @@ class DealCouponSection extends ConsumerWidget {
           const SizedBox(height: 12),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: _inset),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -38,10 +38,19 @@ class LimitedWeeksSection extends ConsumerWidget {
   /// 並べる週の数。**新しい順に 4 週**（横に流すので、それ以上は見られない。web と同じ）
   static const maxWeeks = 4;
 
-  /// 1 枚の幅（画面幅に対する比）。**2.1〜2.2 枚見える幅**（web のユーザー指定。
-  /// 2.5 枚では 1 枚が細く縦に長すぎた）。右端が少し見えていることが
-  /// 「続きがある」の合図になる。
+  /// 1 枚の幅（**左右の余白を除いた幅**に対する比。web の `w-[45%]`）。
+  /// **2.1〜2.2 枚見える幅**（web のユーザー指定。2.5 枚では 1 枚が細く縦に
+  /// 長すぎた）。右端が少し見えていることが「続きがある」の合図になる。
+  ///
+  /// **画面幅に掛けないこと。** web の `%` は横に流す器の中身の幅（器は `-mx-4`
+  /// で紙面の端まで出し、`px-4` で余白を戻している）に対する比で、画面幅より
+  /// 32px 狭い。画面幅に掛けると 1 枚が 14px 広がり、**3 枚目がちょうど画面の外へ
+  /// 押し出されて、2 枚がすっぽり収まった形になる** ―― 横に送れることが
+  /// 分からなくなる（実際にそうなっていた。ユーザーの指摘）。
   static const _cardWidthRatio = 0.45;
+
+  /// 横に流す器の左右の余白（web の `px-4`）。
+  static const _inset = 16.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,7 +59,7 @@ class LimitedWeeksSection extends ConsumerWidget {
     if (cards.isEmpty) return const SizedBox.shrink();
 
     final width = MediaQuery.sizeOf(context).width;
-    final cardWidth = width * _cardWidthRatio;
+    final cardWidth = (width - _inset * 2) * _cardWidthRatio;
 
     return Padding(
       // 節の間は `mb-8`（web）
@@ -69,7 +78,7 @@ class LimitedWeeksSection extends ConsumerWidget {
           // **紙面の端まで流す**（web の `-mx-4 px-4`）
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: _inset),
             // **カードの高さを揃える**（web はカードが `flex-1` で列の高さに伸びる）
             child: IntrinsicHeight(
               child: Row(
