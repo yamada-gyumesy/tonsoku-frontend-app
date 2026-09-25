@@ -375,6 +375,8 @@ class MapPalette {
     required this.annexMatsuya,
     required this.soldOut,
     required this.me,
+    required this.panel,
+    required this.panelBorder,
   });
 
   final Color land;
@@ -424,6 +426,13 @@ class MapPalette {
   /// ダーク `#4C8DF6` 5.26。
   final Color me;
 
+  /// **地図の上に浮かせる部品**（検索・チップ・凡例・ボタン・吹き出し）の地と枠。
+  /// ライトは面色のまま。**ダークはヘッダーと同じ地（`bg`）にする**（ユーザーの
+  /// 指定）―― ダークの陸は面色で、部品も面色だと地図に溶けた。陸を暗くする・
+  /// 明るくする手は、地図が暗すぎる・見えないと言われたので採らない。
+  final Color panel;
+  final Color panelBorder;
+
   static const light = MapPalette(
     land: Color(0xFFFAF7F3), // bg と同じ
     water: Color(0xFFDDE3E1),
@@ -438,6 +447,8 @@ class MapPalette {
     annexMatsuya: Color(0xFFB58500),
     soldOut: Color(0xFFCFC8C2),
     me: Color(0xFF1A73E8),
+    panel: Color(0xFFFFFFFF), // surface と同じ
+    panelBorder: Color(0xFFE7DFD5), // border と同じ
   );
 
   static const dark = MapPalette(
@@ -454,6 +465,9 @@ class MapPalette {
     annexMatsuya: Color(0xFFF2C94C),
     soldOut: Color(0xFF5A504A),
     me: Color(0xFF4C8DF6),
+    // ヘッダーと同じ地（bg）。陸（面色）より暗く沈めて浮かせる
+    panel: Color(0xFF16110F),
+    panelBorder: Color(0xFF392F2A), // border と同じ
   );
 
   static MapPalette of(AppColors colors) => colors.isDark ? dark : light;

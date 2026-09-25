@@ -92,10 +92,10 @@ class MapFilters extends ConsumerWidget {
         if (filter.menuIds.isNotEmpty) ...[
           const SizedBox(height: 6),
           Material(
-            color: colors.surface,
+            color: MapPalette.of(colors).panel,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: colors.border),
+              side: BorderSide(color: MapPalette.of(colors).panelBorder),
             ),
             elevation: 2,
             child: Padding(
@@ -181,11 +181,13 @@ class _BrandChip extends StatelessWidget {
       toggled: selected,
       button: true,
       child: Material(
-        color: colors.surface,
+        color: MapPalette.of(colors).panel,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
-            color: selected ? line.withValues(alpha: 0.6) : colors.border,
+            color: selected
+                ? line.withValues(alpha: 0.6)
+                : MapPalette.of(colors).panelBorder,
           ),
         ),
         elevation: 2,
@@ -253,11 +255,13 @@ class MenuChip extends ConsumerWidget {
       toggled: selected,
       button: true,
       child: Material(
-        color: colors.surface,
+        color: MapPalette.of(colors).panel,
         shape: RoundedRectangleBorder(
           borderRadius: radius,
           side: BorderSide(
-            color: selected ? line.withValues(alpha: 0.6) : colors.border,
+            color: selected
+                ? line.withValues(alpha: 0.6)
+                : MapPalette.of(colors).panelBorder,
           ),
         ),
         elevation: 2,

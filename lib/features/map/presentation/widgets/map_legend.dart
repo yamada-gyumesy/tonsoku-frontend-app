@@ -97,7 +97,7 @@ class MapAttribution extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
           decoration: BoxDecoration(
-            color: colors.surface.withValues(alpha: 0.55),
+            color: MapPalette.of(colors).panel.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(3),
           ),
           child: Text(
@@ -128,9 +128,11 @@ class _Plate extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         // 地図が透けるくらいに薄く（ユーザーの指定）
-        color: colors.surface.withValues(alpha: 0.75),
+        color: MapPalette.of(colors).panel.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: MapPalette.of(colors).panelBorder.withValues(alpha: 0.6),
+        ),
       ),
       child: child,
     );

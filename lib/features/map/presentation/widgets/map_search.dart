@@ -98,10 +98,10 @@ class _MapSearchState extends ConsumerState<MapSearch> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(
-          color: colors.surface,
+          color: MapPalette.of(colors).panel,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: colors.border),
+            side: BorderSide(color: MapPalette.of(colors).panelBorder),
           ),
           elevation: 2,
           child: SizedBox(
@@ -156,7 +156,11 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                     ),
                   ),
                 if (widget.filter case final filter?) ...[
-                  Container(width: 1, height: 20, color: colors.border),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    color: MapPalette.of(colors).panelBorder,
+                  ),
                   const SizedBox(width: 2),
                   filter,
                   const SizedBox(width: 2),
@@ -171,10 +175,10 @@ class _MapSearchState extends ConsumerState<MapSearch> {
           // 候補を押した時に、先に入力欄の外として扱われて一覧が消えないように
           TextFieldTapRegion(
             child: Material(
-              color: colors.surface,
+              color: MapPalette.of(colors).panel,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: colors.border),
+                side: BorderSide(color: MapPalette.of(colors).panelBorder),
               ),
               elevation: 2,
               clipBehavior: Clip.antiAlias,
@@ -184,8 +188,10 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
                   itemCount: results.length,
-                  separatorBuilder: (_, _) =>
-                      Divider(height: 1, color: colors.border),
+                  separatorBuilder: (_, _) => Divider(
+                    height: 1,
+                    color: MapPalette.of(colors).panelBorder,
+                  ),
                   itemBuilder: (context, i) {
                     final shop = results[i];
                     // 営業していない店は薄く（地図の印と同じ）

@@ -190,8 +190,8 @@ class _Badge extends ConsumerWidget {
         child: CustomPaint(
           painter: _BubblePainter(
             angle: sector * math.pi / 4,
-            fill: colors.surface,
-            border: colors.border,
+            fill: MapPalette.of(colors).panel,
+            border: MapPalette.of(colors).panelBorder,
             shadow: Colors.black.withValues(alpha: colors.isDark ? 0.5 : 0.2),
           ),
           child: Padding(

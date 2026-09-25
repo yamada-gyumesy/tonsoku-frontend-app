@@ -653,8 +653,10 @@ class _LocateButton extends StatelessWidget {
       button: true,
       label: label,
       child: Material(
-        color: colors.surface,
-        shape: CircleBorder(side: BorderSide(color: colors.border)),
+        color: MapPalette.of(colors).panel,
+        shape: CircleBorder(
+          side: BorderSide(color: MapPalette.of(colors).panelBorder),
+        ),
         elevation: 2,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -705,8 +707,10 @@ class _CompassButton extends StatelessWidget {
       button: true,
       label: label,
       child: Material(
-        color: colors.surface,
-        shape: CircleBorder(side: BorderSide(color: colors.border)),
+        color: MapPalette.of(colors).panel,
+        shape: CircleBorder(
+          side: BorderSide(color: MapPalette.of(colors).panelBorder),
+        ),
         elevation: 2,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -812,7 +816,7 @@ class _LoadFailed extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Material(
-      color: colors.surface,
+      color: MapPalette.of(colors).panel,
       borderRadius: BorderRadius.circular(8),
       elevation: 2,
       child: Padding(
