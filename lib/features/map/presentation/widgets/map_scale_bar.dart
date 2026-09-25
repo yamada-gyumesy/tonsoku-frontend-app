@@ -74,6 +74,8 @@ class MapScaleBar extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     height: 1,
+                    // 距離の字だけ太く（ユーザーの指定。線は細いまま）
+                    fontWeight: FontWeight.w700,
                     color: colors.text,
                     fontFamily: AppTheme.defaultFontFamily,
                     shadows: [
