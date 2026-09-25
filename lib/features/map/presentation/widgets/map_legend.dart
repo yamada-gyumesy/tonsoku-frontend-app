@@ -13,6 +13,9 @@ import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 ///
 /// 並べるのは**いま地図にある状態だけ**（[present]）。発売前の品はほとんど
 /// 無いので、常に並べると使われない行が 1 つ増える。
+///
+/// - 販売中の印は**「店舗限定」**と書く（ユーザーの判断。この印が何の印かを言う）
+/// - **普通の店の点は並べない**（ユーザーの判断。見れば店だと分かる）
 class MapLegend extends ConsumerWidget {
   const MapLegend({required this.present, super.key});
 
@@ -28,14 +31,14 @@ class MapLegend extends ConsumerWidget {
           (
             LimitedMark(availability: a, size: 14),
             switch (a) {
-              LimitedAvailability.selling => t.mapSelling,
+              LimitedAvailability.selling => t.homeLimitedHeading,
               LimitedAvailability.upcoming => t.mapUpcoming,
-              LimitedAvailability.soldOut => t.mapSoldOut,
               LimitedAvailability.ended => t.homeLimitedEnded,
             },
           ),
-      (const ShopMarker(small: true), t.mapLegendShop),
     ];
+    // 店舗限定の印が 1 つも無い（絞り込みで消えた・品が無い週）なら板ごと出さない
+    if (entries.isEmpty) return const SizedBox.shrink();
 
     return Semantics(
       container: true,

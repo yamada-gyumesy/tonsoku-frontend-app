@@ -77,7 +77,6 @@ class LimitedMark extends StatelessWidget {
   static IconData iconOf(LimitedAvailability a) => switch (a) {
     LimitedAvailability.selling => Icons.star_rounded,
     LimitedAvailability.upcoming => Icons.schedule_rounded,
-    LimitedAvailability.soldOut => Icons.remove_rounded,
     LimitedAvailability.ended => Icons.close_rounded,
   };
 
@@ -95,11 +94,6 @@ class LimitedMark extends StatelessWidget {
         colors.surface,
         colors.primaryText,
         colors.primaryText,
-      ),
-      LimitedAvailability.soldOut => (
-        colors.surface,
-        colors.textSub,
-        colors.textSub,
       ),
       LimitedAvailability.ended => (
         colors.hover,

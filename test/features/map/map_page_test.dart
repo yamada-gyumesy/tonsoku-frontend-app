@@ -21,9 +21,6 @@ import 'package:tonsoku/features/map/presentation/widgets/map_legend.dart';
 class _NoLocation implements LocationRepository {
   @override
   Future<Position?> current() async => null;
-
-  @override
-  Future<Position?> currentIfPermitted() async => null;
 }
 
 /// マップの画面。**背景地図は描かない**（読み込みを待たせたまま）で、店の印と
@@ -68,8 +65,15 @@ void main() {
     expect(find.text('681店舗'), findsOneWidget);
     expect(find.byType(MapLegend), findsOneWidget);
     expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
-    // 品を選ぶまでは「含める」を出さない
-    expect(find.text('売り切れ・終売の店も含める'), findsNothing);
+    // 「含める」は出しておくが、品を選ぶまでは押せない
+    expect(find.text('終売の店も含める'), findsOneWidget);
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).onChanged, isNull);
+
+    await tester.tap(find.text('松のや専門店'));
+    await tester.pump();
+    expect(find.text('122店舗'), findsOneWidget);
+    await tester.tap(find.text('松のや専門店'));
+    await tester.pump();
 
     await tester.tap(find.text('松屋併設'));
     await tester.pump();
@@ -81,7 +85,7 @@ void main() {
     await tester.tap(find.text('たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'));
     await tester.pump();
     expect(find.text('15店舗'), findsOneWidget);
-    expect(find.text('売り切れ・終売の店も含める'), findsOneWidget);
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).onChanged, isNotNull);
 
     // 全店で終売した品はチップごと出さない（行き先が無い）
     expect(find.text('“極厚”肩ロース定食'), findsNothing);

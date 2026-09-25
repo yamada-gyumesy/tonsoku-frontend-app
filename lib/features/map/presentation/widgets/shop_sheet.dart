@@ -230,7 +230,7 @@ class _LimitedRow extends ConsumerWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: Opacity(
-                // 終売・売り切れは写真も沈める（印と同じ）
+                // 終売は写真も沈める（印と同じ）
                 opacity: a.isActive ? 1 : 0.55,
                 child: CdnImage(url: image, width: 56, height: 42),
               ),

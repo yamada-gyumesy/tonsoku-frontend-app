@@ -146,13 +146,12 @@ class AppMessages {
     required this.couponRankNames,
     required this.couponStartBracket,
     required this.couponStartsOn,
+    required this.mapStandalone,
     required this.mapBrandMatsuya,
     required this.mapBrandMycurry,
     required this.mapIncludeInactive,
     required this.mapSelling,
     required this.mapUpcoming,
-    required this.mapSoldOut,
-    required this.mapLegendShop,
     required this.mapLegendLabel,
     required this.mapMyLocation,
     required this.mapLocationUnavailable,
@@ -416,17 +415,17 @@ class AppMessages {
   final String mapBrandMatsuya;
   final String mapBrandMycurry;
 
-  /// 品を選んだ時だけ出るチェック。
+  /// 何も併設していない店の絞り込み（`isStandalone`）。併設のチップの先頭に置く。
+  final String mapStandalone;
+
+  /// 品のチップの下に出すチェック（品を選ぶまでは押せない）。
   final String mapIncludeInactive;
 
-  /// 店ごとの品の状態（印の凡例と店の詳細で同じ語を使う）。**終売は
-  /// [homeLimitedEnded] を使う**（web の週カードの判子と同じ語）。
+  /// 店ごとの品の状態（店の詳細の各行）。**終売は [homeLimitedEnded] を使う**
+  /// （web の週カードの判子と同じ語）。凡例の販売中の印は「販売中」ではなく
+  /// [homeLimitedHeading]（「店舗限定」。ユーザーの判断）。
   final String mapSelling;
   final String mapUpcoming;
-  final String mapSoldOut;
-
-  /// 凡例の「普通の店」の印。
-  final String mapLegendShop;
 
   /// 凡例全体の読み上げ名。
   final String mapLegendLabel;
@@ -618,13 +617,12 @@ class AppMessages {
     },
     couponStartBracket: (start) => '[$start]',
     couponStartsOn: (start) => '$start〜',
+    mapStandalone: '松のや専門店',
     mapBrandMatsuya: '松屋併設',
     mapBrandMycurry: 'マイカリー食堂併設',
-    mapIncludeInactive: '売り切れ・終売の店も含める',
+    mapIncludeInactive: '終売の店も含める',
     mapSelling: '販売中',
     mapUpcoming: '発売前',
-    mapSoldOut: '売り切れ',
-    mapLegendShop: '店舗',
     mapLegendLabel: '凡例',
     mapMyLocation: '現在地',
     mapLocationUnavailable: '現在地を取得できません',
@@ -812,13 +810,12 @@ class AppMessages {
     },
     couponStartBracket: (start) => '[$start]',
     couponStartsOn: (start) => 'From $start',
+    mapStandalone: 'Matsunoya only',
     mapBrandMatsuya: 'With Matsuya',
     mapBrandMycurry: 'With My Curry Shokudo',
-    mapIncludeInactive: 'Include sold-out and ended stores',
+    mapIncludeInactive: 'Include ended stores',
     mapSelling: 'Available',
     mapUpcoming: 'Coming soon',
-    mapSoldOut: 'Sold out',
-    mapLegendShop: 'Store',
     mapLegendLabel: 'Legend',
     mapMyLocation: 'My location',
     mapLocationUnavailable: 'Your location is unavailable',
@@ -995,13 +992,12 @@ class AppMessages {
     },
     couponStartBracket: (start) => '[$start]',
     couponStartsOn: (start) => '$start起',
+    mapStandalone: '松乃家专门店',
     mapBrandMatsuya: '附设松屋',
     mapBrandMycurry: '附设My Curry食堂',
-    mapIncludeInactive: '包括已售罄和已停售的门店',
+    mapIncludeInactive: '包括已停售的门店',
     mapSelling: '销售中',
     mapUpcoming: '即将发售',
-    mapSoldOut: '已售罄',
-    mapLegendShop: '门店',
     mapLegendLabel: '图例',
     mapMyLocation: '当前位置',
     mapLocationUnavailable: '无法获取当前位置',

@@ -34,7 +34,6 @@ String availabilityLabel(ShopLimited item, AppMessages t) {
   final at = item.at;
   return switch (item.availability) {
     LimitedAvailability.selling => t.mapSelling,
-    LimitedAvailability.soldOut => t.mapSoldOut,
     LimitedAvailability.upcoming =>
       at == null ? t.mapUpcoming : t.mapStartsAt(formatWhen(at, t)),
     LimitedAvailability.ended =>

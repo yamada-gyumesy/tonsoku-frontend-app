@@ -12,10 +12,10 @@ import 'package:tonsoku/shared/widgets/cdn_image.dart';
 /// マップの上に貼る絞り込みの帯。**記事一覧の絞り込み（web の `.sticky-band`）と
 /// 同じ見た目**: 面色の地に、横に流すチップの段を重ねる。
 ///
-/// - 上の段 … **店舗限定の品**（写真つき。複数選べる）。品が 1 つも無い週は段ごと出さない
-/// - 下の段 … **併設**（記事一覧のタグと同じトグル）と、出している店の数
-/// - 品を選んだ時だけ … **「売り切れ・終売の店も含める」**（品を選んでいない時は
-///   意味を持たないので出さない）
+/// - 上の段 … **店舗限定の品**（写真つき。複数選べる）と、その下に
+///   **「終売の店も含める」**（品を選ぶまでは押せない。選ぶまで隠すと、この
+///   絞り込みがあることに気づけない）。品が 1 つも無い週はどちらも出さない
+/// - 下の段 … **松のや専門店と併設**（記事一覧のタグと同じトグル）と、出している店の数
 class MapFilterBand extends ConsumerWidget {
   const MapFilterBand({
     required this.filter,
@@ -68,13 +68,32 @@ class MapFilterBand extends ConsumerWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, right: 16),
+                child: _IncludeInactive(
+                  label: t.mapIncludeInactive,
+                  value: filter.includeInactive,
+                  // 品を選ぶまでは意味を持たないので押せない（出してはおく。
+                  // 選ぶまで隠すと、この絞り込みがあることに気づけない）
+                  onChanged: filter.menuIds.isEmpty
+                      ? null
+                      : (v) => onChanged(filter.copyWith(includeInactive: v)),
+                ),
+              ),
+              const SizedBox(height: 4),
             ],
             Row(
               children: [
                 Expanded(
                   child: _Row(
                     children: [
+                      TagToggleChip(
+                        label: t.mapStandalone,
+                        selected: filter.standalone,
+                        onTap: () => onChanged(
+                          filter.copyWith(standalone: !filter.standalone),
+                        ),
+                      ),
                       for (final brand in ShopBrand.values)
                         TagToggleChip(
                           label: brandLabel(brand, t),
@@ -102,16 +121,6 @@ class MapFilterBand extends ConsumerWidget {
                   ),
               ],
             ),
-            if (filter.menuIds.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 4, right: 16, top: 2),
-                child: _IncludeInactive(
-                  label: t.mapIncludeInactive,
-                  value: filter.includeInactive,
-                  onChanged: (v) =>
-                      onChanged(filter.copyWith(includeInactive: v)),
-                ),
-              ),
           ],
         ),
       ),
@@ -217,20 +226,23 @@ class _IncludeInactive extends StatelessWidget {
 
   final String label;
   final bool value;
-  final ValueChanged<bool> onChanged;
+
+  /// null なら押せない（品を選んでいない時）。
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final change = onChanged;
     return MergeSemantics(
       child: InkWell(
-        onTap: () => onChanged(!value),
+        onTap: change == null ? null : () => change(!value),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Checkbox(
               value: value,
-              onChanged: (v) => onChanged(v ?? false),
+              onChanged: change == null ? null : (v) => change(v ?? false),
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               // 印は地の上に置くので `primaryText`（テーマの `colorScheme.primary` と同じ）
@@ -241,7 +253,12 @@ class _IncludeInactive extends StatelessWidget {
             Flexible(
               child: Text(
                 label,
-                style: TextStyle(fontSize: 12, color: colors.textSub),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: change == null
+                      ? colors.textSub.withValues(alpha: 0.5)
+                      : colors.textSub,
+                ),
               ),
             ),
           ],

@@ -43,7 +43,7 @@ final bundledTilesProvider = FutureProvider<BundledTileProvider>(
 /// 持ち込まない。レーダーとの主な違い:
 ///
 /// - **背景地図を持つ**（レーダーは持たない。同梱の Protomaps。`BundledTileProvider`）
-/// - **売り切れ・終売を印で分ける**（`ShopMarker`）
+/// - **終売（売り切れを含む）を印で分ける**（`ShopMarker`）
 /// - **店の情報を増やした**（住所・営業時間・電話・一時閉店・Google マップ。`ShopSheet`）
 /// - 絞り込みは**併設**と**店舗限定の品**の 2 種類（`ShopFilter`）
 ///
@@ -107,12 +107,10 @@ class _MapPageState extends ConsumerState<MapPage> {
   void initState() {
     super.initState();
     _small = (_saved?.zoom ?? MapPage.minZoom) < ShopsLayer.smallBelow;
-    // **既に許可されていれば**現在地へ寄せる（許可は求めない。`LocationRepository`）。
-    // 最後に見ていた位置がある時は寄せない ―― 前回の続きを見たい人を
-    // 開くたびに現在地へ連れ戻さない
-    if (_saved == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _locate(ask: false));
-    }
+    // **開いたらまず現在地へ寄せる**（ユーザーの判断。まだ聞いていなければここで
+    // 許可を求める）。取れるまでは最後に見ていた位置（無ければ日本全体）を出しておき、
+    // 取れなければそのまま。開いただけで失敗を知らせない（`quiet`）
+    WidgetsBinding.instance.addPostFrameCallback((_) => _locate(quiet: true));
   }
 
   @override
@@ -153,18 +151,17 @@ class _MapPageState extends ConsumerState<MapPage> {
     });
   }
 
-  /// 現在地へ寄せる。[ask] が false なら許可を求めない（開いた時）。
-  Future<void> _locate({required bool ask}) async {
+  /// 現在地へ寄せる（まだ聞いていなければ許可を求める）。[quiet] なら取れなくても
+  /// 知らせない（開いた時）。
+  Future<void> _locate({bool quiet = false}) async {
     if (_locating) return;
     setState(() => _locating = true);
     final repo = ref.read(locationRepositoryProvider);
-    final position = ask
-        ? await repo.current()
-        : await repo.currentIfPermitted();
+    final position = await repo.current();
     if (!mounted) return;
     setState(() => _locating = false);
     if (position == null) {
-      if (ask) {
+      if (!quiet) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(
             content: Text(ref.read(messagesProvider).mapLocationUnavailable),
@@ -348,7 +345,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                   child: _LocateButton(
                     label: t.mapMyLocation,
                     busy: _locating,
-                    onTap: () => _locate(ask: true),
+                    onTap: _locate,
                   ),
                 ),
               ],
@@ -376,8 +373,8 @@ class _MapPageState extends ConsumerState<MapPage> {
         ),
       );
     }
-    // **強い印ほど後ろ（＝上に重なる）。** 普通の店 → 終売 → 売り切れ →
-    // 発売前 → 販売中
+    // **強い印ほど後ろ（＝上に重なる）。** 普通の店 → 終売 → 発売前 →
+    // 販売中
     int rank(ShopEntry e) => switch (e.availability) {
       null => 0,
       final a => LimitedAvailability.values.length - a.index,
