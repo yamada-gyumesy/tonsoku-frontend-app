@@ -457,27 +457,23 @@ class _MapPageState extends ConsumerState<MapPage> {
               ),
             ],
           ),
-        // **左下に凡例**（ユーザーの指定）
-        Align(
-          alignment: Alignment.bottomLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 8),
-            // ── 動画広告（リワード。#5）─────────────────────
-            // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
-            // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
-            // 入れるので、ここには何も置かない
-            child: MapLegend(present: present),
-          ),
-        ),
-        // **縮尺は下の真ん中**（ユーザーの指定）。地図の位置と倍率を読む
-        // （`MapCamera.of`）ので地図の層として置く。下端は右下の著作権表記と
-        // 同じ高さ
-        const Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: MapScaleBar(),
-          ),
+        // **左下に凡例、下の真ん中に縮尺**（ユーザーの指定）。縮尺は地図の
+        // 位置と倍率を読む（`MapCamera.of`）ので地図の層として置く。**狭い
+        // 端末で凡例とぶつかる時は、縮尺を凡例の右へずらす**（英語の凡例は
+        // 幅が広い。[_BottomBarDelegate]）
+        CustomMultiChildLayout(
+          delegate: _BottomBarDelegate(),
+          children: [
+            LayoutId(
+              id: _BottomBarDelegate.legend,
+              // ── 動画広告（リワード。#5）─────────────────────
+              // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
+              // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
+              // 入れるので、ここには何も置かない
+              child: MapLegend(present: present),
+            ),
+            LayoutId(id: _BottomBarDelegate.scale, child: const MapScaleBar()),
+          ],
         ),
         // 画面の外の**店舗限定の店**の数（方角ごと。普通の店は数えない ――
         // ユーザーの指定。このマップの主役は店舗限定の店）。**縁の余白は
@@ -799,6 +795,52 @@ class _NeedlePainter extends CustomPainter {
   @override
   bool shouldRepaint(_NeedlePainter old) =>
       old.north != north || old.south != south;
+}
+
+/// 左下の凡例と、下の真ん中の縮尺の置き場。**縮尺は真ん中を基本に、凡例と
+/// 右下の著作権表記の間に収まるようにずらす**。間に入らない時（狭い端末の
+/// 英語）は凡例の上に置く。
+class _BottomBarDelegate extends MultiChildLayoutDelegate {
+  static const legend = 'legend';
+  static const scale = 'scale';
+
+  /// 端からの余白。
+  static const inset = 8.0;
+
+  /// 縮尺の下端（右下の著作権表記と同じ高さ）。
+  static const scaleBottom = 10.0;
+
+  /// 凡例との間。
+  static const gap = 12.0;
+
+  /// 右下の著作権表記の幅（縮尺をここまで寄せない）。
+  static const attributionWidth = 104.0;
+
+  @override
+  void performLayout(Size size) {
+    final loose = BoxConstraints.loose(size);
+    final l = layoutChild(legend, loose);
+    positionChild(legend, Offset(inset, size.height - inset - l.height));
+    final sc = layoutChild(scale, loose);
+    final centered = (size.width - sc.width) / 2;
+    final minX = inset + l.width + gap;
+    final maxX = size.width - attributionWidth - sc.width;
+    if (minX > maxX) {
+      // 凡例と著作権表記の間に入らない（英語の凡例は幅が広い）。凡例の上に置く
+      positionChild(
+        scale,
+        Offset(inset, size.height - inset - l.height - 6 - sc.height),
+      );
+      return;
+    }
+    positionChild(
+      scale,
+      Offset(math.max(centered, minX), size.height - scaleBottom - sc.height),
+    );
+  }
+
+  @override
+  bool shouldRelayout(_BottomBarDelegate old) => false;
 }
 
 class _LoadFailed extends StatelessWidget {

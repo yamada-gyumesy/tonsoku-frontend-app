@@ -144,15 +144,19 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                   ),
                 // **×は右端に寄せる**（ユーザーの指摘）。フィルタのボタンがある時は
                 // その左に詰めて置き、間に細い区切り線を入れる
+                // ×は入力欄の一部として扱う（入力欄の外を押したらカーソルを外す
+                // 作りなので、そのままだと×でキーボードまで閉じる）
                 if (hasText)
-                  IconButton(
-                    onPressed: _controller.clear,
-                    tooltip: t.commonClose,
-                    visualDensity: VisualDensity.compact,
-                    icon: Icon(
-                      Icons.close_rounded,
-                      size: 18,
-                      color: colors.textSub,
+                  TextFieldTapRegion(
+                    child: IconButton(
+                      onPressed: _controller.clear,
+                      tooltip: t.commonClose,
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: colors.textSub,
+                      ),
                     ),
                   ),
                 if (widget.filter case final filter?) ...[

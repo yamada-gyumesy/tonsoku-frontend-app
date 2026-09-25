@@ -16,6 +16,7 @@ import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_legend.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_scale_bar.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 
 /// 位置情報を使わない（テストに OS の許可の口は無い）。
@@ -100,4 +101,41 @@ void main() {
     // 全店で終売した品はチップごと出さない（行き先が無い）
     expect(find.text('“極厚”肩ロース定食'), findsNothing);
   });
+
+  for (final locale in [AppLocale.ja, AppLocale.en]) {
+    testWidgets('狭い端末でも縮尺は凡例に重ならない（${locale.code}）', (tester) async {
+      SharedPreferences.setMockInitialValues({'app_locale': locale.code});
+      final store = await SharedPreferences.getInstance();
+      tester.view.physicalSize = const Size(320 * 3, 640 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(store),
+            bundledTilesProvider.overrideWith(
+              (ref) => Completer<BundledTileProvider>().future,
+            ),
+            stationsProvider.overrideWith((ref) async => const []),
+            shopsProvider.overrideWith((ref) => Stream.value(shops)),
+            limitedMenusProvider.overrideWith((ref) => Stream.value(menus)),
+            locationRepositoryProvider.overrideWithValue(_NoLocation()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(locale),
+            home: MapPage(onOpenArticle: (_) {}),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      final legend = tester.getRect(find.byType(MapLegend));
+      final scale = tester.getRect(find.byType(MapScaleBar));
+      // 横に並ぶか、入らなければ凡例の上に載る
+      expect(scale.overlaps(legend), isFalse);
+    });
+  }
 }
