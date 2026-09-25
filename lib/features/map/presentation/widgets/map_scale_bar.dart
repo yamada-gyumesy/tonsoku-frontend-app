@@ -6,9 +6,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 
-/// 縮尺のメーター（左下、凡例の横）。**1 本の棒と、その長さの距離だけ**を出す
-/// （ユーザーの指摘。`flutter_map` の `Scalebar` は棒を 2 つの目盛りに割るので、
-/// 「500 m」が棒全体なのか 1 目盛りなのか分からなかった。短すぎるとも言われた）。
+/// 縮尺のメーター（左下、凡例の横）。**棒を真ん中の目盛りで 2 つに割り、棒の
+/// 右端にその長さの距離を書く**（ユーザーの指定）。`flutter_map` の `Scalebar` は
+/// 距離を棒の上の中央に書くので、「500 m」が棒全体なのか 1 目盛りなのか分から
+/// なかった（ユーザーの指摘。短すぎるとも言われた）。
 ///
 /// - 棒の長さは [maxWidth] 以下で一番長くなる**切りのよい距離**（1・2・5 × 10ⁿ）
 /// - 距離は 1000 m 未満なら m、以上なら km
@@ -19,7 +20,8 @@ class MapScaleBar extends StatelessWidget {
   const MapScaleBar({super.key});
 
   /// 棒の長さの上限（pt）。
-  static const maxWidth = 160.0;
+  /// **凡例と右下の著作権表記の間に収める**（長いと「© OpenStreetMap」に重なる）。
+  static const maxWidth = 80.0;
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +31,21 @@ class MapScaleBar extends StatelessWidget {
     final meters = niceDistance(perPoint * maxWidth);
     final width = meters / perPoint;
     return ExcludeSemantics(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          CustomPaint(
+            size: Size(width, 8),
+            painter: _BarPainter(ink: colors.text, halo: colors.surface),
+          ),
+          const SizedBox(width: 4),
+          // 距離は棒の右端に（ユーザーの指定。棒の終わりがその距離だと読める）
           Text(
             formatDistance(meters),
             style: TextStyle(
               fontSize: 11,
+              height: 1,
               fontWeight: FontWeight.w700,
               color: colors.text,
               fontFamily: AppTheme.defaultFontFamily,
@@ -50,11 +59,6 @@ class MapScaleBar extends StatelessWidget {
                   Shadow(color: colors.surface, offset: o),
               ],
             ),
-          ),
-          const SizedBox(height: 2),
-          CustomPaint(
-            size: Size(width, 8),
-            painter: _BarPainter(ink: colors.text, halo: colors.surface),
           ),
         ],
       ),
@@ -84,7 +88,8 @@ String formatDistance(double meters) => meters >= 1000
     ? '${(meters / 1000).toStringAsFixed(meters % 1000 == 0 ? 0 : 1)} km'
     : '${meters.round()} m';
 
-/// 棒（両端に縦の印）。線の下に面色の縁を敷いて、地図の上で読めるようにする。
+/// 棒（両端と真ん中に縦の印。真ん中は短い）。線の下に面色の縁を敷いて、地図の
+/// 上で読めるようにする。
 class _BarPainter extends CustomPainter {
   const _BarPainter({required this.ink, required this.halo});
 
@@ -97,7 +102,9 @@ class _BarPainter extends CustomPainter {
       ..moveTo(1, 0)
       ..lineTo(1, size.height - 1)
       ..lineTo(size.width - 1, size.height - 1)
-      ..lineTo(size.width - 1, 0);
+      ..lineTo(size.width - 1, 0)
+      ..moveTo(size.width / 2, size.height * 0.4)
+      ..lineTo(size.width / 2, size.height - 1);
     canvas
       ..drawPath(
         path,

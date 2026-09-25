@@ -51,12 +51,12 @@ void main() {
     expect(sectorOf(const Offset(-1, -1)), 7); // 左上
   });
 
-  test('札は縁に置く（上は上辺の中央、右上は角）', () {
+  test('札は縁に置く（上は上辺の中央、斜めは角）', () {
     const area = Rect.fromLTWH(0, 0, 400, 600);
     expect(edgePoint(area, 0), const Offset(200, 0));
     expect(edgePoint(area, 2), const Offset(400, 300));
-    final ne = edgePoint(area, 1);
-    // 右上は右辺か上辺に当たる（幅が狭いので右辺）
-    expect(ne.dx, closeTo(400, 1e-6));
+    // 斜めは角に置く
+    expect(edgePoint(area, 1), const Offset(400, 0));
+    expect(edgePoint(area, 5), const Offset(0, 600));
   });
 }

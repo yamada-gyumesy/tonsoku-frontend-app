@@ -50,7 +50,7 @@ class ShopFilter {
   /// 選んだ品（`campaign_id`）。
   final Set<String> menuIds;
 
-  /// 「終売の店も含める」。**品を選んでいる時だけ意味を持つ。**
+  /// 「終売・売り切れの店も含める」。**品を選んでいる時だけ意味を持つ。**
   final bool includeInactive;
 
   bool get isActive => standalone || brands.isNotEmpty || menuIds.isNotEmpty;
@@ -92,7 +92,7 @@ class ShopFilter {
   /// 印と店の詳細に出す品。**品を選んでいる時は選んだ品だけ**（選んでいない品の
   /// 状態で印の色が変わると、何を見ているのか分からなくなる）。
   ///
-  /// 品を選んでいて「終売の店も含める」が外れている時は、
+  /// 品を選んでいて「終売・売り切れの店も含める」が外れている時は、
   /// 販売中・発売前のものだけ。
   List<ShopLimited> relevant(List<ShopLimited> limited) {
     if (menuIds.isEmpty) return limited;

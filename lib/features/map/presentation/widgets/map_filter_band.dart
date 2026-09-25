@@ -14,7 +14,7 @@ import 'package:tonsoku/shared/widgets/optical_center.dart';
 /// 1. **松のや専門店と併設**（横並び。[_BrandChip]）。**畳んでおき、検索バーの右の
 ///    フィルタのボタン（[MapFilterButton]）で開く**（ユーザーの指定。邪魔なので）
 /// 2. **店舗限定の品**（縦並び。[MenuChip]。複数選べる）。品が 1 つも無い週は出さない
-/// 3. 品を選んだ時だけ **「終売の店も含める」**（選んでいない時は意味を持たない）
+/// 3. 品を選んだ時だけ **「終売・売り切れの店も含める」**（選んでいない時は意味を持たない）
 ///
 /// 地図の上に浮かせるので、どの部品も面色の地に影を付ける（地が地図の模様に
 /// なるため）。角は丸めた四角（ユーザーの指定。丸い端のピルにしない）。
@@ -199,65 +199,13 @@ class _BrandChip extends StatelessWidget {
   }
 }
 
-/// 出している店の数を**丸で囲んで**出す（ユーザーの指定。右上の列、帰属の (i) の下）。
-class ShopCountBadge extends ConsumerWidget {
-  const ShopCountBadge({required this.count, super.key});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final t = ref.watch(messagesProvider);
-    return Semantics(
-      label: t.homeLimitedShops(count),
-      child: ExcludeSemantics(
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: colors.surface,
-            // 地の上の赤（`primaryText`）の輪
-            border: Border.all(color: colors.primaryText, width: 1.5),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.1,
-                  fontWeight: FontWeight.w700,
-                  color: colors.primaryText,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-              Text(
-                t.mapShopsUnit,
-                style: TextStyle(
-                  fontSize: 9,
-                  height: 1.1,
-                  color: colors.textSub,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 店舗限定の品のチップ（写真 ＋ 品名 ＋ 店の数）。**角は丸めた四角**（ユーザーの
 /// 指定。丸い端のピルにしない）。選ばれていなければ面色の地に罫線、選ばれたら
 /// 地の上の赤（`primaryText`）で文字と枠、地はその 6% を面色に重ねる。
 ///
-/// 店の数は**終売の店も含めた数**で、終売があれば「（終売: X件）」を添える
-/// （ユーザーの指定。[LimitedMenu] の `shops` は売り切れの店も含むので、
-/// 合計は `shops` ＋ `ended_shops`、終売は売り切れ ＋ `ended_shops`。
-/// 画面では売り切れも終売と呼ぶ。`LimitedAvailability`）。
+/// 店の数は**終売・売り切れの店も含めた数**で、あれば「（終売: X件・売り切れ: Y件）」
+/// を添える（ユーザーの指定）。[LimitedMenu] の `shops` は売り切れの店も含むので、
+/// 合計は `shops` ＋ `ended_shops`。
 class MenuChip extends ConsumerWidget {
   const MenuChip({
     required this.menu,
@@ -277,7 +225,8 @@ class MenuChip extends ConsumerWidget {
     final line = colors.primaryText;
     final image = menu.thumbnailUrl ?? menu.imageUrl ?? '';
     final total = menu.shops.length + menu.endedShops.length;
-    final ended = menu.soldOutShops.length + menu.endedShops.length;
+    final ended = menu.endedShops.length;
+    final soldOut = menu.soldOutShops.length;
     final radius = BorderRadius.circular(8);
 
     return Semantics(
@@ -324,7 +273,7 @@ class MenuChip extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          t.mapMenuShops(total, ended),
+                          t.mapMenuShops(total, ended, soldOut),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

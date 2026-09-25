@@ -152,12 +152,12 @@ class AppMessages {
     required this.mapIncludeInactive,
     required this.mapSelling,
     required this.mapUpcoming,
+    required this.mapSoldOut,
     required this.mapLegendLabel,
     required this.mapMyLocation,
     required this.mapNorthUp,
     required this.mapSearchHint,
     required this.mapFilter,
-    required this.mapShopsUnit,
     required this.mapMenuShops,
     required this.mapHeadingUp,
     required this.mapLocationUnavailable,
@@ -432,6 +432,7 @@ class AppMessages {
   /// [homeLimitedHeading]（「店舗限定」。ユーザーの判断）。
   final String mapSelling;
   final String mapUpcoming;
+  final String mapSoldOut;
 
   /// 凡例全体の読み上げ名。
   final String mapLegendLabel;
@@ -446,12 +447,9 @@ class AppMessages {
   /// 検索バーの右のフィルタのボタン（読み上げ）。
   final String mapFilter;
 
-  /// 出している店の数の丸（`ShopCountBadge`）の、数の下の単位。
-  final String mapShopsUnit;
-
-  /// 店舗限定の品のチップの店の数（終売を含めた合計と、終売の数。
-  /// 終売が無ければ合計だけ。ユーザーの指定の文言）。
-  final String Function(int total, int ended) mapMenuShops;
+  /// 店舗限定の品のチップの店の数（終売・売り切れを含めた合計と、それぞれの数。
+  /// 0 の方は出さない。ユーザーの指定の文言「（終売: X件）」に売り切れを並べた）。
+  final String Function(int total, int ended, int soldOut) mapMenuShops;
   final String mapHeadingUp;
   final String mapLocationUnavailable;
   final String mapOpenInGoogleMaps;
@@ -643,17 +641,22 @@ class AppMessages {
     mapStandalone: '松のや専門店',
     mapBrandMatsuya: '松屋併設',
     mapBrandMycurry: 'マイカリー食堂併設',
-    mapIncludeInactive: '終売の店も含める',
+    mapIncludeInactive: '終売・売り切れの店も含める',
     mapSelling: '販売中',
     mapUpcoming: '発売前',
+    mapSoldOut: '売り切れ',
     mapLegendLabel: '凡例',
     mapMyLocation: '現在地',
     mapNorthUp: '北が上',
     mapSearchHint: '店舗を探す',
     mapFilter: '絞り込み',
-    mapShopsUnit: '店舗',
-    mapMenuShops: (total, ended) =>
-        ended > 0 ? '$total店舗（終売: $ended件）' : '$total店舗',
+    mapMenuShops: (total, ended, soldOut) {
+      final parts = [
+        if (ended > 0) '終売: $ended件',
+        if (soldOut > 0) '売り切れ: $soldOut件',
+      ];
+      return parts.isEmpty ? '$total店舗' : '$total店舗（${parts.join('・')}）';
+    },
     mapHeadingUp: '進行方向が上',
     mapLocationUnavailable: '現在地を取得できません',
     mapOpenInGoogleMaps: 'Google マップで開く',
@@ -843,17 +846,24 @@ class AppMessages {
     mapStandalone: 'Matsunoya only',
     mapBrandMatsuya: 'With Matsuya',
     mapBrandMycurry: 'With My Curry Shokudo',
-    mapIncludeInactive: 'Include ended stores',
+    mapIncludeInactive: 'Include ended and sold-out stores',
     mapSelling: 'Available',
     mapUpcoming: 'Coming soon',
+    mapSoldOut: 'Sold out',
     mapLegendLabel: 'Legend',
     mapMyLocation: 'My location',
     mapNorthUp: 'North up',
     mapSearchHint: 'Search stores',
     mapFilter: 'Filter',
-    mapShopsUnit: 'stores',
-    mapMenuShops: (total, ended) =>
-        ended > 0 ? '$total stores ($ended ended)' : '$total stores',
+    mapMenuShops: (total, ended, soldOut) {
+      final parts = [
+        if (ended > 0) '$ended ended',
+        if (soldOut > 0) '$soldOut sold out',
+      ];
+      return parts.isEmpty
+          ? '$total stores'
+          : '$total stores (${parts.join(', ')})';
+    },
     mapHeadingUp: 'Heading up',
     mapLocationUnavailable: 'Your location is unavailable',
     mapOpenInGoogleMaps: 'Open in Google Maps',
@@ -1032,17 +1042,22 @@ class AppMessages {
     mapStandalone: '松乃家专门店',
     mapBrandMatsuya: '附设松屋',
     mapBrandMycurry: '附设My Curry食堂',
-    mapIncludeInactive: '包括已停售的门店',
+    mapIncludeInactive: '包括已停售和已售罄的门店',
     mapSelling: '销售中',
     mapUpcoming: '即将发售',
+    mapSoldOut: '已售罄',
     mapLegendLabel: '图例',
     mapMyLocation: '当前位置',
     mapNorthUp: '北方朝上',
     mapSearchHint: '搜索门店',
     mapFilter: '筛选',
-    mapShopsUnit: '家门店',
-    mapMenuShops: (total, ended) =>
-        ended > 0 ? '$total家门店（已停售: $ended家）' : '$total家门店',
+    mapMenuShops: (total, ended, soldOut) {
+      final parts = [
+        if (ended > 0) '已停售: $ended家',
+        if (soldOut > 0) '已售罄: $soldOut家',
+      ];
+      return parts.isEmpty ? '$total家门店' : '$total家门店（${parts.join('・')}）';
+    },
     mapHeadingUp: '前进方向朝上',
     mapLocationUnavailable: '无法获取当前位置',
     mapOpenInGoogleMaps: '在 Google 地图中打开',

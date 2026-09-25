@@ -124,7 +124,7 @@ int sectorOf(Offset d) {
   return turns % 8;
 }
 
-/// [area] の縁で、中心から方角 [sector] へ伸ばした線が当たる点。
+/// [area] の縁で、中心から方角 [sector] へ伸ばした線が当たる点（斜めは角）。
 Offset edgePoint(Rect area, int sector) {
   final angle = sector * math.pi / 4;
   final dir = Offset(math.sin(angle), -math.cos(angle));
@@ -134,6 +134,14 @@ Offset edgePoint(Rect area, int sector) {
   final tx = dir.dx.abs() < 1e-9 ? double.infinity : halfW / dir.dx.abs();
   final ty = dir.dy.abs() < 1e-9 ? double.infinity : halfH / dir.dy.abs();
   final t = math.min(tx, ty);
+  // **斜めの方角は領域の角に置く**（ユーザーの指摘。45 度の線は縦長の画面では
+  // 角ではなく辺に当たり、辺の途中に斜めの吹き出しが出て落ち着かない）
+  if (sector.isOdd) {
+    return Offset(
+      dir.dx > 0 ? area.right : area.left,
+      dir.dy > 0 ? area.bottom : area.top,
+    );
+  }
   return c + dir * t;
 }
 
@@ -240,23 +248,55 @@ class _BubblePainter extends CustomPainter {
     final rect = Offset.zero & size;
     final c = rect.center;
     final dir = Offset(math.sin(angle), -math.cos(angle));
-    // 板の縁で尻尾が出る点（中心から dir へ伸ばした線が板の縁に当たる点）
-    final tx = dir.dx.abs() < 1e-9 ? double.infinity : c.dx / dir.dx.abs();
-    final ty = dir.dy.abs() < 1e-9 ? double.infinity : c.dy / dir.dy.abs();
-    // 角の丸みの内側へ少し戻して、尻尾の付け根が板に重なるようにする
-    final edge = c + dir * (math.min(tx, ty) - 2);
-    final tip = c + dir * (math.min(tx, ty) + tail);
-    final normal = Offset(-dir.dy, dir.dx) * tailHalfWidth;
+    // 向きの符号は方角の番号から決める（sin / cos の誤差で、真横が
+    // わずかに斜めと判定されないように）
+    final sector = (angle / (math.pi / 4)).round() % 8;
+    const signs = [
+      (0, -1),
+      (1, -1),
+      (1, 0),
+      (1, 1),
+      (0, 1),
+      (-1, 1),
+      (-1, 0),
+      (-1, -1),
+    ];
+    final sx = signs[sector].$1.toDouble();
+    final sy = signs[sector].$2.toDouble();
+    final ui.Path tailPath;
+    if (sx != 0 && sy != 0) {
+      // **斜めは板の角から出す**（ユーザーの指摘。辺の途中から斜めに出すと
+      // 落ち着かない）。角を挟む 2 辺に付け根、角の外に先
+      final corner = Offset(
+        sx > 0 ? rect.right : rect.left,
+        sy > 0 ? rect.bottom : rect.top,
+      );
+      // 付け根は角の丸みの内側（丸みより少し広い程度。広いと尻尾だけ大きく
+      // 見える。ユーザーの指摘）
+      const base = radius - 1;
+      tailPath = ui.Path()
+        ..moveTo(corner.dx - sx * base, corner.dy)
+        ..lineTo(corner.dx + sx * tail * 0.4, corner.dy + sy * tail * 0.4)
+        ..lineTo(corner.dx, corner.dy - sy * base)
+        ..lineTo(corner.dx - sx * base, corner.dy - sy * base)
+        ..close();
+    } else {
+      // 上下左右は辺の真ん中から出す
+      final edge = Offset(c.dx + sx * (c.dx - 2), c.dy + sy * (c.dy - 2));
+      final tip = Offset(c.dx + sx * (c.dx + tail), c.dy + sy * (c.dy + tail));
+      final normal = Offset(-dir.dy, dir.dx) * tailHalfWidth;
+      tailPath = ui.Path()
+        ..moveTo(edge.dx + normal.dx, edge.dy + normal.dy)
+        ..lineTo(tip.dx, tip.dy)
+        ..lineTo(edge.dx - normal.dx, edge.dy - normal.dy)
+        ..close();
+    }
     final path = ui.Path.combine(
       ui.PathOperation.union,
       ui.Path()..addRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(radius)),
       ),
-      ui.Path()
-        ..moveTo(edge.dx + normal.dx, edge.dy + normal.dy)
-        ..lineTo(tip.dx, tip.dy)
-        ..lineTo(edge.dx - normal.dx, edge.dy - normal.dy)
-        ..close(),
+      tailPath,
     );
     canvas
       ..drawShadow(path, shadow, 2, false)

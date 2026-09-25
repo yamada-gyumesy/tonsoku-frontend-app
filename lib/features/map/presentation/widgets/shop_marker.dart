@@ -10,7 +10,9 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 /// - **店舗限定の店** … 一回り大きな丸にアイコン。状態で塗りを変える:
 ///   - 販売中 … **赤の塗り（`primary`）に白**。唯一の塗りなので一番目立つ
 ///   - 発売前 … 面色の地に赤（`primaryText`）の縁とアイコン
-///   - 終売 … hover の地に罫線の縁、副テキストのアイコン（一番沈める）
+///   - 売り切れ … 販売中の★を沈めた形（hover の地に罫線の縁、副テキストの★）。
+///     一時的な状態なので形は販売中のまま
+///   - 終売 … 同じ地に×（形で売り切れと分ける）
 ///
 /// **塗りの赤（`primary`）は白を載せる塗りにだけ使う。** 地図の上に直接置く赤
 /// （縁・アイコン）は `primaryText`（`AppColors.primary` の注記。ダークで 3:1 に
@@ -76,6 +78,9 @@ class LimitedMark extends StatelessWidget {
   static IconData iconOf(LimitedAvailability a) => switch (a) {
     LimitedAvailability.selling => Icons.star_rounded,
     LimitedAvailability.upcoming => Icons.schedule_rounded,
+    // **売り切れは販売中の★を沈めた形**（ユーザーの指定。一時的な状態なので、
+    // 販売中と同じ形のまま色だけ落とす。終売は×で形から変える）
+    LimitedAvailability.soldOut => Icons.star_rounded,
     LimitedAvailability.ended => Icons.close_rounded,
   };
 
@@ -93,6 +98,11 @@ class LimitedMark extends StatelessWidget {
         colors.surface,
         colors.primaryText,
         colors.primaryText,
+      ),
+      LimitedAvailability.soldOut => (
+        colors.hover,
+        colors.border,
+        colors.textSub,
       ),
       LimitedAvailability.ended => (
         colors.hover,

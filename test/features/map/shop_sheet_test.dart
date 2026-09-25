@@ -91,7 +91,7 @@ void main() {
         ),
         const ShopLimited(
           menu: LimitedMenu(campaignId: 'b', name: '売り切れの品'),
-          availability: LimitedAvailability.ended,
+          availability: LimitedAvailability.soldOut,
         ),
         const ShopLimited(
           menu: LimitedMenu(
@@ -106,8 +106,7 @@ void main() {
 
     expect(find.text('店舗限定'), findsOneWidget);
     expect(find.text('販売中'), findsOneWidget);
-    // 売り切れは終売として出す（時刻は無い）
-    expect(find.text('終売'), findsOneWidget);
+    expect(find.text('売り切れ'), findsOneWidget);
     expect(find.text('9/19 8時 終売'), findsOneWidget);
 
     // 販売中が一番上

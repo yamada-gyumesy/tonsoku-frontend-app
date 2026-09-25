@@ -33,6 +33,7 @@ class MapLegend extends ConsumerWidget {
             switch (a) {
               LimitedAvailability.selling => t.homeLimitedHeading,
               LimitedAvailability.upcoming => t.mapUpcoming,
+              LimitedAvailability.soldOut => t.mapSoldOut,
               LimitedAvailability.ended => t.homeLimitedEnded,
             },
           ),
@@ -44,34 +45,18 @@ class MapLegend extends ConsumerWidget {
       container: true,
       label: t.mapLegendLabel,
       child: _Plate(
+        // 並びは 1 行（状態は多くて 3 つ）。折り返さないので Wrap にしない
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ...[
-              Flexible(
-                child: Wrap(
-                  spacing: 10,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    for (final (mark, label) in entries)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: Center(child: mark),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            label,
-                            style: TextStyle(fontSize: 11, color: colors.text),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
+            for (final (i, (mark, label)) in entries.indexed) ...[
+              if (i > 0) const SizedBox(width: 8),
+              SizedBox(width: 14, height: 14, child: Center(child: mark)),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                softWrap: false,
+                style: TextStyle(fontSize: 11, color: colors.text),
               ),
             ],
           ],
@@ -135,7 +120,7 @@ class _Plate extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(8),

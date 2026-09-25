@@ -71,7 +71,7 @@ void main() {
     expect(f.matches(mycurry, const []), isFalse); // 併設は合うが品が無い
   });
 
-  test('終売は「含める」を入れた時だけ数える（発売前は常に数える）', () {
+  test('売り切れ・終売は「含める」を入れた時だけ数える（発売前は常に数える）', () {
     const off = ShopFilter(menuIds: {'x'});
     const on = ShopFilter(menuIds: {'x'}, includeInactive: true);
     for (final a in LimitedAvailability.values) {

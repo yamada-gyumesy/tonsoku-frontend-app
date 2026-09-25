@@ -24,6 +24,7 @@ class MapSearch extends ConsumerStatefulWidget {
     required this.onShop,
     required this.resetKey,
     this.filter,
+    this.count,
     this.below,
     super.key,
   });
@@ -37,10 +38,17 @@ class MapSearch extends ConsumerStatefulWidget {
   /// バーの右端に置くフィルタのボタン（松のや専門店・併設を開く。`MapPage`）。
   final Widget? filter;
 
+  /// 地図に出している店の数（入力していない時だけ、バーの右端に薄く出す。
+  /// ユーザーの指定。丸で囲むと目立ちすぎた）。
+  final int? count;
+
   /// バーの下に置くもの（絞り込み）。
   final Widget? below;
 
   static const maxResults = 20;
+
+  /// 店の数の文字（テストで品のチップの店の数と区別する）。
+  static const countKey = ValueKey('map-search-count');
 
   @override
   ConsumerState<MapSearch> createState() => _MapSearchState();
@@ -121,6 +129,19 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                     ),
                   ),
                 ),
+                if (!hasText && widget.count != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      key: MapSearch.countKey,
+                      t.homeLimitedShops(widget.count!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSub,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
                 // **×は右端に寄せる**（ユーザーの指摘）。フィルタのボタンがある時は
                 // その左に詰めて置き、間に細い区切り線を入れる
                 if (hasText)

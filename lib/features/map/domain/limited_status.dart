@@ -6,11 +6,11 @@ import 'package:tonsoku/shared/models/limited_menu.dart';
 /// 店舗限定メニューの、**ある店での**状態。
 ///
 /// **並びは強い順**（1 軒が複数の品を持つ時、印には一番強いものを出す）。
-/// 「いま食べられる」が最優先で、発売前・終売の順に弱くなる。
+/// 「いま食べられる」が最優先で、発売前・売り切れ・終売の順に弱くなる。
 ///
-/// **売り切れは終売として出す**（ユーザーの判断。画面では「売り切れ」と「終売」の
-/// どちらか一方の言い方に揃える。web の判子も「終売」）。配信の `sold_out_shops`
-/// と `ended_shops` の区別は、画面では持たない。
+/// **売り切れと終売は分けて出す**（ユーザーの判断。一度「終売」に揃えたが戻した）。
+/// 売り切れは一時的（15 分ごとの巡回で戻りうる）、終売は戻らない。印も変える
+/// （`LimitedMark`）。
 enum LimitedAvailability {
   /// 販売中（`shops` にあり、`sold_out_shops` に無い）。
   selling,
@@ -18,12 +18,15 @@ enum LimitedAvailability {
   /// 発売前（`shops` にあるが `start_date` がまだ来ていない）。
   upcoming,
 
-  /// 終売（`ended_shops` にある、または `sold_out_shops` にある）。
-  /// 売り切れには時刻が無いので [ShopLimited.at] は null。
+  /// 売り切れ（`sold_out_shops` にある）。**巡回は 15 分ごと**なので、
+  /// 戻っている可能性はある
+  soldOut,
+
+  /// 終売（`ended_shops` にある。全店で終売した品もここ）。
   ended;
 
-  /// 絞り込みで「扱っている店」に数えるか。**終売は「終売の店も含める」を
-  /// 入れた時だけ数える**。
+  /// 絞り込みで「扱っている店」に数えるか。**売り切れ・終売は
+  /// 「終売・売り切れの店も含める」を入れた時だけ数える**。
   /// 発売前は数える（その店が取扱店であることは確かなので）
   bool get isActive => this == selling || this == upcoming;
 }
@@ -91,7 +94,7 @@ ShopLimited? availabilityAt(
 
   if (menu.shops.contains(shopCode)) {
     if (menu.soldOutShops.contains(shopCode)) {
-      return ShopLimited(menu: menu, availability: LimitedAvailability.ended);
+      return ShopLimited(menu: menu, availability: LimitedAvailability.soldOut);
     }
     final start = parseJst(menu.startDate);
     if (start != null && start.isAfter(at)) {

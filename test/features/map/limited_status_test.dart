@@ -30,10 +30,10 @@ void main() {
       availabilityAt(m, 'a', now: now)?.availability,
       LimitedAvailability.selling,
     );
-    // 売り切れは終売として出す（画面の言い方を 1 つに揃える）。時刻は無い
-    final soldOut = availabilityAt(m, 'b', now: now);
-    expect(soldOut?.availability, LimitedAvailability.ended);
-    expect(soldOut?.at, isNull);
+    expect(
+      availabilityAt(m, 'b', now: now)?.availability,
+      LimitedAvailability.soldOut,
+    );
     expect(availabilityAt(m, 'c', now: now), isNull);
   });
 
@@ -97,10 +97,11 @@ void main() {
     expect(strongest(const []), isNull);
   });
 
-  test('強さの並び: 販売中 > 発売前 > 終売', () {
+  test('強さの並び: 販売中 > 発売前 > 売り切れ > 終売', () {
     expect(LimitedAvailability.values, [
       LimitedAvailability.selling,
       LimitedAvailability.upcoming,
+      LimitedAvailability.soldOut,
       LimitedAvailability.ended,
     ]);
   });

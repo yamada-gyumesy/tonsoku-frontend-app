@@ -32,7 +32,7 @@ void main() {
     expect(availabilityLabel(item, ja), '9/23 終売');
   });
 
-  test('時刻の分からない終売・販売中・売り切れ（終売として出す）・発売前', () {
+  test('時刻の分からない終売・販売中・売り切れ・発売前', () {
     expect(
       availabilityLabel(
         const ShopLimited(menu: menu, availability: LimitedAvailability.ended),
@@ -52,10 +52,13 @@ void main() {
     );
     expect(
       availabilityLabel(
-        const ShopLimited(menu: menu, availability: LimitedAvailability.ended),
+        const ShopLimited(
+          menu: menu,
+          availability: LimitedAvailability.soldOut,
+        ),
         ja,
       ),
-      '終売',
+      '売り切れ',
     );
     expect(
       availabilityLabel(

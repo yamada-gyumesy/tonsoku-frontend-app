@@ -52,7 +52,7 @@ final bundledTilesProvider = FutureProvider<BundledTileProvider>(
 /// 持ち込まない。レーダーとの主な違い:
 ///
 /// - **背景地図を持つ**（レーダーは持たない。同梱の Protomaps。`BundledTileProvider`）
-/// - **終売（売り切れを含む）を印で分ける**（`ShopMarker`）
+/// - **売り切れ・終売を印で分ける**（`ShopMarker`）
 /// - **店の情報を増やした**（住所・営業時間・電話・一時閉店・Google マップ。`ShopSheet`）
 /// - 絞り込みは**併設**と**店舗限定の品**の 2 種類（`ShopFilter`）
 ///
@@ -443,19 +443,21 @@ class _MapPageState extends ConsumerState<MapPage> {
         Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 72, 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
+            // 右は著作権表記（〜100）を空ける
+            padding: const EdgeInsets.fromLTRB(8, 0, 104, 8),
+            // 狭い画面では縮尺を凡例の上へ折り返す（はみ出させない）
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.end,
+              verticalDirection: VerticalDirection.up,
               children: [
                 // ── 動画広告（リワード。#5）─────────────────────
                 // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
                 // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
                 // 入れるので、ここには何も置かない
-                Flexible(child: MapLegend(present: present)),
+                MapLegend(present: present),
                 // 凡例から離して置く（ユーザーの指摘。くっつくと凡例の一部に見える）
                 const Padding(
-                  padding: EdgeInsets.only(left: 20, bottom: 4),
+                  padding: EdgeInsets.only(left: 12, bottom: 4),
                   child: MapScaleBar(),
                 ),
               ],
@@ -502,8 +504,8 @@ class _MapPageState extends ConsumerState<MapPage> {
             child: Stack(
               children: [
                 Positioned.fill(child: map),
-                // **並び（ユーザーの指定）**: 左上に検索と絞り込み、右上に
-                // コンパスと店の数、右下に現在地と著作権表記、左下に凡例と縮尺
+                // **並び（ユーザーの指定）**: 左上に検索（店の数はバーの右端）と
+                // 絞り込み、右上にコンパス、右下に現在地と著作権表記、左下に凡例と縮尺
                 // （凡例と縮尺は地図の層。`FlutterMap` の子）
                 Positioned(
                   top: 12,
@@ -517,11 +519,6 @@ class _MapPageState extends ConsumerState<MapPage> {
                         rotation: _rotation,
                         onTap: _toggleHeading,
                       ),
-                      // 出している店の数（丸で囲む。ユーザーの指定）
-                      if (shops.hasValue) ...[
-                        const SizedBox(height: 10),
-                        ShopCountBadge(count: entries.length),
-                      ],
                     ],
                   ),
                 ),
@@ -567,6 +564,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                     // 探すのは地図に出している店（牛めしレーダーと同じ）
                     shops: [for (final e in entries) e.shop],
                     resetKey: _filter,
+                    count: shops.hasValue ? entries.length : null,
                     filter: MapFilterButton(
                       open: _brandsOpen,
                       active: _filter.standalone || _filter.brands.isNotEmpty,
@@ -613,8 +611,8 @@ class _MapPageState extends ConsumerState<MapPage> {
         ),
       );
     }
-    // **強い印ほど後ろ（＝上に重なる）。** 普通の店 → 終売 → 発売前 →
-    // 販売中
+    // **強い印ほど後ろ（＝上に重なる）。** 普通の店 → 終売 → 売り切れ →
+    // 発売前 → 販売中
     int rank(ShopEntry e) => switch (e.availability) {
       null => 0,
       final a => LimitedAvailability.values.length - a.index,
@@ -668,10 +666,10 @@ class _LocateButton extends StatelessWidget {
 }
 
 /// 地図の向きのボタン（牛めしレーダーのコンパスのボタンを、とん速の丸いボタンの
-/// 形にしたもの）。コンパスの針と、その下に「N」。
+/// 形にしたもの）。見た目は一般的な地図アプリに揃える（ユーザーの指定）:
 ///
-/// - 北が上 … 針は真上（北が赤、南が副テキスト）
-/// - 進行方向が上 … 針が北を指して回る（針全体を赤に）
+/// - 北が上 … 薄い針の上に大きな「N」
+/// - 進行方向が上 … ボタン全体が針（北が赤、南が副テキスト）。北を指して回る
 class _CompassButton extends StatelessWidget {
   const _CompassButton({
     required this.label,
@@ -703,36 +701,45 @@ class _CompassButton extends StatelessWidget {
           child: SizedBox(
             width: 44,
             height: 44,
-            // **コンパスの針の下に「N」**（ユーザーの指定）。針は北を指す
-            // （北が上の時は真上、進行方向が上の時は地図の回転に合わせて回る）。
-            // 進行方向が上の間は針を地の上の赤で塗り、モードの違いを見せる
+            // **一般的な地図の形**（ユーザーの指定。Google マップと同じ）:
+            // - 北が上 … 薄い針の上に大きな「N」（ユーザーの指定）
+            // - 進行方向が上 … ボタン全体を針にして、北を指して回す
             child: ExcludeSemantics(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Transform.rotate(
-                    angle: headingUp ? rotation * math.pi / 180 : 0,
-                    child: CustomPaint(
-                      size: const Size(10, 22),
-                      painter: _NeedlePainter(
-                        north: colors.primaryText,
-                        south: headingUp ? colors.primaryText : colors.textSub,
-                        southAlpha: headingUp ? 0.35 : 1,
+              child: headingUp
+                  ? Center(
+                      child: Transform.rotate(
+                        angle: rotation * math.pi / 180,
+                        child: CustomPaint(
+                          size: const Size(14, 32),
+                          painter: _NeedlePainter(
+                            north: colors.primaryText,
+                            south: colors.textSub,
+                          ),
+                        ),
                       ),
+                    )
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CustomPaint(
+                          size: const Size(12, 30),
+                          painter: _NeedlePainter(
+                            north: colors.primaryText.withValues(alpha: 0.25),
+                            south: colors.textSub.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        Text(
+                          'N',
+                          style: TextStyle(
+                            fontSize: 18,
+                            height: 1,
+                            fontWeight: FontWeight.w700,
+                            color: colors.text,
+                            fontFamily: AppTheme.defaultFontFamily,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    'N',
-                    style: TextStyle(
-                      fontSize: 9,
-                      height: 1.1,
-                      fontWeight: FontWeight.w700,
-                      color: colors.text,
-                      fontFamily: AppTheme.defaultFontFamily,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -743,15 +750,10 @@ class _CompassButton extends StatelessWidget {
 
 /// コンパスの針（上半分が北、下半分が南の菱形）。
 class _NeedlePainter extends CustomPainter {
-  const _NeedlePainter({
-    required this.north,
-    required this.south,
-    this.southAlpha = 1,
-  });
+  const _NeedlePainter({required this.north, required this.south});
 
   final Color north;
   final Color south;
-  final double southAlpha;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -773,13 +775,13 @@ class _NeedlePainter extends CustomPainter {
           ..lineTo(w, c.dy)
           ..lineTo(0, c.dy)
           ..close(),
-        Paint()..color = south.withValues(alpha: southAlpha),
+        Paint()..color = south,
       );
   }
 
   @override
   bool shouldRepaint(_NeedlePainter old) =>
-      old.north != north || old.south != south || old.southAlpha != southAlpha;
+      old.north != north || old.south != south;
 }
 
 class _LoadFailed extends StatelessWidget {

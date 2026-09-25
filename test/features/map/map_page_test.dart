@@ -16,6 +16,7 @@ import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_legend.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 
 /// 位置情報を使わない（テストに OS の許可の口は無い）。
 class _NoLocation implements LocationRepository {
@@ -25,6 +26,11 @@ class _NoLocation implements LocationRepository {
 
 /// マップの画面。**背景地図は描かない**（読み込みを待たせたまま）で、店の印と
 /// 絞り込みの組み合わせだけを見る。
+/// 検索バーの右端の、地図に出している店の数（品のチップの店の数と区別する）。
+Finder shownCount(String text) => find.byWidgetPredicate(
+  (w) => w is Text && w.key == MapSearch.countKey && w.data == text,
+);
+
 void main() {
   final shops = MapRepository.decodeShops(
     File('test/fixtures/app_shop_production.json').readAsStringSync(),
@@ -62,12 +68,12 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.bySemanticsLabel('681店舗'), findsOneWidget);
+    expect(shownCount('681店舗'), findsOneWidget);
     expect(find.byType(MapLegend), findsOneWidget);
     // 帰属表記は右下に常に出す（contributors は付けない。ユーザーの判断）
     expect(find.text('© OpenStreetMap'), findsOneWidget);
     // 品を選ぶまでは「含める」を出さない
-    expect(find.text('終売の店も含める'), findsNothing);
+    expect(find.text('終売・売り切れの店も含める'), findsNothing);
 
     // 松のや専門店・併設は畳んである。検索バーの右のフィルタのボタンで開く
     expect(find.text('松のや専門店'), findsNothing);
@@ -75,21 +81,21 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('松のや専門店'));
     await tester.pump();
-    expect(find.bySemanticsLabel('122店舗'), findsOneWidget);
+    expect(shownCount('122店舗'), findsOneWidget);
     await tester.tap(find.text('松のや専門店'));
     await tester.pump();
 
     await tester.tap(find.text('松屋併設'));
     await tester.pump();
-    expect(find.bySemanticsLabel('483店舗'), findsOneWidget);
+    expect(shownCount('483店舗'), findsOneWidget);
 
     // 併設を外して、販売中の品を選ぶ（15 店。売り切れの店は無い）
     await tester.tap(find.text('松屋併設'));
     await tester.pump();
     await tester.tap(find.text('たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'));
     await tester.pump();
-    expect(find.bySemanticsLabel('15店舗'), findsOneWidget);
-    expect(find.text('終売の店も含める'), findsOneWidget);
+    expect(shownCount('15店舗'), findsOneWidget);
+    expect(find.text('終売・売り切れの店も含める'), findsOneWidget);
 
     // 全店で終売した品はチップごと出さない（行き先が無い）
     expect(find.text('“極厚”肩ロース定食'), findsNothing);
