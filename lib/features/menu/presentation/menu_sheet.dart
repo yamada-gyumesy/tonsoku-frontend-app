@@ -11,6 +11,8 @@ import 'package:tonsoku/features/menu/presentation/app_version_provider.dart';
 import 'package:tonsoku/features/menu/presentation/licenses_page.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
+import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
+import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
 
 /// 画面下のナビ「メニュー」から開くボトムシート。web の `CoMenuSheet`
 /// （gyumesy-frontend-app の `MenuSheet` を写した）。
@@ -27,16 +29,24 @@ import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
 ///
 /// ## web・gyumesy との違い
 ///
-/// - **カレンダー・ランキングはここに詰める**（とん速の下タブは ホーム / マップ /
+/// - **カレンダー・ランキングはここに詰める**（ランキングは実装済み）（とん速の下タブは ホーム / マップ /
 ///   クーポン / メニュー。ユーザーの指定）。**それぞれの画面ができた PR で行を足す**
-///   （カレンダー #15・ランキング #16）
+///   （カレンダー #15）
 ///   （行き先の無い行は置かない）
 /// - **通知設定の行は通知の Issue（#6）で足す**（web は常に出すが、アプリはまだ
 ///   受け口が無い）
 class MenuSheet extends ConsumerStatefulWidget {
-  const MenuSheet({required this.onClose, super.key});
+  const MenuSheet({
+    required this.onClose,
+    required this.onOpenRanking,
+    super.key,
+  });
 
   final VoidCallback onClose;
+
+  /// ランキングを開く。**積むのは [AppShell] の仕事**（どのタブに積むかを
+  /// 知っているのはあちら）。
+  final VoidCallback onOpenRanking;
 
   @override
   ConsumerState<MenuSheet> createState() => MenuSheetState();
@@ -316,6 +326,24 @@ class MenuSheetState extends ConsumerState<MenuSheet>
         onTap: () => _openOnWeb('/about/'),
       ),
       _divider(colors),
+      // **並びはユーザーの指定**: とん速とは → カレンダー → ランキング →
+      // 通知設定 → 外観 → 言語（web の `CoMenuSheet` はとん速とは・通知設定・
+      // 外観・言語。web で下タブにあるカレンダー・ランキングをここへ詰めた）
+      // **ランキングはここに詰める**（web は下タブに置いているが、とん速の
+      // アプリの下タブには入らない。ユーザーの指定）。**中身が無い言語では行ごと
+      // 出さない**（空の画面へ行ける入口を残さない。web の `hasRanking`）。
+      // **取得できるまでは出しておく**（先に隠して後から現れると押し間違える。
+      // gyumesy の下タブと同じ判断）
+      if (ref.watch(rankingWindowsProvider).value case final resolved
+          when resolved == null || hasAnyRanking(resolved)) ...[
+        MenuListRow(
+          label: t.navRanking,
+          // web の `leaderboard`
+          icon: Icons.leaderboard_outlined,
+          onTap: widget.onOpenRanking,
+        ),
+        _divider(colors),
+      ],
       MenuListRow(
         label: t.themeLabel,
         icon: Icons.contrast,

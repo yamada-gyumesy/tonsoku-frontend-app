@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/i18n/locale_controller.dart';
+import 'package:tonsoku/core/router/app_router.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/menu/presentation/menu_sheet.dart';
 import 'package:tonsoku/features/shell/presentation/widgets/nav_item.dart';
@@ -46,13 +47,52 @@ class _AppShellState extends ConsumerState<AppShell> {
     setState(() => _sheetOpen = true);
   }
 
+  /// メニューから開いた画面を積んでいるタブ。
+  final _menuScreenBranches = <int>{};
+
+  /// 戻ってきた時に最初の画面から開くタブ（[_goBranch]）。**タブごとに持つ**
+  /// ―― 1 つだけだと、ホームでランキング → クーポンでもランキング → ホーム、
+  /// の順で移った時に印が上書きされ、ホームにランキングが残った（PR #20 の
+  /// レビューで再現）。
+  final _foldOnReturn = <int>{};
+
+  /// メニューから開く画面を**いま居るタブの中に積む**（下タブを隠さず、戻ると
+  /// そのタブへ帰る）。**シートを閉じてから積む** ―― 残したまま積むと、戻って
+  /// きた時にシートが開いたままになり、下の画面が見えない（gyumesy の注記）。
+  ///
+  /// **タブを移ったら畳む**（[_goBranch]）。メニューから開く画面はどのタブにも
+  /// 属さないので、積んだタブに残すと、別のタブへ移って戻った時に出てくる
+  /// （ユーザーの指摘: ホーム → ランキング → クーポン → ホームでランキングが
+  /// 出た。gyumesy が通知設定を畳むのと同じ理由）。
+  Future<void> _openFromMenu(String Function(String prefix) location) async {
+    _sheetKey.currentState?.close();
+    final branch = navigationShell.currentIndex;
+    _menuScreenBranches.add(branch);
+    await GoRouter.of(
+      context,
+    ).push<void>(location(AppRoutes.branchPrefixes[branch]));
+    // 戻るで閉じた。**畳む印を消す**（残すと、そのあと同じタブに積んだ記事まで
+    // タブを移った時に畳まれる）
+    _menuScreenBranches.remove(branch);
+  }
+
   void _goBranch(int index) {
     // タブへ移る時はシートを畳む。web はページ遷移なので必ず閉じる
     if (_sheetOpen) _sheetKey.currentState?.close();
+    // **メニューから開いた画面を積んだタブを離れたら、そのタブへ戻る時に
+    // 最初の画面から開く**（[_openFromMenu]）。その画面から開いた記事も一緒に
+    // 畳む。**離れる瞬間に畳まない** ―― 同じフレームで `goBranch` を 2 回呼ぶと
+    // 後のほうだけが効き、畳む側が捨てられる（テストで確かめた）
+    for (final folded
+        in _menuScreenBranches.where((b) => b != index).toList()) {
+      _menuScreenBranches.remove(folded);
+      _foldOnReturn.add(folded);
+    }
+    final fold = _foldOnReturn.remove(index);
     navigationShell.goBranch(
       index,
       // 同じタブをもう一度押した時は、そのタブのルートまで戻す
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == navigationShell.currentIndex || fold,
     );
   }
 
@@ -85,6 +125,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             MenuSheet(
               key: _sheetKey,
               onClose: () => setState(() => _sheetOpen = false),
+              onOpenRanking: () => _openFromMenu(AppRoutes.ranking),
             ),
         ],
       ),

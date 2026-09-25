@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/features/article/presentation/article_page.dart';
 import 'package:tonsoku/features/coupon/presentation/coupon_page.dart';
+import 'package:tonsoku/features/ranking/presentation/ranking_page.dart';
 import 'package:tonsoku/features/home/presentation/article_list_page.dart';
 import 'package:tonsoku/features/home/presentation/home_page.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
@@ -26,6 +27,14 @@ abstract final class AppRoutes {
   static const articles = '/articles';
 
   static String article(String slug) => '/articles/$slug';
+
+  /// タブごとの接頭辞（**ブランチの並びと同じ順**）。メニューから開く画面を
+  /// **今のタブの中に積む**時に使う（下タブを隠さず、戻るとそのタブへ帰る。
+  /// 記事詳細を各タブに積むのと同じ考え方）。
+  static const branchPrefixes = ['', map, coupon];
+
+  /// ランキング（web の `/ranking/`）。[prefix] は [branchPrefixes] の 1 つ。
+  static String ranking(String prefix) => '$prefix/ranking';
 }
 
 /// 記事詳細のルート。**どのタブの中にも積む**（タブを切り替えても読みかけの記事が
@@ -34,6 +43,15 @@ abstract final class AppRoutes {
 /// 関連記事・後継記事は**同じタブの中に積み重ねる**（戻るで辿ってきた記事へ順に
 /// 戻れる）。積む先は `context.push` の相対パスではなく、そのタブの接頭辞を持った
 /// 絶対パスで決める —— 接頭辞を落とすとホームのタブへ飛ばされる。
+/// ランキングのルート。**どのタブの中にも積む**（メニューはタブを持たないので、
+/// 開いた時にいたタブの中に積む。[articleRoute] と同じ理由で接頭辞を持つ）。
+GoRoute rankingRoute(String prefix) => GoRoute(
+  path: 'ranking',
+  builder: (context, state) => RankingPage(
+    onOpenArticle: (slug) => context.push('$prefix/articles/$slug'),
+  ),
+);
+
 GoRoute articleRoute(String prefix) => GoRoute(
   path: 'articles/:slug',
   builder: (context, state) => ArticlePage(
@@ -88,6 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   articleRoute(''),
+                  rankingRoute(''),
                 ],
               ),
             ],
@@ -101,6 +120,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.map,
                 builder: (context, state) => const PlaceholderPage(),
+                // メニューから開く画面と、そこから開く記事を積む
+                routes: [
+                  articleRoute(AppRoutes.map),
+                  rankingRoute(AppRoutes.map),
+                ],
               ),
             ],
           ),
@@ -114,7 +138,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   onOpenArticle: (slug) =>
                       context.push('${AppRoutes.coupon}/articles/$slug'),
                 ),
-                routes: [articleRoute(AppRoutes.coupon)],
+                routes: [
+                  articleRoute(AppRoutes.coupon),
+                  rankingRoute(AppRoutes.coupon),
+                ],
               ),
             ],
           ),
