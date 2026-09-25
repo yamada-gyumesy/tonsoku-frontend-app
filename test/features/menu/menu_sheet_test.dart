@@ -10,6 +10,7 @@ import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/core/theme/theme_mode_controller.dart';
 import 'package:tonsoku/features/menu/presentation/menu_sheet.dart';
+import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
 
@@ -29,7 +30,12 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(store)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(store),
+          // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
+          // （配信の取得を組まない）
+          rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),
           darkTheme: AppTheme.dark(AppLocale.ja),
@@ -44,6 +50,7 @@ void main() {
                   if (open)
                     MenuSheet(
                       key: key,
+                      onOpenRanking: () {},
                       onClose: () => setState(() => open = false),
                     ),
                 ],
@@ -175,7 +182,12 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(store)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(store),
+          // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
+          // （配信の取得を組まない）
+          rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),
           // `AppShell` と同じ置き方（本文の中に重ね、ナビは器の外）
@@ -183,7 +195,7 @@ void main() {
             body: Stack(
               children: [
                 const SizedBox.expand(child: Text('本文')),
-                MenuSheet(onClose: () {}),
+                MenuSheet(onClose: () {}, onOpenRanking: () {}),
               ],
             ),
             bottomNavigationBar: SizedBox(
@@ -241,7 +253,10 @@ void main() {
       await openOther(tester);
 
       Finder rowIcon(String label, IconData icon) => find.descendant(
-        of: find.widgetWithText(MenuListRow, label),
+        of: find.ancestor(
+          of: find.text(label),
+          matching: find.byType(MenuListRow),
+        ),
         matching: find.byIcon(icon),
       );
 
@@ -308,7 +323,12 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(store)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(store),
+          // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
+          // （配信の取得を組まない）
+          rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),
           home: StatefulBuilder(
@@ -322,7 +342,7 @@ void main() {
                       child: const Text('下の記事'),
                     ),
                   ),
-                  if (open) MenuSheet(onClose: () {}),
+                  if (open) MenuSheet(onClose: () {}, onOpenRanking: () {}),
                 ],
               ),
               bottomNavigationBar: TextButton(

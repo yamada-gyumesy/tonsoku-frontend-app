@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/i18n/locale_controller.dart';
+import 'package:tonsoku/core/router/app_router.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/menu/presentation/menu_sheet.dart';
 import 'package:tonsoku/features/shell/presentation/widgets/nav_item.dart';
@@ -46,6 +47,17 @@ class _AppShellState extends ConsumerState<AppShell> {
     setState(() => _sheetOpen = true);
   }
 
+  /// メニューから開く画面を**いま居るタブの中に積む**（下タブを隠さず、戻ると
+  /// そのタブへ帰る。記事詳細を各タブに積むのと同じ）。**シートを閉じてから
+  /// 積む** ―― 残したまま積むと、戻ってきた時にシートが開いたままになり、下の
+  /// 画面が見えない（gyumesy の注記）。
+  Future<void> _openFromMenu(String Function(String prefix) location) async {
+    _sheetKey.currentState?.close();
+    await GoRouter.of(
+      context,
+    ).push<void>(location(AppRoutes.branchPrefixes[navigationShell.currentIndex]));
+  }
+
   void _goBranch(int index) {
     // タブへ移る時はシートを畳む。web はページ遷移なので必ず閉じる
     if (_sheetOpen) _sheetKey.currentState?.close();
@@ -85,6 +97,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             MenuSheet(
               key: _sheetKey,
               onClose: () => setState(() => _sheetOpen = false),
+              onOpenRanking: () => _openFromMenu(AppRoutes.ranking),
             ),
         ],
       ),

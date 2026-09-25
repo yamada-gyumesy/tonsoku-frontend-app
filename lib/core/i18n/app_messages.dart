@@ -24,6 +24,15 @@ class AppMessages {
     required this.navMap,
     required this.navCoupon,
     required this.navMenu,
+    required this.navRanking,
+    required this.rankingPageTitle,
+    required this.rankingDaily,
+    required this.rankingWeekly,
+    required this.rankingMonthly,
+    required this.rankingTabGroup,
+    required this.rankingUpdatedAt,
+    required this.rankingRank,
+    required this.rankingEmpty,
     required this.navAbout,
     required this.navTerms,
     required this.navPrivacy,
@@ -140,6 +149,17 @@ class AppMessages {
   final String navMap;
   final String navCoupon;
   final String navMenu;
+
+  /// ランキング（web の `nav.ranking` と `ranking.*`）。
+  final String navRanking;
+  final String rankingPageTitle;
+  final String rankingDaily;
+  final String rankingWeekly;
+  final String rankingMonthly;
+  final String rankingTabGroup;
+  final String Function(String date) rankingUpdatedAt;
+  final String Function(int rank) rankingRank;
+  final String rankingEmpty;
 
   /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` のうち特商法を除く 2 つ）。
   final String navAbout;
@@ -319,6 +339,15 @@ class AppMessages {
     navMap: 'マップ',
     navCoupon: 'クーポン',
     navMenu: 'メニュー',
+    navRanking: 'ランキング',
+    rankingPageTitle: 'ランキング',
+    rankingDaily: 'デイリー',
+    rankingWeekly: 'ウィークリー',
+    rankingMonthly: 'マンスリー',
+    rankingTabGroup: '集計期間',
+    rankingUpdatedAt: (date) => '更新日：$date',
+    rankingRank: (rank) => '$rank位',
+    rankingEmpty: 'まだランキングがありません',
     navAbout: 'とん速とは',
     navTerms: '利用規約',
     navPrivacy: 'プライバシーポリシー',
@@ -452,6 +481,15 @@ class AppMessages {
     navMap: 'Map',
     navCoupon: 'Coupons',
     navMenu: 'Menu',
+    navRanking: 'Ranking',
+    rankingPageTitle: 'Ranking',
+    rankingDaily: 'Daily',
+    rankingWeekly: 'Weekly',
+    rankingMonthly: 'Monthly',
+    rankingTabGroup: 'Ranking period',
+    rankingUpdatedAt: (date) => 'Updated: $date',
+    rankingRank: (rank) => 'No. $rank',
+    rankingEmpty: 'No ranking yet',
     navAbout: 'About Tonsoku',
     navTerms: 'Terms of Service',
     navPrivacy: 'Privacy Policy',
@@ -596,6 +634,15 @@ class AppMessages {
     navMap: '地图',
     navCoupon: '优惠券',
     navMenu: '菜单',
+    navRanking: '排行榜',
+    rankingPageTitle: '排行榜',
+    rankingDaily: '每日',
+    rankingWeekly: '每周',
+    rankingMonthly: '每月',
+    rankingTabGroup: '统计期间',
+    rankingUpdatedAt: (date) => '更新日期：$date',
+    rankingRank: (rank) => '第$rank名',
+    rankingEmpty: '暂无排行榜',
     navAbout: '关于豚速',
     navTerms: '使用条款',
     navPrivacy: '隐私政策',

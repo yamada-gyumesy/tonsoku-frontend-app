@@ -14,6 +14,7 @@ import 'package:tonsoku/shared/models/tag.dart';
 import 'package:tonsoku/shared/widgets/async_list_view.dart';
 import 'package:tonsoku/shared/widgets/back_header.dart';
 import 'package:tonsoku/shared/widgets/section_heading.dart';
+import 'package:tonsoku/shared/widgets/sticky_band.dart';
 
 /// 記事一覧（ホームの「過去の記事を見る」の行き先）。web の `/articles/`。
 ///
@@ -208,14 +209,12 @@ class _ArticleListPageState extends ConsumerState<ArticleListPage> {
   }
 }
 
-/// 絞り込みの帯。**ヘッダー直下に隙間なく貼り付く**（web の `.sticky-band`）。
+/// 絞り込みの帯。**ヘッダー直下に隙間なく貼り付く**（`StickyBand`。web の
+/// `.sticky-band`）。
 ///
-/// - 地は面色。**枠・角丸・影は付けない**（gyumesy の浮いたカードとは違う。
-///   web のユーザー指定）
-/// - **貼り付いた時だけ下に区切り線を 1 本出す。** 線は紙面の端から端まで
 /// - **帯自体に上下 16px を持たせる**（貼り付いても普段と同じ余白感のまま。
 ///   一覧の 1 件目は上の余白を削って重ねる。`ArticleCard.flushTop`）
-class _FilterBand extends StatefulWidget {
+class _FilterBand extends StatelessWidget {
   const _FilterBand({
     required this.stuck,
     required this.categories,
@@ -237,26 +236,8 @@ class _FilterBand extends StatefulWidget {
   final ValueChanged<String> onToggleTag;
 
   @override
-  State<_FilterBand> createState() => _FilterBandState();
-}
-
-/// **高さは測ってから貼る**（gyumesy の `MeasuredStickyToolbar` と同じ作り）。
-/// 2 段目の出入りと端末の文字サイズで変わるので、決め打ちにできない。
-class _FilterBandState extends State<_FilterBand> {
-  final _key = GlobalKey();
-  double? _height;
-
-  void _measure() {
-    final box = _key.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize || _height == box.size.height) return;
-    if (mounted) setState(() => _height = box.size.height);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-    final colors = context.colors;
-    final widget = this.widget;
+    final widget = this;
 
     final content = Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -298,77 +279,10 @@ class _FilterBandState extends State<_FilterBand> {
       ),
     );
 
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: _BandDelegate(
-        stuck: widget.stuck,
-        surface: colors.surface,
-        border: colors.border,
-        // 測れるまでは 1px で置き、次のフレームで確定させる
-        height: _height ?? 1,
-        // **中身は常にこの 1 か所に置く**（測る前後で置き場所を変えると
-        // `GlobalKey` が同じフレームで 2 か所に現れて中身ごと消える。gyumesy）
-        child: KeyedSubtree(key: _key, child: content),
-      ),
-    );
+    // 貼り付き方（高さを測ってから貼る・貼り付いたら紙面の端から端まで線）は
+    // `StickyBand` が持つ（ランキングの期間タブと同じ帯）
+    return StickyBand(stuck: widget.stuck, child: content);
   }
-}
-
-class _BandDelegate extends SliverPersistentHeaderDelegate {
-  _BandDelegate({
-    required this.stuck,
-    required this.surface,
-    required this.border,
-    required this.height,
-    required this.child,
-  });
-
-  final ValueNotifier<bool> stuck;
-  final Color surface;
-  final Color border;
-  final double height;
-  final Widget child;
-
-  @override
-  double get minExtent => height;
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) => ValueListenableBuilder<bool>(
-    valueListenable: stuck,
-    builder: (context, isStuck, child) => DecoratedBox(
-      decoration: BoxDecoration(
-        color: surface,
-        // **線は外側に描く**（web は `box-shadow: 0 1px 0`。`border` だと帯の
-        // 高さが 1px 変わり、貼り付く瞬間に下が跳ねる）
-        boxShadow: isStuck
-            ? [BoxShadow(color: border, offset: const Offset(0, 1))]
-            : null,
-      ),
-      child: child,
-    ),
-    child: OverflowBox(
-      alignment: Alignment.topCenter,
-      maxHeight: double.infinity,
-      child: child,
-    ),
-  );
-
-  @override
-  bool shouldRebuild(_BandDelegate oldDelegate) =>
-      oldDelegate.height != height ||
-      oldDelegate.surface != surface ||
-      oldDelegate.border != border ||
-      oldDelegate.stuck != stuck ||
-      // **中身も比べる**（比べないと貼り付いた側が古い選択のまま残る。
-      // gyumesy の `StickyToolbar` が実機で踏んでいる）
-      oldDelegate.child != child;
 }
 
 /// 横に流す 1 段。**左右の余白は帯ではなく各段が持つ**（帯に持たせると、横

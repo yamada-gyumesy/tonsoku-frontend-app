@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/utils/article_date.dart';
+import 'package:tonsoku/features/ranking/presentation/widgets/rank_badge.dart';
 import 'package:tonsoku/shared/models/article_meta.dart';
 import 'package:tonsoku/shared/models/category.dart';
 import 'package:tonsoku/shared/models/tag.dart';
@@ -24,6 +25,8 @@ class ArticleCard extends ConsumerWidget {
     this.categories = const [],
     this.tags = const [],
     this.flushTop = false,
+    this.rank,
+    this.compact = false,
     super.key,
   });
 
@@ -43,6 +46,14 @@ class ArticleCard extends ConsumerWidget {
   /// チップと 1 件目の間が 32px 空くのを防いでいる（`CoArticleFilter`）。
   /// スリバーは負の余白で重ねられないので、1 件目の側で削る。
   final bool flushTop;
+
+  /// ランキングの順位。**指定するとサムネイルの左上に順位バッジを載せる**
+  /// （web の `CoArticleCard` の `rank`。4 位以下のランキングで使う）。
+  final int? rank;
+
+  /// 見出しを一段小さくする（web の `compact`。`text-sm`）。**ランキングの
+  /// 4 位以下では必須**（上位 3 件のカードより見出しが大きい逆転を起こさない）。
+  final bool compact;
 
   /// web の `w-32 h-24`。
   static const _thumbnailWidth = 128.0;
@@ -87,11 +98,22 @@ class ArticleCard extends ConsumerWidget {
                     clipBehavior: Clip.antiAlias,
                     // **一覧では小さい版を使う**（原寸は幅 800）。
                     // サムネイルの無い記事は既定の絵に落とす（web の `thumbnailSrc`）
-                    child: CdnImage(
-                      url: article.thumbnailSmall,
-                      width: _thumbnailWidth,
-                      height: _thumbnailHeight,
-                      fallbackAsset: CdnImage.defaultThumbnail,
+                    child: Stack(
+                      children: [
+                        CdnImage(
+                          url: article.thumbnailSmall,
+                          width: _thumbnailWidth,
+                          height: _thumbnailHeight,
+                          fallbackAsset: CdnImage.defaultThumbnail,
+                        ),
+                        if (rank case final int rank)
+                          // web の `absolute top-0.5 left-0.5`
+                          Positioned(
+                            top: 2,
+                            left: 2,
+                            child: RankBadge(rank: rank, small: true),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -106,10 +128,11 @@ class ArticleCard extends ConsumerWidget {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         // web の `text-base leading-normal tracking-[0.04em]`
+                        // （`compact` は `text-sm`）
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: compact ? 14 : 16,
                           height: 1.5,
-                          letterSpacing: 16 * 0.04,
+                          letterSpacing: (compact ? 14 : 16) * 0.04,
                           fontWeight: FontWeight.bold,
                           color: colors.text,
                         ),
