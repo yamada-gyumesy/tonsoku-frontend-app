@@ -9,7 +9,9 @@ web（tonsoku-frontend-web）が npm で持っている配布物から作る。*
 版がずれて、同じ記事が web とアプリで違う字形になる。**
 
 - Klee One: `@expo-google-fonts/klee-one` の `KleeOne_600SemiBold.ttf`（Google Fonts・OFL）
-- Noto Sans JP: `@fontsource/noto-sans-jp` の `-japanese-` woff2 を素の TTF に戻す
+- Noto Sans JP: **gyumesy-frontend-app の `assets/fonts/` をそのまま写す**（あちらが
+  fontsource の `-japanese-` woff2 を素の TTF に戻したもの。作り直すと中の時刻だけが
+  違うファイルになるので、同じ実体を持つために写す）
 
 ## Klee One の太さの値を書き換える理由
 
@@ -32,6 +34,7 @@ web はビルド時に全ページの字が分かるので「使っている字�
     python3 tool/build_fonts.py [web リポジトリのパス]
 """
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -48,12 +51,11 @@ LATIN = set(range(0x20, 0x250))
 def main() -> int:
     web = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_WEB
     modules = web / "node_modules"
-    noto_dir = modules / "@fontsource" / "noto-sans-jp" / "files"
     klee_src = (
         modules / "@expo-google-fonts" / "klee-one" / "600SemiBold"
         / "KleeOne_600SemiBold.ttf"
     )
-    if not noto_dir.is_dir() or not klee_src.is_file():
+    if not klee_src.is_file():
         print(f"配布物が見つからない: {modules}\n先に web 側で yarn install すること")
         return 1
 
@@ -61,20 +63,19 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
 
     # ── Noto Sans JP（英語・中国語）──────────────────────
+    gyumesy_fonts = web.parent / "gyumesy-frontend-app" / "assets" / "fonts"
     japanese = set()
-    for weight, name in NOTO_WEIGHTS.items():
-        # **時刻を書き換えない**（`recalcTimestamp=False`）。書き換えると、回すたびに
-        # 中身が同じでもファイルが変わる
-        font = TTFont(
-            noto_dir / f"noto-sans-jp-japanese-{weight}-normal.woff2",
-            recalcTimestamp=False,
-        )
+    for name in NOTO_WEIGHTS.values():
+        source = gyumesy_fonts / f"NotoSansJP-{name}.ttf"
+        if not source.is_file():
+            print(f"gyumesy の書体が見つからない: {source}")
+            return 1
+        target = out / source.name
+        shutil.copyfile(source, target)
+        font = TTFont(target)
         japanese |= set(font.getBestCmap())
-        font.flavor = None  # woff2 の圧縮を外して素の TTF にする
-        target = out / f"NotoSansJP-{name}.ttf"
-        font.save(target)
         font.close()
-        print(f"{target.name}: {target.stat().st_size // 1024}KB")
+        print(f"{target.name}: {target.stat().st_size // 1024}KB（gyumesy から写した）")
 
     # ── Klee One（日本語）───────────────────────────────
     klee = TTFont(klee_src, recalcTimestamp=False)
