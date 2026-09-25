@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:tonsoku/core/ads/ads_controller.dart';
+import 'package:tonsoku/core/config/ad_config.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
@@ -57,6 +59,9 @@ void main() {
           shopsProvider.overrideWith((ref) => Stream.value(shops)),
           limitedMenusProvider.overrideWith((ref) => Stream.value(menus)),
           locationRepositoryProvider.overrideWithValue(_NoLocation()),
+          // **広告を出さない構成で見る**（本番の ID が空の時と同じ ＝ 店舗限定の
+          // 表示は開放扱い）。動画で開放する流れは map_unlock_test.dart
+          adConfigProvider.overrideWithValue(const AdConfig(units: {})),
         ],
         child: MaterialApp(
           theme: AppTheme.light(AppLocale.ja),

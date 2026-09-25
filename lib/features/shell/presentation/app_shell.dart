@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/ads/ad_banner.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/router/app_router.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
@@ -224,39 +225,45 @@ class _AppShellState extends ConsumerState<AppShell> {
       // **`NavigationBar` を使わない。** 既定の高さ（80px）と余白が web
       // （56px・アイコン 22px・ラベル 10px・間隔 4px）と合わず、画面下が
       // そのぶん狭くなる（gyumesy-frontend-app と同じ判断）
-      bottomNavigationBar: Semantics(
-        container: true,
-        label: t.navLabel,
-        child: Container(
-          // **地は生成り（`bg`）。** web の `CoBottomNav` はヘッダーと同じ地色で、
-          // 上罫を残している（本文の面と色が違っても、線が無いと境目が弱い）
-          decoration: BoxDecoration(
-            color: colors.bg,
-            border: Border(top: BorderSide(color: colors.border)),
-          ),
-          // ホームバーのぶんは器が持つ（中身の高さは web と同じに保つ）
-          child: SafeArea(
-            top: false,
-            child: SizedBox(
-              height: AppShell._height,
-              child: Row(
-                children: [
-                  for (final item in items)
-                    Expanded(
-                      child: NavItem(
-                        icon: item.icon,
-                        label: item.label,
-                        // **シートを開いても現在地は消さない。** どのタブに
-                        // いたかは変わっていないので、消すと戻り先を見失う
-                        isActive: item.branch == null
-                            ? _sheetOpen
-                            : navigationShell.currentIndex == item.branch,
-                        onTap: item.branch == null
-                            ? _toggleSheet
-                            : () => _goBranch(item.branch!),
+      //
+      // **下タブの上にアンカーの広告を積む**（全タブ。[WithAnchoredAd]）。
+      // `bottomNavigationBar` の中に入れるので、本文は広告の上で終わり、
+      // 覆われない
+      bottomNavigationBar: WithAnchoredAd(
+        nav: Semantics(
+          container: true,
+          label: t.navLabel,
+          child: Container(
+            // **地は生成り（`bg`）。** web の `CoBottomNav` はヘッダーと同じ地色で、
+            // 上罫を残している（本文の面と色が違っても、線が無いと境目が弱い）
+            decoration: BoxDecoration(
+              color: colors.bg,
+              border: Border(top: BorderSide(color: colors.border)),
+            ),
+            // ホームバーのぶんは器が持つ（中身の高さは web と同じに保つ）
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: AppShell._height,
+                child: Row(
+                  children: [
+                    for (final item in items)
+                      Expanded(
+                        child: NavItem(
+                          icon: item.icon,
+                          label: item.label,
+                          // **シートを開いても現在地は消さない。** どのタブに
+                          // いたかは変わっていないので、消すと戻り先を見失う
+                          isActive: item.branch == null
+                              ? _sheetOpen
+                              : navigationShell.currentIndex == item.branch,
+                          onTap: item.branch == null
+                              ? _toggleSheet
+                              : () => _goBranch(item.branch!),
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:tonsoku/core/ads/ad_banner.dart';
+import 'package:tonsoku/core/config/ad_config.dart';
 import 'package:tonsoku/core/config/app_config.dart';
 import 'package:tonsoku/core/config/app_config_provider.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
@@ -40,16 +42,16 @@ import 'package:tonsoku/shared/widgets/section_heading.dart';
 /// 記事詳細。**web の `src/pages/[...locale]/articles/[slug].astro` と同じ並び。**
 ///
 /// ヘッダー（サムネ・表題・日時・分類・共有）→ 仮訳の断り → 後継記事の帯 →
-/// 動画 → TikTok → 本文 → のや子のひとこと → 関連記事 → この記事の前後の予定。
+/// 動画 → TikTok → 本文 → のや子のひとこと → 広告 → 関連記事 → この記事の前後の予定。
 ///
 /// **記事本体（`articles/{slug}.json`）だけで組み立てる。** 一覧を経由せずに
 /// 開けるようにするため（関連記事・通知から直接開いた記事）。
 ///
 /// ## この画面にまだ無いもの
 ///
-/// - **広告** … 広告の Issue（#5）。**web の記事 3 枠（`CoAdSlot`）は写さない**
+/// - **web の記事の広告 3 枠（`CoAdSlot`）のうち本文前・中間の 2 枠** … 写さない
 ///   （アプリは記事への直接の着地が少なく回遊型なので、下タブの上の固定バナーが
-///   主軸。記事の中は置いても 1 枠。web の広告の選定セッションの回答）
+///   主軸。記事の中は本文の後の 1 枠だけ。web の広告の選定セッションの回答）
 /// - **アプリの案内**（web の `CoAppDownload`）… アプリの中では出さない
 ///   （アプリを入れた人に「アプリを入れよう」と言うことになる）
 /// - **X の返信**（web の `CoXComments`）… 持たない（gyumesy と同じく UGC 判定を避ける）
@@ -279,6 +281,15 @@ class _BodyState extends ConsumerState<_Body> {
                 expression: meta.expression,
               ),
             ),
+          // **広告（本文の後、関連記事より前）。** 読み終えた位置（web の
+          // `articleBottom`）。**関連記事より下に置かない** ―― 回遊の導線を広告で
+          // 塞ぐと、セッションあたりの PV が落ちて広告の表示回数そのものが減る
+          // （web の注記）。**記事の枠はこの 1 つだけ**（web の本文前・中間の枠は
+          // 写さない。ユーザーの判断）。余白は web の `mt-12 px-4`
+          const InlineAdSlot(
+            slot: AdSlot.articleInline,
+            padding: EdgeInsets.fromLTRB(16, 48, 16, 0),
+          ),
           // **関連記事。0 件は普通にある**（空の見出しを残さない。解決できない
           // 記事はカードごと出ないので、全部解決できなかった時も見出しを消す）
           if (related.isNotEmpty)

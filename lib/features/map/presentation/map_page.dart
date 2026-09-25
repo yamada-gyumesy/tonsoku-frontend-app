@@ -19,7 +19,9 @@ import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/features/map/data/bundled_tile_provider.dart';
 import 'package:tonsoku/features/map/data/compass_repository.dart';
+import 'package:tonsoku/core/ads/ad_gateway.dart';
 import 'package:tonsoku/features/map/data/location_repository.dart';
+import 'package:tonsoku/features/map/data/map_unlock.dart';
 import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 import 'package:tonsoku/features/map/domain/limited_status.dart';
@@ -55,6 +57,8 @@ final bundledTilesProvider = FutureProvider<BundledTileProvider>(
 /// - **売り切れ・終売を印で分ける**（`ShopMarker`）
 /// - **店の情報を増やした**（住所・営業時間・電話・一時閉店・Google マップ。`ShopSheet`）
 /// - 絞り込みは**併設**と**店舗限定の品**の 2 種類（`ShopFilter`）
+/// - **店舗限定の表示はリワード動画を見て 6 時間開放する**（ユーザーの決定。
+///   `MapUnlockController`）。閉じている間も普通の店の地図としては使える
 ///
 /// 並びは上から ロゴのヘッダー → 絞り込みの帯 → 地図。**ヘッダーは退かない**
 /// （地図はスクロールしないので、他のタブのように払って隠す動きが無い）。
@@ -142,7 +146,12 @@ class _MapPageState extends ConsumerState<MapPage> {
     // **開いたらまず現在地へ寄せる**（ユーザーの判断。まだ聞いていなければここで
     // 許可を求める）。取れるまでは最後に見ていた位置（無ければ日本全体）を出しておき、
     // 取れなければそのまま。開いただけで失敗を知らせない（`quiet`）
-    WidgetsBinding.instance.addPostFrameCallback((_) => _locate(quiet: true));
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _locate(quiet: true);
+      // **動画は現在地の許可が片付いてから出す。** 同時に出すと、OS の許可の
+      // ダイアログが動画の上に重なる（シミュレータで確かめた）
+      if (mounted) setState(() => _located = true);
+    });
   }
 
   @override
@@ -219,7 +228,10 @@ class _MapPageState extends ConsumerState<MapPage> {
     // indexedStack で、裏のタブもこの画面は生きたまま。止めないと別のタブに
     // いる間も Android は約 50Hz でセンサーと setState が回り続ける）。
     // 裏のタブは go_router が TickerMode を切るので、それを合図にする
+    final wasActive = _tabActive;
     _tabActive = TickerMode.valuesOf(context).enabled;
+    if (_tabActive && !wasActive) _offerPending = true;
+    if (!_tabActive) _offerPending = false;
     if (!_tabActive) {
       _stopCompass();
     } else if (_me != null || _headingUp) {
@@ -228,6 +240,14 @@ class _MapPageState extends ConsumerState<MapPage> {
   }
 
   bool _tabActive = true;
+
+  /// **マップを開いた**（タブへ来た）ので、閉じていれば動画を出す
+  /// （[_offerIfLocked]）。最初に開いた時と、他のタブから戻った時に立てる。
+  bool _offerPending = true;
+
+  /// 開いた時の現在地の取得（許可のダイアログを含む）が片付いたか。
+  /// 動画を自動で出すのはこの後（[_offerIfLocked]）。
+  bool _located = false;
 
   void _stopCompass() {
     unawaited(_compass?.cancel());
@@ -349,12 +369,54 @@ class _MapPageState extends ConsumerState<MapPage> {
     return _theme!;
   }
 
+  /// マップを開いた時、店舗限定の表示を閉じていれば動画を出す（ユーザーの指定）。
+  ///
+  /// - **広告の準備（同意・初期化）と品の取得、開いた時の現在地の取得（許可の
+  ///   ダイアログ）を待ってから決める**（待っている間は [_offerPending] を残す）
+  /// - **開放すれば見える品が無い週は出さない**（見ても何も増えない）
+  /// - **この起動の間に途中で閉じていたら、もう自動では出さない**
+  ///   （`MapUnlockState.declined`）。閉じた人に開くたび出し直すと、閉じる操作が
+  ///   効かないのと同じになる。案内を押せば見直せる。期限が切れて閉じた時は
+  ///   途中で閉じたわけではないので、次に開いた時にまた出す
+  /// - 自動で出した時は、読み込めなくても知らせない（押した時だけ知らせる）
+  void _offerIfLocked(
+    MapLimitedGate gate,
+    MapUnlockState unlock,
+    List<LimitedMenu>? menus,
+  ) {
+    if (!_offerPending ||
+        !_located ||
+        gate == MapLimitedGate.waiting ||
+        menus == null) {
+      return;
+    }
+    _offerPending = false;
+    if (gate != MapLimitedGate.locked || menus.isEmpty) return;
+    if (unlock.declined || unlock.busy) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_watchVideo(quiet: true));
+    });
+  }
+
+  /// 動画を出す。**読み込めなければ短く知らせる**（押しても何も起きない形に
+  /// しない。ユーザーの指定）。[quiet] なら知らせない（開いた時に自動で出した時）。
+  Future<void> _watchVideo({bool quiet = false}) async {
+    final outcome = await ref.read(mapUnlockProvider.notifier).watchVideo();
+    if (!mounted || quiet || outcome != RewardOutcome.failed) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(ref.read(messagesProvider).mapVideoUnavailable)),
+    );
+  }
+
   void _openShop(Shop shop) {
     // **開く時点の時刻で求め直す**（印は最後に組んだ時のもの。
     // 印の組み直しを待たずに、押した時の状態を出す）
     final now = clock.now();
     final state = shopStateOf(shop, now: now);
-    final limited = ref.read(limitedIndexProvider).at(shop.code, now: now);
+    // **店舗限定の表示を閉じている間は、詳細の「店舗限定」の欄も出さない**
+    final limited = ref.read(mapLimitedGateProvider) == MapLimitedGate.open
+        ? ref.read(limitedIndexProvider).at(shop.code, now: now)
+        : const <ShopLimited>[];
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -386,14 +448,27 @@ class _MapPageState extends ConsumerState<MapPage> {
     final tiles = ref.watch(bundledTilesProvider).value;
     final stations = ref.watch(stationsProvider).value ?? const [];
     final shops = ref.watch(shopsProvider);
-    final index = ref.watch(limitedIndexProvider);
+    // **店舗限定の表示は、動画を見て開放している間だけ出す**（ユーザーの決定。
+    // `MapUnlockController`）。閉じている間は品を無いものとして組む ―― 印は
+    // 普通の店の点になり、品のチップ・「含める」・画面外の吹き出し・店の詳細の
+    // 欄が消える。検索・併設の絞り込み・現在地・コンパスはそのまま
+    final gate = ref.watch(mapLimitedGateProvider);
+    final unlock = ref.watch(mapUnlockProvider);
+    final open = gate == MapLimitedGate.open;
+    final index = open ? ref.watch(limitedIndexProvider) : LimitedIndex.empty;
     final menusValue = ref.watch(limitedMenusProvider).value;
-    final menus = menusValue ?? const <LimitedMenu>[];
+    final menus = open
+        ? (menusValue ?? const <LimitedMenu>[])
+        : <LimitedMenu>[];
     // 配信から消えた品の選択を外す（`ShopFilter.retainMenus`）。取れる前は触らない。
-    // 同じ build の中で使うだけなので setState は要らない
-    if (menusValue != null) {
-      _filter = _filter.retainMenus({for (final m in menusValue) m.campaignId});
+    // **閉じた時も外す**（期限が切れた時に選んだ品が残ると、見えない品で絞られて
+    // 地図が 0 店になる）。同じ build の中で使うだけなので setState は要らない
+    if (menusValue != null || !open) {
+      _filter = _filter.retainMenus({for (final m in menus) m.campaignId});
     }
+    // 品のチップの代わりの案内（閉じていて、開放すれば見える品がある時だけ）
+    final showNotice = !open && (menusValue?.isNotEmpty ?? false);
+    _offerIfLocked(gate, unlock, menusValue);
 
     final entries = _entries(shops.value ?? const [], index);
     _scheduleTick(nextChangeAfter(clock.now(), shops.value ?? const [], menus));
@@ -459,10 +534,9 @@ class _MapPageState extends ConsumerState<MapPage> {
         // **縮尺は下の真ん中、著作権表記は左下**（ユーザーの指定）。縮尺は地図の
         // 位置と倍率を読む（`MapCamera.of`）ので地図の層として置く。**凡例は置かない**（ユーザーの指定。印の意味は品のチップの
         // 内訳が兼ねる。`MenuChip`）
-        // ── 動画広告（リワード。#5）─────────────────────
-        // **視聴のボタンは左下に置く**予定。視聴と報酬の対応を画面に明示する
-        // （Issue #8 のユーザーの指定）。広告の SDK は #5 で入れるので、ここには
-        // 何も置かない
+        // **動画広告（リワード）の案内は左下ではなく、品のチップの場所に置く**
+        // （`MapUnlockNotice`。ユーザーの指定。見れば何が出るのかが、出る場所で
+        // 分かる。2 か所には置かない）
         // 左下の著作権表記と一緒に置く（[_BottomDelegate]。著作権表記の実際の
         // 幅を見て、縮尺をそれに重ならない範囲の真ん中に収める）
         CustomMultiChildLayout(
@@ -493,7 +567,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                 44 +
                 8 +
                 (_brandsOpen ? 40 : 0) +
-                menus.length * 52 +
+                (showNotice ? 42 : menus.length * 52) +
                 (_filter.menuIds.isEmpty ? 0 : 42) +
                 16,
             44,
@@ -590,6 +664,13 @@ class _MapPageState extends ConsumerState<MapPage> {
                       showBrands: _brandsOpen,
                       menus: menus,
                       onChanged: (f) => setState(() => _filter = f),
+                      notice: showNotice
+                          ? MapUnlockNotice(
+                              busy:
+                                  unlock.busy || gate == MapLimitedGate.waiting,
+                              onTap: _watchVideo,
+                            )
+                          : null,
                     ),
                   ),
                 ),

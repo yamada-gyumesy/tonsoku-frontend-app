@@ -69,10 +69,16 @@ web の `src/assets/styles/main.css`。**web の値を変えたらここも直�
 
 **とん速は広告を必ず入れる**（gyumesy には無い）。AdMob を使う。
 
-- **置き場は web（`CoAdSlot`）の判断に揃える**（ユーザーの指示。web 側と相談して決める）
-- **マップに動画広告（リワード）を置く**（ユーザーの決定。#5 で扱う。置き場は `map_page.dart` の凡例の上に印してある）
+- **置き場は下タブの上のアンカーバナー（全タブ）と、記事の本文の後の 1 枠だけ**
+  （web の `CoAdSlot` の `articleBottom` と同じ位置。web の記事 3 枠は写さない。
+  web 側と相談したうえでのユーザーの判断）
+- **マップのリワード動画は「店舗限定の表示の開放」**（見終えたら 6 時間。ユーザーの決定）。
+  閉じている間の案内は品のチップの場所に置く（`MapUnlockNotice`）
+- **本番の ID が空の枠は何も出さない**。全部空なら SDK・同意・ATT に一切触れない
+  （web の `adsenseClientId` と同じ。`lib/core/config/ad_config.dart`）
 - **手元・テストで本番の広告を出さない**（無効なインプレッションになる。web の `config.ts`
-  の `adsenseClientId` と同じ扱い）
+  の `adsenseClientId` と同じ扱い）。release 以外は Google のテスト用 ID、テストは
+  広告の読み込みごと偽物（`adGatewayProvider`）
 
 ## 文書の置き場
 
