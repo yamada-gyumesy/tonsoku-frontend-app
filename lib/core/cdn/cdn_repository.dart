@@ -222,8 +222,17 @@ class CdnRepository {
 /// 出る。配列でない本文も同じく例外（形が違う）。
 List<T> Function(String) decodeJsonList<T>(
   T Function(Map<String, dynamic>) fromJson,
-) => (body) {
-  final raw = jsonDecode(body) as List<dynamic>;
+) =>
+    (body) => decodeJsonItems(jsonDecode(body) as List<dynamic>, fromJson);
+
+/// [decodeJsonList] の中身。**配列がオブジェクトに包まれて届く配信**
+/// （`articles/index.json` の `articles`）も同じ規則で読むために分けてある
+/// ―― 包みを剥がしてから `.map(fromJson)` で読むと、1 件の崩れで一覧ごと
+/// 失敗する（実際にそうなっていた）。
+List<T> decodeJsonItems<T>(
+  List<dynamic> raw,
+  T Function(Map<String, dynamic>) fromJson,
+) {
   final items = <T>[];
   Object? firstError;
   for (final e in raw) {
@@ -237,7 +246,7 @@ List<T> Function(String) decodeJsonList<T>(
     throw FormatException('配信の要素が 1 件も読めない: $firstError');
   }
   return List.unmodifiable(items);
-};
+}
 
 /// **1 件でも読めなければ一覧ごと例外にする** decode（[decodeJsonList] の厳しい版）。
 ///

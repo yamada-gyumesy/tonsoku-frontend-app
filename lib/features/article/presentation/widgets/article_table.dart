@@ -86,7 +86,7 @@ class ArticleTable extends StatelessWidget {
     Widget cell(String text, TextStyle style) => Padding(
       padding: cellPadding,
       child: MarkdownBody(
-        data: text,
+        data: ParsedTable.noWrapLinks(text),
         styleSheet: MarkdownStyleSheet(
           p: style,
           pPadding: EdgeInsets.zero,
@@ -136,7 +136,8 @@ class ArticleTable extends StatelessWidget {
     TextScaler scaler, {
     required bool header,
   }) {
-    final plain = ParsedTable.plainText(markdown);
+    // **組む時と同じ文字で測る**（リンクは折り返さない。[ParsedTable.noWrapLinks]）
+    final plain = ParsedTable.plainText(ParsedTable.noWrapLinks(markdown));
     double width(String s) {
       final painter = TextPainter(
         text: TextSpan(text: s, style: style),
@@ -266,7 +267,7 @@ class ParsedTable {
 
   /// 幅を測るための素の文字（リンクは文字だけ、強調の記号は落とす）。
   static String plainText(String markdown) => markdown
-      .replaceAllMapped(RegExp(r'\[([^\]]+)\]\([^)]*\)'), (m) => m.group(1)!)
+      .replaceAllMapped(_link, (m) => m.group(1)!)
       .replaceAll(RegExp(r'[*`_]'), '');
 
   static final _cjk = RegExp(
@@ -274,29 +275,130 @@ class ParsedTable {
     unicode: true,
   );
 
-  /// 折り返せない一続き。**漢字・かな・全角の記号は 1 字ずつ**、それ以外は空白で区切る
-  /// （ブラウザの `line-break: normal` のおおよそ。行頭禁則は無視する ―― 幅を
-  /// 決めるだけなので、1 字ぶんの差は余白に吸われる）。
+  /// 行頭に来てはいけない字（閉じ括弧・句読点・小書きのかな・長音など）。
+  /// **直前の字とつなげて 1 つの一続きにする**（ブラウザの禁則と同じ向き）。
+  static const _noBreakBefore =
+      '、。，．）」』】〕〉》〙〛｝］！？：；ー々ゝゞ・％'
+      'ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ'
+      r')]}%,.!?:;';
+
+  /// 行末に来てはいけない字（開き括弧）。**直後の字とつなげる。**
+  static const _noBreakAfter = '（「『【〔〈《〘〚｛［([{';
+
+  /// 折り返せない一続き（CSS の `min-content` を決める単位）。
+  ///
+  /// - **漢字・かなは 1 字ずつ**折り返せる。英数字は空白までが 1 語
+  /// - **閉じ括弧・句読点は直前に、開き括弧は直後につなげる**（禁則）
+  /// - **閉じ括弧の直後の開き括弧もつなげる**（`）（`。Flutter の組版は
+  ///   ここで折り返さない ―― 実測）
+  /// - **WORD JOINER（U+2060）と NO-BREAK SPACE の前後はつなげる**
+  ///   （リンクの中。[noWrapLinks] を通してから渡す）
+  ///
+  /// **禁則を落とさないこと。** `）` を独立した 1 字にすると列の最小幅が
+  /// 実際より狭く決まり、組版が禁則を守れずに `-280円（約22%）` の `）` だけを
+  /// 次の行へ落とした（本番の記事 `6gdw35`。ブラウザも Flutter の組版も
+  /// `22%）` を切らない）。**組版が切らないところをここで切ると、必ず列が狭すぎる。**
   static List<String> unbreakableSegments(String text) {
     final segments = <String>[];
     final buffer = StringBuffer();
+    // 直前の字の後ろで折り返せるか（漢字・かな・閉じ括弧の後ろ）
+    var breakAfter = false;
+    // 直前の字が開き括弧か（その後ろでは折り返せない）
+    var afterOpen = false;
+    // 直前の字が閉じ括弧か（`）（` は切らない）
+    var afterClose = false;
+    // 直前が WORD JOINER / NO-BREAK SPACE（次の字の前では切らない）
+    var glued = false;
     void flush() {
       if (buffer.isNotEmpty) segments.add(buffer.toString());
       buffer.clear();
     }
 
+    void set({bool br = false, bool open = false, bool close = false}) {
+      breakAfter = br;
+      afterOpen = open;
+      afterClose = close;
+      glued = false;
+    }
+
     for (final rune in text.runes) {
       final ch = String.fromCharCode(rune);
-      if (ch.trim().isEmpty) {
-        flush();
-      } else if (_cjk.hasMatch(ch)) {
-        flush();
-        segments.add(ch);
-      } else {
+      if (ch == _wordJoiner) {
+        // 幅 0。前後を切らせないだけ
+        glued = true;
+      } else if (ch == _noBreakSpace) {
         buffer.write(ch);
+        set();
+        glued = true;
+      } else if (ch.trim().isEmpty) {
+        flush();
+        set();
+      } else if (_noBreakBefore.contains(ch)) {
+        buffer.write(ch);
+        set(br: true, close: true);
+      } else if (_noBreakAfter.contains(ch)) {
+        if (breakAfter && !afterClose && !glued) flush();
+        buffer.write(ch);
+        set(open: true);
+      } else if (_cjk.hasMatch(ch)) {
+        if (!afterOpen && !glued) flush();
+        buffer.write(ch);
+        set(br: true);
+      } else {
+        if (breakAfter && !afterOpen && !glued) flush();
+        buffer.write(ch);
+        set();
       }
     }
     flush();
     return segments;
   }
+
+  static const _wordJoiner = '\u2060';
+  static const _noBreakSpace = '\u00A0';
+
+  static const _markup = '*_`';
+
+  static final _link = RegExp(r'\[([^\]]+)\]\(([^)]*)\)');
+
+  /// リンクの文字を折り返せなくする（web の
+  /// `.co-article-markdown td a { white-space: nowrap }`）。
+  ///
+  /// **web の判断をそのまま持ち込む。**「セルを縮めてリンクを 2 行に割るより、
+  /// 表だけ横に送るほうが読める」（店名のリンク `松のや 草加店（草加駅前）` が
+  /// 3 行に割れていた。本番の記事 `2cjtbt`）。
+  ///
+  /// **その代わり店舗の表は横に送られる**（375pt の端末で表 396pt / 画面 343pt）。
+  /// 割れるのと横に送るのとを並べて、**ユーザーが web と同じ横送りを選んだ**
+  /// （2026-09-25）。**横に送ること自体は禁じていない**（ユーザー）。表を作り直した
+  /// きっかけの指摘は、本文のセルが折り返さなかったことと、**スクロールバーが余白の
+  /// 内側の変な位置に出ていたこと**で、横送りそのものではない。web のもう 1 つの理由
+  /// （外部リンクの記号だけが次の行に残る）はアプリには当たらない ―― 記号を描いていない。
+  ///
+  /// 字の間に WORD JOINER（U+2060。幅 0 で、前後で折り返させない）を挟み、
+  /// 空白は NO-BREAK SPACE にする。**列の最小幅もこれを通した文字で測る**
+  /// （[unbreakableSegments] が WORD JOINER の前後をつなげる）。リンクの文字だけを
+  /// 別に測ると、**リンクに続く折り返せない字**（`）（9/21`）のぶん列が狭く決まり、
+  /// 組版がリンクの中で無理に折る（実測で `（草加駅前` と `）` が割れた）。
+  static String noWrapLinks(String markdown) => markdown.replaceAllMapped(
+    _link,
+    (m) {
+      final chars = m
+          .group(1)!
+          .replaceAll(' ', _noBreakSpace)
+          .runes
+          .map(String.fromCharCode)
+          .toList();
+      final text = StringBuffer();
+      for (final (i, ch) in chars.indexed) {
+        // **強調の記号の隣には挟まない**（`**` が割れて強調が効かなくなる。
+        // 記号は描かれないので、そこで折り返されることも無い）
+        if (i > 0 && !_markup.contains(ch) && !_markup.contains(chars[i - 1])) {
+          text.write(_wordJoiner);
+        }
+        text.write(ch);
+      }
+      return '[$text](${m.group(2)})';
+    },
+  );
 }

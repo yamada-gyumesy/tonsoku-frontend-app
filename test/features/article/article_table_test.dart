@@ -19,6 +19,56 @@ void main() {
       expect(ParsedTable.plainText('**[松のや](https://x)** の`店`'), '松のや の店');
     });
 
+    /// **閉じ括弧を独立させると `）` だけが次の行に落ちる**（本番の記事 `6gdw35`）。
+    test('閉じ括弧・句読点は直前に、開き括弧は直後につなげる（禁則）', () {
+      expect(ParsedTable.unbreakableSegments('-280円（約22%）'), [
+        '-280',
+        '円',
+        '（約',
+        '22%）',
+      ]);
+      expect(ParsedTable.unbreakableSegments('「松のや」、ロースかつ。'), [
+        '「松',
+        'の',
+        'や」、',
+        // 長音も行頭に来ない
+        'ロー',
+        'ス',
+        'か',
+        'つ。',
+      ]);
+      expect(ParsedTable.unbreakableSegments('ちょっと'), ['ちょっ', 'と']);
+    });
+
+    /// web の `td a { white-space: nowrap }`（本番の記事 `2cjtbt` で店名が
+    /// 3 行に割れていた）。
+    test('リンクは折り返せなくし、続く折り返せない字ごと 1 つの一続きにする', () {
+      const cell = '[松のや 草加店（草加駅前）](https://x)（9/21 9時 終売）';
+      final nowrap = ParsedTable.noWrapLinks(cell);
+      expect(nowrap, endsWith('](https://x)（9/21 9時 終売）'));
+      // 空白は NO-BREAK SPACE、字の間は WORD JOINER
+      expect(nowrap, startsWith('[松\u2060の\u2060や\u2060\u00A0\u2060草'));
+      // 見た目の文字は変わらない
+      expect(
+        ParsedTable.plainText(
+          nowrap,
+        ).replaceAll('\u2060', '').replaceAll('\u00A0', ' '),
+        ParsedTable.plainText(cell),
+      );
+      // **`）（` は切らない**ので、リンクの後ろの `（9/21` まで 1 つ
+      expect(
+        ParsedTable.unbreakableSegments(
+          ParsedTable.plainText(nowrap),
+        ).map((s) => s.replaceAll('\u2060', '').replaceAll('\u00A0', ' ')),
+        ['松のや 草加店（草加駅前）（9/21', '9', '時', '終', '売）'],
+      );
+      // 強調の記号は割らない
+      expect(
+        ParsedTable.noWrapLinks('[**店**](https://x)'),
+        '[**店**](https://x)',
+      );
+    });
+
     test('折り返せない一続きは、漢字・かなを 1 字ずつ、英数字は語ごと', () {
       expect(ParsedTable.unbreakableSegments('京都府96-1 PayPay'), [
         '京',

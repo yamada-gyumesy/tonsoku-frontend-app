@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/cdn/cdn_paths.dart';
@@ -29,10 +30,16 @@ class ArticleRepository {
   /// `articles/index.json` は**オブジェクトに包まれている**（`{generated_at,
   /// count, articles}`。feed.json は配列）。`count` は見ない —— 食い違った時に
   /// 信じるのは実体のほう（web の `models/article.ts`）。
-  static List<ArticleMeta> _decodeIndex(String body) =>
-      ((jsonDecode(body) as Map<String, dynamic>)['articles'] as List<dynamic>)
-          .map((e) => ArticleMeta.fromJson(e as Map<String, dynamic>))
-          .toList(growable: false);
+  ///
+  /// **中身は feed と同じく 1 件ずつ読む**（`decodeJsonItems`）。読めない記事は
+  /// その 1 件だけ落ちる ―― 一覧ごと失敗させると、キャッシュの無い端末では
+  /// 記事一覧が開けず、ある端末では古い一覧のまま止まる（ホームは同じ記事を
+  /// 1 件落として普通に出るので、画面ごとに振る舞いが食い違う）。
+  @visibleForTesting
+  static List<ArticleMeta> decodeIndex(String body) => decodeJsonItems(
+    (jsonDecode(body) as Map<String, dynamic>)['articles'] as List<dynamic>,
+    ArticleMeta.fromJson,
+  );
 
   /// **カテゴリとタグは 1 件でも読めなければ例外にする**（`decodeJsonListStrict`）。
   /// ラベルの正なので、1 件を黙って落とすとそのカテゴリがどこからも辿れなくなる
@@ -52,7 +59,7 @@ class ArticleRepository {
   /// web の記事一覧も全件を 1 枚に出している。feed（最新 200 件）で済ませると、
   /// 記事が 200 本を超えた日から古い記事へ辿る道が消える。
   Stream<List<ArticleMeta>> watchArticleIndex() =>
-      _cdn.watch(_paths.articleIndex, _decodeIndex);
+      _cdn.watch(_paths.articleIndex, decodeIndex);
 
   Stream<List<Category>> watchCategories() =>
       _cdn.watch(_paths.categories, _decodeCategories);
@@ -73,7 +80,7 @@ class ArticleRepository {
       _cdn.fetchFreshIfChanged(_paths.feed, _decodeFeed);
 
   Future<bool> refreshArticleIndex() =>
-      _cdn.fetchFreshIfChanged(_paths.articleIndex, _decodeIndex);
+      _cdn.fetchFreshIfChanged(_paths.articleIndex, decodeIndex);
 
   Future<bool> refreshCategories() =>
       _cdn.fetchFreshIfChanged(_paths.categories, _decodeCategories);
