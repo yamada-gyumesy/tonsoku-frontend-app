@@ -134,19 +134,34 @@ class _AppShellState extends ConsumerState<AppShell> {
     // シートが開いている間は、**戻る操作を横取りする**（言語・その他を開いて
     // いればメニューへ、メニューなら閉じる。web が履歴を 2 段積んでいるのと同じ）。
     //
-    // **`PopScope` では止まらない。** go_router は戻る操作を深い側のナビゲータ
-    // （タブの中）から処理するので、タブに記事を積んでいるとそこで消費され、
-    // シェルの `PopScope` まで届かない ―― **シートは開いたまま、見えないところで
-    // 記事が閉じた**（PR #17 のレビューで再現。gyumesy も同じ作りで同じ挙動）。
-    // `BackButtonListener` は Router の戻るボタンの受け口に、**置いた時点で
-    // 優先権を取って**加わるので、タブのナビゲータより先に受け取れる
-    if (!_sheetOpen) return scaffold;
-    return BackButtonListener(
-      onBackButtonPressed: () async {
+    // **受け口は 2 つ要る。どちらも外さないこと。**
+    //
+    // - **`BackButtonListener`** … go_router は戻る操作を深い側のナビゲータ
+    //   （タブの中）から処理するので、タブに記事を積んでいるとそこで消費され、
+    //   シェルの `PopScope` まで届かない ―― **シートは開いたまま、見えない
+    //   ところで記事が閉じた**（PR #17 のレビューで再現。gyumesy も同じ作り）。
+    //   これは Router の戻るボタンの受け口に**置いた時点で優先権を取って**加わる
+    //   ので、タブのナビゲータより先に受け取れる
+    // - **`PopScope(canPop: false)`** … **OS に「戻るはアプリが扱う」と伝える役**
+    //   （`SystemNavigator.setFrameworkHandlesBack(true)`）。何も積んでいない
+    //   タブでは他にこれを送るものが無く、Android 16（予測型「戻る」が既定）
+    //   では**戻る操作がアプリに届かず、シートを閉じないままホーム画面へ抜ける**
+    //   （PR #17 の 2 回目のレビュー。一度 `PopScope` を外してこれを起こした）
+    return PopScope(
+      canPop: !_sheetOpen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         _sheetKey.currentState?.handleBack();
-        return true;
       },
-      child: scaffold,
+      child: _sheetOpen
+          ? BackButtonListener(
+              onBackButtonPressed: () async {
+                _sheetKey.currentState?.handleBack();
+                return true;
+              },
+              child: scaffold,
+            )
+          : scaffold,
     );
   }
 }

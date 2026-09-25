@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -114,5 +115,36 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(MenuSheet), findsNothing);
     expect(find.text('root /'), findsOneWidget);
+  });
+
+  /// **OS に「戻るはアプリが扱う」と伝えること。** Android 16（予測型「戻る」が
+  /// 既定）は、これが無いと戻る操作をアプリに渡さずにホーム画面へ抜ける。
+  /// `handlePopRoute` はこの判定を迂回するので、上のテストでは見えない
+  /// （PR #17 の 2 回目のレビュー）。
+  testWidgets('シートを開いたら、OS に戻る操作はアプリが扱うと伝える', (tester) async {
+    final calls = <Object?>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'SystemNavigator.setFrameworkHandlesBack') {
+          calls.add(call.arguments);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+
+    // **ライフサイクルを resumed にする。** 未設定だと `WidgetsApp` は OS へ
+    // 何も送らない（起動前の扱い）
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await pump(tester);
+    calls.clear();
+    await openSheet(tester);
+    expect(calls, contains(true), reason: '何も積んでいないタブで伝えていない');
   });
 }
