@@ -29,7 +29,28 @@ dependencies:
   # Network（R2 の配信 JSON 取得）
   dio: ^5.10.0
 
-  # ロゴ（web と同じ icon.svg を使う。PNG にすると地の白が
+  # 記事一覧のサムネイルを端末に残す。配信データと同じく、電波が悪くても
+  # 前回見たものが出ることを優先する（gyumesy と同じ）
+  cached_network_image: ^4.0.0
+
+  # 記事本文のレンダリング。**表が要る**（とん速は 36 本中 34 本が表を持つ）
+  # ので GFM 対応が必須（gyumesy と同じ選定）
+  flutter_markdown_plus: ^1.0.12
+  # 見出しの枠線・画像と出典の組み（figure）はスタイルシートで表現できないので、
+  # ブロックの組み替えと MarkdownElementBuilder を自前で持つ。その引数の型
+  # （md.Element / md.Node）を参照するため明示依存に置く
+  markdown: ^7.3.0
+
+  # 出典リンク・アプリに画面が無いページ（とん速とは・法務）を開く
+  url_launcher: ^6.3.1
+  # 記事の動画（X のポストの添付）。**配信元は自前の R2** なので、外部へ
+  # 飛ばさずアプリ内で再生する（gyumesy と同じ）
+  video_player: ^2.13.0
+
+  # 記事のシェア
+  share_plus: ^13.3.0
+
+  # ロゴとのや子（web と同じ SVG を使う。PNG にすると地の白が
   # ダークテーマで四角く出る）
   flutter_svg: ^2.3.0
 
@@ -62,7 +83,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    # ヘッダーのロゴ。web の public/icon.svg と同じもの（意匠を揃える）
+    # ヘッダーのロゴ。web の public/icon.svg と同じもの（意匠を揃える）。
+    # サムネイルの無い記事の既定の絵も web の `public/images/articles/` と同じもの
     - assets/brand/
 
   fonts:

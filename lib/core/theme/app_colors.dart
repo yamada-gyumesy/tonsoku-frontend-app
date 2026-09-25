@@ -232,6 +232,116 @@ class AppColors extends ThemeExtension<AppColors> {
   }
 }
 
+/// カテゴリの色。**チップとタブと線は同じカテゴリから色を引く**（web の
+/// `--color-brand-cat-*` / `--color-brand-tab-*` と `models/category.ts`）。
+///
+/// - [ink] … チップの文字・カレンダーの線と丸ポチ（地の上に置く文字用。
+///   ダークでは明るい値になる）
+/// - [tint] … チップの地（[ink] を面に 8% 混ぜて焼いたもの。`color-mix` で
+///   その場で作らない理由は web の `main.css`）
+/// - [tab] … タブの塗り（白文字を載せる）
+///
+/// **[ink] を塗りに使わないこと。** ダークで白文字が 2.4〜3.3:1 まで落ちる
+/// （web が実際に踏んでいる）。だから塗りは [tab] で別に持つ。
+///
+/// 実測コントラスト（web の実測）: チップの文字と地 ライト 4.56〜8.85 /
+/// ダーク 4.91〜6.53、タブの白文字 ライト 5.05〜15.57 / ダーク 4.72〜10.94。
+/// **色を変えたら両テーマで計算し直すこと。**
+@immutable
+class CategoryColor {
+  const CategoryColor({
+    required this.ink,
+    required this.tint,
+    required this.tab,
+  });
+
+  final Color ink;
+  final Color tint;
+  final Color tab;
+}
+
+/// カテゴリ slug ごとの色。**名前は slug に対応させる**（web が index 割り当てを
+/// やめた理由: どの色がどのカテゴリかが追えず、色を足した時に対応が黙ってずれる）。
+///
+/// **松のやの色だけで組む**（墨・赤・灰・緑・黄土）。青系を入れない。
+///
+/// **ラベルは配信の `categories.json` が正で、色だけがこちらの責任。**
+abstract final class CategoryPalette {
+  static const _light = <String, CategoryColor>{
+    'menu': CategoryColor(
+      ink: Color(0xFFA7232A),
+      tint: Color(0xFFF8EDEE),
+      tab: Color(0xFFA7232A),
+    ),
+    'official': CategoryColor(
+      ink: Color(0xFF4A403A),
+      tint: Color(0xFFF1F0EF),
+      tab: Color(0xFF7A6A60),
+    ),
+    'store': CategoryColor(
+      ink: Color(0xFF046240),
+      tint: Color(0xFFEBF2F0),
+      tab: Color(0xFF046240),
+    ),
+    'campaign': CategoryColor(
+      ink: Color(0xFF8A6A1F),
+      tint: Color(0xFFF6F3ED),
+      tab: Color(0xFF8A6A1F),
+    ),
+  };
+
+  static const _dark = <String, CategoryColor>{
+    'menu': CategoryColor(
+      ink: Color(0xFFDA6E62),
+      tint: Color(0xFF311B19),
+      tab: Color(0xFFB62A31),
+    ),
+    'official': CategoryColor(
+      ink: Color(0xFFB0A69E),
+      tint: Color(0xFF272320),
+      tab: Color(0xFF7E7168),
+    ),
+    'store': CategoryColor(
+      ink: Color(0xFF4FB58C),
+      tint: Color(0xFF1E231C),
+      tab: Color(0xFF067A50),
+    ),
+    'campaign': CategoryColor(
+      ink: Color(0xFFC7A44E),
+      tint: Color(0xFF2E2418),
+      tab: Color(0xFF8A6A1F),
+    ),
+  };
+
+  /// 先頭の「フィード」タブと、色の決まっていない slug のタブの塗り
+  /// （web の `--color-brand-tab-feed`）。
+  static const _feedTabLight = Color(0xFF2E211A);
+  static const _feedTabDark = Color(0xFF4A3930);
+
+  /// **`categories.json` に載っているが色を知らない slug も出す。** 地は中立色
+  /// （web と同じ。落とすと、配信されているのにどこからも辿れないカテゴリができる）。
+  ///
+  /// - チップ … **`official` と同じ組**（web の `FALLBACK_COLOR`。新しい色を増やさない）
+  /// - タブ … フィードと同じ塗り（web の `TAB_FILL_FALLBACK`）
+  static CategoryColor of(String slug, AppColors colors) {
+    final dark = colors.isDark;
+    final known = (dark ? _dark : _light)[slug];
+    if (known != null) return known;
+    final fallback = (dark ? _dark : _light)['official']!;
+    return CategoryColor(
+      ink: fallback.ink,
+      tint: fallback.tint,
+      tab: dark ? _feedTabDark : _feedTabLight,
+    );
+  }
+
+  /// カレンダーの線・絞り込みの丸ポチの色。**チップの [CategoryColor.ink] と同じ色**
+  /// （同じカテゴリが 2 つの色を持たないように）。**知らない slug は副テキストの色**
+  /// （web の `CATEGORY_LINE_FALLBACK`。チップの中立色とは別）。
+  static Color lineOf(String slug, AppColors colors) =>
+      (colors.isDark ? _dark : _light)[slug]?.ink ?? colors.textSub;
+}
+
 extension AppColorsX on BuildContext {
   AppColors get colors => Theme.of(this).extension<AppColors>()!;
 }

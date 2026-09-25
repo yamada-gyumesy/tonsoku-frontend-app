@@ -239,6 +239,22 @@ List<T> Function(String) decodeJsonList<T>(
   return List.unmodifiable(items);
 };
 
+/// **1 件でも読めなければ一覧ごと例外にする** decode（[decodeJsonList] の厳しい版）。
+///
+/// **表示ラベルの正になる一覧（`categories.json` / `tags.json`）に使う。** 読めない
+/// 1 件を黙って落とすと、配信されているカテゴリが**どこからも辿れなくなったことに
+/// 誰も気づけない**（web もこの 2 つは記事一覧より厳しく扱い、0 件でもビルドを落とす）。
+/// 例外になれば `CdnRepository.watch` はキャッシュの値を出し続けるので、画面は
+/// 前に読めた版のまま残る。
+List<T> Function(String) decodeJsonListStrict<T>(
+  T Function(Map<String, dynamic>) fromJson,
+) =>
+    (body) => List.unmodifiable(
+      (jsonDecode(body) as List<dynamic>).map(
+        (e) => fromJson(e as Map<String, dynamic>),
+      ),
+    );
+
 /// JSON オブジェクトを受け取ってモデルにする decode を組み立てる。
 T Function(String) decodeJsonObject<T>(
   T Function(Map<String, dynamic>) fromJson,
