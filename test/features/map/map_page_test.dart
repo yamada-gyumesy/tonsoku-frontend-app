@@ -62,28 +62,29 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('681店舗'), findsOneWidget);
+    expect(find.bySemanticsLabel('681店舗'), findsOneWidget);
     expect(find.byType(MapLegend), findsOneWidget);
-    expect(find.text('© OpenStreetMap contributors'), findsOneWidget);
+    // 帰属表記は右下に常に出す（contributors は付けない。ユーザーの判断）
+    expect(find.text('© OpenStreetMap'), findsOneWidget);
     // 品を選ぶまでは「含める」を出さない
     expect(find.text('終売の店も含める'), findsNothing);
 
     await tester.tap(find.text('松のや専門店'));
     await tester.pump();
-    expect(find.text('122店舗'), findsOneWidget);
+    expect(find.bySemanticsLabel('122店舗'), findsOneWidget);
     await tester.tap(find.text('松のや専門店'));
     await tester.pump();
 
     await tester.tap(find.text('松屋併設'));
     await tester.pump();
-    expect(find.text('483店舗'), findsOneWidget);
+    expect(find.bySemanticsLabel('483店舗'), findsOneWidget);
 
     // 併設を外して、販売中の品を選ぶ（15 店。売り切れの店は無い）
     await tester.tap(find.text('松屋併設'));
     await tester.pump();
     await tester.tap(find.text('たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'));
     await tester.pump();
-    expect(find.text('15店舗'), findsOneWidget);
+    expect(find.bySemanticsLabel('15店舗'), findsOneWidget);
     expect(find.text('終売の店も含める'), findsOneWidget);
 
     // 全店で終売した品はチップごと出さない（行き先が無い）

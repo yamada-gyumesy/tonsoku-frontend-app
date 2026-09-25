@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -194,32 +196,123 @@ class _StationLabel extends StatelessWidget {
 }
 
 /// 現在地の印。**緑の点**（差し色。店の赤・茶と取り違えない）。
-class MyLocationMarker extends StatelessWidget {
-  const MyLocationMarker({super.key});
+class MyLocationMarker extends StatefulWidget {
+  const MyLocationMarker({this.heading, this.rotation = 0, super.key});
+
+  /// 端末の向き（度。0 = 北、時計回り）。**分からなければ null**（扇を出さない。
+  /// 方位のセンサーが無い端末・シミュレータ）。
+  final double? heading;
+
+  /// 地図の回転（度。`MapCamera.rotation`）。印は回らない層に立つので、扇の
+  /// 向きは「北が画面でどちらにあるか」を足して求める（牛めしレーダーの
+  /// `user_marker_painter.dart` と同じ式）。
+  final double rotation;
+
+  /// 印の大きさ（扇が収まる大きさ）。
+  static const size = 64.0;
+
+  @override
+  State<MyLocationMarker> createState() => _MyLocationMarkerState();
+}
+
+/// **青（`MapPalette.me`）の点を光らせ、向いている方向に扇を出す**（ユーザーの
+/// 指定）。光の輪は広がって消える（「いまの自分」だと色だけに頼らず分かる）。
+class _MyLocationMarkerState extends State<MyLocationMarker>
+    with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Center(
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: colors.green.withValues(alpha: 0.18),
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Container(
+    final color = MapPalette.of(colors).me;
+    // 動きを減らす設定の人には光の輪を広げない（止めた輪だけ出す）
+    final still = MediaQuery.disableAnimationsOf(context);
+    final heading = widget.heading;
+    return SizedBox.square(
+      dimension: MyLocationMarker.size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (heading != null)
+            CustomPaint(
+              size: const Size.square(MyLocationMarker.size),
+              painter: _HeadingCone(
+                color: color,
+                angle: (heading + widget.rotation) * math.pi / 180,
+              ),
+            ),
+          if (still)
+            _ring(color, 1, 0.25)
+          else
+            AnimatedBuilder(
+              animation: _pulse,
+              builder: (context, _) {
+                final t = Curves.easeOut.transform(_pulse.value);
+                return _ring(color, 0.5 + 0.5 * t, 0.45 * (1 - t));
+              },
+            ),
+          Container(
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: colors.green,
+              color: color,
               shape: BoxShape.circle,
               border: Border.all(color: colors.surface, width: 2),
+              boxShadow: [
+                BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 8),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+
+  /// 光の輪（[scale] は 30 に対する大きさ、[opacity] は濃さ）。
+  Widget _ring(Color color, double scale, double opacity) => Container(
+    width: 30 * scale,
+    height: 30 * scale,
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: opacity),
+      shape: BoxShape.circle,
+    ),
+  );
+}
+
+/// 向いている方向の扇（中心から外へ薄くなる）。[angle] は画面の上を 0 とした
+/// 時計回りの角度（ラジアン）。
+class _HeadingCone extends CustomPainter {
+  const _HeadingCone({required this.color, required this.angle});
+
+  final Color color;
+  final double angle;
+
+  /// 扇の開き（60 度）。
+  static const spread = math.pi / 3;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.width / 2;
+    final rect = Rect.fromCircle(center: c, radius: r);
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [color.withValues(alpha: 0.45), color.withValues(alpha: 0)],
+      ).createShader(rect);
+    // drawArc の 0 は右（3 時）なので、上を 0 にするには 90 度引く
+    canvas.drawArc(rect, angle - math.pi / 2 - spread / 2, spread, true, paint);
+  }
+
+  @override
+  bool shouldRepaint(_HeadingCone old) =>
+      old.angle != angle || old.color != color;
 }

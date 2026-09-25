@@ -371,6 +371,8 @@ class MapPalette {
     required this.rail,
     required this.label,
     required this.labelHalo,
+    required this.shop,
+    required this.me,
   });
 
   final Color land;
@@ -391,6 +393,23 @@ class MapPalette {
   /// 地名・駅名の縁取り（陸と同じ色）。
   final Color labelHalo;
 
+  /// **普通の店の点**（店舗限定を扱っていない店）。緑（ユーザーの指定）。
+  ///
+  /// 茶（`AppColors.brown`）は地図の地・道路と同じ系統の色で馴染みすぎ、
+  /// 黄土色も見分けにくかった（どちらもユーザーの指摘）。緑は地図のどの色とも
+  /// 系統が違い、店舗限定の赤とも取り違えない。地との比（計算値。図形は 3:1 以上）:
+  ///
+  /// | | 陸 | 水 |
+  /// |---|---|---|
+  /// | ライト `#1E8A4C` | 4.10 | 3.37 |
+  /// | ダーク `#3DBE7A` | 7.22 | 7.68 |
+  final Color shop;
+
+  /// **現在地の印**と向きの扇。地図アプリで定番の青（ユーザーの判断。店の緑・
+  /// 店舗限定の赤と取り違えない）。地との比（計算値）: ライト `#1A73E8` 4.22 /
+  /// ダーク `#4C8DF6` 5.26。
+  final Color me;
+
   static const light = MapPalette(
     land: Color(0xFFFAF7F3), // bg と同じ
     water: Color(0xFFDDE3E1),
@@ -401,6 +420,8 @@ class MapPalette {
     rail: Color(0xFFA3968D),
     label: Color(0xFF6E625B), // textSub
     labelHalo: Color(0xFFFAF7F3),
+    shop: Color(0xFF1E8A4C),
+    me: Color(0xFF1A73E8),
   );
 
   static const dark = MapPalette(
@@ -413,6 +434,8 @@ class MapPalette {
     rail: Color(0xFF6B5E56),
     label: Color(0xFFA79A92), // textSub
     labelHalo: Color(0xFF211A17),
+    shop: Color(0xFF3DBE7A),
+    me: Color(0xFF4C8DF6),
   );
 
   static MapPalette of(AppColors colors) => colors.isDark ? dark : light;

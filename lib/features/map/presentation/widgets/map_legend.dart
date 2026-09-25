@@ -44,23 +44,36 @@ class MapLegend extends ConsumerWidget {
       container: true,
       label: t.mapLegendLabel,
       child: _Plate(
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            for (final (mark, label) in entries)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(width: 14, height: 14, child: Center(child: mark)),
-                  const SizedBox(width: 4),
-                  Text(
-                    label,
-                    style: TextStyle(fontSize: 11, color: colors.text),
-                  ),
-                ],
+            ...[
+              Flexible(
+                child: Wrap(
+                  spacing: 10,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final (mark, label) in entries)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: Center(child: mark),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            label,
+                            style: TextStyle(fontSize: 11, color: colors.text),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
+            ],
           ],
         ),
       ),
@@ -68,13 +81,21 @@ class MapLegend extends ConsumerWidget {
   }
 }
 
-/// 地図データの帰属表記。**ODbL（OpenStreetMap のライセンス）が地図の上に
-/// 見える形で出すことを求めている**ので、隠さない・畳まない。押すと著作権の
-/// ページを開く。
+/// 地図データの帰属表記。**右下に常に出す「© OpenStreetMap」**（ユーザーの判断）。
+/// 押すと著作権のページを開く。
+///
+/// - **「contributors」は付けない**（ユーザーの判断）。OpenStreetMap 財団の
+///   帰属表示の指針（https://osmfoundation.org/wiki/Licence/Attribution_Guidelines ）
+///   は「© OpenStreetMap」を著作権のページへつないで出す形を認めている
+/// - 地図を塞がないよう、地は薄く（面色の 55%）
+/// - メニューのライセンス一覧にも載せてある（`registerMapDataLicense`）
 class MapAttribution extends StatelessWidget {
   const MapAttribution({super.key});
 
   static final copyright = Uri.parse('https://www.openstreetmap.org/copyright');
+
+  /// 固有の表記なので訳さない。
+  static const text = '© OpenStreetMap';
 
   @override
   Widget build(BuildContext context) {
@@ -85,10 +106,12 @@ class MapAttribution extends StatelessWidget {
         onTap: () => launchUrl(copyright, mode: LaunchMode.inAppBrowserView),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-          color: colors.surface.withValues(alpha: 0.8),
+          decoration: BoxDecoration(
+            color: colors.surface.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(3),
+          ),
           child: Text(
-            // 固有の表記なので訳さない（OpenStreetMap の指定の文言）
-            '© OpenStreetMap contributors',
+            text,
             style: TextStyle(
               fontSize: 10,
               color: colors.textSub,

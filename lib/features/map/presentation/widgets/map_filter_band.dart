@@ -3,25 +3,24 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
-import 'package:tonsoku/features/home/presentation/article_list_page.dart';
 import 'package:tonsoku/features/map/domain/map_format.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
 import 'package:tonsoku/shared/widgets/cdn_image.dart';
 import 'package:tonsoku/shared/widgets/optical_center.dart';
 
-/// マップの上に貼る絞り込みの帯。**記事一覧の絞り込み（web の `.sticky-band`）と
-/// 同じ見た目**: 面色の地に、横に流すチップの段を重ねる。
+/// 地図の上、検索バーの直下に置く絞り込み（ユーザーの指定）。上から:
 ///
-/// - 上の段 … **店舗限定の品**（写真つき。複数選べる）。品が 1 つも無い週は段ごと出さない
-/// - 品を選んだ時だけ、品の段の直下に … **「終売の店も含める」**（品を選んでいない
-///   時は意味を持たないので出さない）
-/// - 下の段 … **松のや専門店と併設**（記事一覧のタグと同じトグル）と、出している店の数
-class MapFilterBand extends ConsumerWidget {
-  const MapFilterBand({
+/// 1. **松のや専門店と併設**（横並び。[_BrandChip]）
+/// 2. **店舗限定の品**（縦並び。[MenuChip]。複数選べる）。品が 1 つも無い週は出さない
+/// 3. 品を選んだ時だけ **「終売の店も含める」**（選んでいない時は意味を持たない）
+///
+/// 地図の上に浮かせるので、どの部品も面色の地に影を付ける（地が地図の模様に
+/// なるため）。角は丸めた四角（ユーザーの指定。丸い端のピルにしない）。
+class MapFilters extends ConsumerWidget {
+  const MapFilters({
     required this.filter,
     required this.menus,
-    required this.shownCount,
     required this.onChanged,
     super.key,
   });
@@ -30,9 +29,6 @@ class MapFilterBand extends ConsumerWidget {
 
   /// 選べる品（`app/limited.json` の並び）。
   final List<LimitedMenu> menus;
-
-  /// いま地図に出している店の数。
-  final int? shownCount;
   final ValueChanged<ShopFilter> onChanged;
 
   @override
@@ -43,118 +39,177 @@ class MapFilterBand extends ConsumerWidget {
     Set<T> toggle<T>(Set<T> set, T value) =>
         set.contains(value) ? ({...set}..remove(value)) : {...set, value};
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (menus.isNotEmpty) ...[
-              _Row(
-                children: [
-                  for (final menu in menus)
-                    MenuChip(
-                      menu: menu,
-                      selected: filter.menuIds.contains(menu.campaignId),
-                      onTap: () => onChanged(
-                        filter.copyWith(
-                          menuIds: toggle(filter.menuIds, menu.campaignId),
-                        ),
-                      ),
-                    ),
-                ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 横に流す（画面が狭い端末・英語の長い名前で溢れさせない）
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: [
+              _BrandChip(
+                label: t.mapStandalone,
+                selected: filter.standalone,
+                onTap: () =>
+                    onChanged(filter.copyWith(standalone: !filter.standalone)),
               ),
-              // 品を選んだ時だけ出す（選んでいない時は意味を持たない）
-              if (filter.menuIds.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
-                  child: _IncludeInactive(
-                    label: t.mapIncludeInactive,
-                    value: filter.includeInactive,
-                    onChanged: (v) =>
-                        onChanged(filter.copyWith(includeInactive: v)),
+              for (final brand in ShopBrand.values) ...[
+                const SizedBox(width: 6),
+                _BrandChip(
+                  label: brandLabel(brand, t),
+                  selected: filter.brands.contains(brand),
+                  onTap: () => onChanged(
+                    filter.copyWith(brands: toggle(filter.brands, brand)),
                   ),
                 ),
-              // 押す場所の上下の余白（6）を含めて、段の間を 8 に揃える
-              SizedBox(height: filter.menuIds.isEmpty ? 8 : 2),
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: _Row(
-                    children: [
-                      TagToggleChip(
-                        label: t.mapStandalone,
-                        selected: filter.standalone,
-                        onTap: () => onChanged(
-                          filter.copyWith(standalone: !filter.standalone),
-                        ),
-                      ),
-                      for (final brand in ShopBrand.values)
-                        TagToggleChip(
-                          label: brandLabel(brand, t),
-                          selected: filter.brands.contains(brand),
-                          onTap: () => onChanged(
-                            filter.copyWith(
-                              brands: toggle(filter.brands, brand),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                if (shownCount case final n?)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Text(
-                      t.homeLimitedShops(n),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.textSub,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
               ],
+            ],
+          ),
+        ),
+        for (final menu in menus) ...[
+          const SizedBox(height: 6),
+          MenuChip(
+            menu: menu,
+            selected: filter.menuIds.contains(menu.campaignId),
+            onTap: () => onChanged(
+              filter.copyWith(menuIds: toggle(filter.menuIds, menu.campaignId)),
             ),
-          ],
+          ),
+        ],
+        if (filter.menuIds.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Material(
+            color: colors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: colors.border),
+            ),
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: _IncludeInactive(
+                label: t.mapIncludeInactive,
+                value: filter.includeInactive,
+                onChanged: (v) =>
+                    onChanged(filter.copyWith(includeInactive: v)),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 松のや専門店・併設のトグル。選ばれたら文字色で塗り、面色の文字（記事一覧の
+/// タグのトグル `TagToggleChip` と同じ塗り分け）。地図の上に浮かせるので、
+/// 選ばれていない時も面色の地を敷く。
+class _BrandChip extends StatelessWidget {
+  const _BrandChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      toggled: selected,
+      button: true,
+      child: Material(
+        color: selected ? colors.text : colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: selected ? colors.text : colors.border),
+        ),
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.2,
+                color: selected ? colors.surface : colors.textSub,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// 横に流す 1 段（記事一覧の `_Row` と同じ。左右の余白は段が持つ）。
-class _Row extends StatelessWidget {
-  const _Row({required this.children});
+/// 出している店の数を**丸で囲んで**出す（ユーザーの指定。右上の列、帰属の (i) の下）。
+class ShopCountBadge extends ConsumerWidget {
+  const ShopCountBadge({required this.count, super.key});
 
-  final List<Widget> children;
+  final int count;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: [
-        for (final (i, child) in children.indexed) ...[
-          if (i > 0) const SizedBox(width: 6),
-          child,
-        ],
-      ],
-    ),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final t = ref.watch(messagesProvider);
+    return Semantics(
+      label: t.homeLimitedShops(count),
+      child: ExcludeSemantics(
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: colors.surface,
+            // 地の上の赤（`primaryText`）の輪
+            border: Border.all(color: colors.primaryText, width: 1.5),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.1,
+                  fontWeight: FontWeight.w700,
+                  color: colors.primaryText,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              Text(
+                t.mapShopsUnit,
+                style: TextStyle(
+                  fontSize: 9,
+                  height: 1.1,
+                  color: colors.textSub,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-/// 店舗限定の品のチップ（写真 ＋ 品名）。**見た目は記事一覧のカテゴリのチップ
-/// （`FilterChipButton`）に揃える**: 選ばれていなければ枠と副テキスト、選ばれたら
-/// 地の上の赤（`primaryText`。「メニュー」カテゴリの色と同じ）で文字と枠、地は
-/// その 6%。
-class MenuChip extends StatelessWidget {
+/// 店舗限定の品のチップ（写真 ＋ 品名 ＋ 店の数）。**角は丸めた四角**（ユーザーの
+/// 指定。丸い端のピルにしない）。選ばれていなければ面色の地に罫線、選ばれたら
+/// 地の上の赤（`primaryText`）で文字と枠、地はその 6% を面色に重ねる。
+///
+/// 店の数は**終売の店も含めた数**で、終売があれば「（終売: X件）」を添える
+/// （ユーザーの指定。[LimitedMenu] の `shops` は売り切れの店も含むので、
+/// 合計は `shops` ＋ `ended_shops`、終売は売り切れ ＋ `ended_shops`。
+/// 画面では売り切れも終売と呼ぶ。`LimitedAvailability`）。
+class MenuChip extends ConsumerWidget {
   const MenuChip({
     required this.menu,
     required this.selected,
@@ -166,50 +221,75 @@ class MenuChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  /// 品名が長い（「たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食」）ので、
-  /// チップの幅に上限を付けて省略する。
-  static const maxLabelWidth = 180.0;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final t = ref.watch(messagesProvider);
     final line = colors.primaryText;
     final image = menu.thumbnailUrl ?? menu.imageUrl ?? '';
+    final total = menu.shops.length + menu.endedShops.length;
+    final ended = menu.soldOutShops.length + menu.endedShops.length;
+    final radius = BorderRadius.circular(8);
 
     return Semantics(
       toggled: selected,
       button: true,
       child: Material(
-        color: selected ? line.withValues(alpha: 0.06) : Colors.transparent,
-        shape: StadiumBorder(
+        color: colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
           side: BorderSide(
-            color: selected ? line.withValues(alpha: 0.35) : colors.border,
+            color: selected ? line.withValues(alpha: 0.6) : colors.border,
           ),
         ),
+        elevation: 2,
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(3, 3, 10, 3),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipOval(child: CdnImage(url: image, width: 24, height: 24)),
-                const SizedBox(width: 6),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: maxLabelWidth),
-                  child: Text(
-                    menu.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1,
-                      color: selected ? line : colors.textSub,
+        child: Ink(
+          color: selected ? line.withValues(alpha: 0.06) : null,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 10, 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: CdnImage(url: image, width: 34, height: 34),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          menu.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.2,
+                            color: selected ? line : colors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          t.mapMenuShops(total, ended),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            height: 1.2,
+                            color: colors.textSub,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

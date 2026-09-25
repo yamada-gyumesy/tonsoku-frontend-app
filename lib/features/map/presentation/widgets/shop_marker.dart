@@ -5,12 +5,11 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 
 /// 店の印。**店舗限定を扱う店がひと目で分かる**ことが要件（Issue #8）。
 ///
-/// - **普通の店** … 茶（`brown`）の小さな点に面色の縁。681 軒が全国に散るので、
-///   引いた時に地図を埋めない大きさにする
+/// - **普通の店** … 緑（`MapPalette.shop`）の小さな点に面色の縁。681 軒が
+///   全国に散るので、引いた時に地図を埋めない大きさにする
 /// - **店舗限定の店** … 一回り大きな丸にアイコン。状態で塗りを変える:
 ///   - 販売中 … **赤の塗り（`primary`）に白**。唯一の塗りなので一番目立つ
 ///   - 発売前 … 面色の地に赤（`primaryText`）の縁とアイコン
-///   - 売り切れ … 面色の地に副テキストの縁とアイコン
 ///   - 終売 … hover の地に罫線の縁、副テキストのアイコン（一番沈める）
 ///
 /// **塗りの赤（`primary`）は白を載せる塗りにだけ使う。** 地図の上に直接置く赤
@@ -59,7 +58,7 @@ class ShopMarker extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: colors.brown,
+        color: MapPalette.of(colors).shop,
         shape: BoxShape.circle,
         border: Border.all(color: colors.surface, width: small ? 1 : 1.5),
       ),

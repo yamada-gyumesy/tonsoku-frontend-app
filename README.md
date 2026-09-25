@@ -133,7 +133,7 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 - **地図を作り直して層や属性を変えたら、描き方（`lib/features/map/presentation/map_theme.dart`）も直す。** 名前がずれても例外にはならず、その層が黙って描かれなくなる（`test/features/map/map_theme_test.dart` は描き方の側しか見ていない）
 - 読み手は自前（`lib/features/map/data/pmtiles.dart`）。公開の PMTiles のパッケージは今の依存と解決できない（理由は同ファイル）
 - 配色はアプリ側で持つ（`MapPalette`。`lib/core/theme/app_colors.dart`）。ライト／ダークで描き分ける
-- **地図の上に「© OpenStreetMap contributors」を常に出す**（ODbL の帰属表示。畳まない・隠さない）
+- **地図の右下に「© OpenStreetMap」を常に出す**（ODbL の帰属表示。押すと著作権のページ。contributors を付けない理由は `MapAttribution` の注記）。メニューのライセンス一覧にも載せる（`lib/core/licenses/map_data_license.dart`）
 
 ## アプリアイコン
 

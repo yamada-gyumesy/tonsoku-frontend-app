@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,9 @@ import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/lifecycle/app_resume.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
+import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/features/map/data/bundled_tile_provider.dart';
+import 'package:tonsoku/features/map/data/compass_repository.dart';
 import 'package:tonsoku/features/map/data/location_repository.dart';
 import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
@@ -25,6 +28,8 @@ import 'package:tonsoku/features/map/domain/shop_state.dart';
 import 'package:tonsoku/features/map/presentation/map_layers.dart';
 import 'package:tonsoku/features/map/presentation/map_theme.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_filter_band.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
+import 'package:tonsoku/features/map/presentation/widgets/offscreen_counts.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_legend.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_sheet.dart';
@@ -97,6 +102,22 @@ class _MapPageState extends ConsumerState<MapPage> {
   bool _locating = false;
   Timer? _saveCamera;
 
+  /// **進行方向が上**（コンパスのボタン。牛めしレーダーの「N 固定 ⇄ コンパス」を
+  /// 写した）。既定は北が上。
+  bool _headingUp = false;
+
+  /// 進行方向が上の間、端末の向きに地図の回転を合わせ続けるか。**地図を指で
+  /// 動かしたら外す**（回転はその時の角度のまま。Google マップと同じ）。
+  /// 現在地のボタンで戻る。
+  bool _follow = false;
+  StreamSubscription<double>? _compass;
+
+  /// 端末の向き（度）。現在地の印の扇に使う。**取れるまでは null**。
+  double? _heading;
+
+  /// 地図の回転（度。ボタンの矢印を北へ向けるのに使う）。
+  double _rotation = 0;
+
   /// 時刻だけで印が変わる瞬間（発売・閉店・再開）に組み直す（[_scheduleTick]）。
   Timer? _tick;
   DateTime? _tickAt;
@@ -123,6 +144,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   void dispose() {
     _saveCamera?.cancel();
     _tick?.cancel();
+    unawaited(_compass?.cancel());
     _controller.dispose();
     super.dispose();
   }
@@ -143,6 +165,11 @@ class _MapPageState extends ConsumerState<MapPage> {
   void _onPositionChanged(MapCamera camera, bool hasGesture) {
     final small = camera.zoom < ShopsLayer.smallBelow;
     if (small != _small) setState(() => _small = small);
+    // 指で動かしたら向きの追従を外す（回転は今の角度のまま）
+    if (hasGesture && _follow) _follow = false;
+    if ((camera.rotation - _rotation).abs() > 0.5) {
+      setState(() => _rotation = camera.rotation);
+    }
     // **止まってから残す**（動かしている間に毎フレーム書かない）
     _saveCamera?.cancel();
     _saveCamera = Timer(const Duration(milliseconds: 600), () {
@@ -156,6 +183,54 @@ class _MapPageState extends ConsumerState<MapPage> {
             '${camera.zoom.toStringAsFixed(2)}',
           );
     });
+  }
+
+  /// 地図の向きを切り替える（北が上 ⇄ 進行方向が上）。
+  ///
+  /// 進行方向が上にした時は**現在地へ寄せてから**回す（牛めしレーダーと同じ。
+  /// 別の場所を見たまま回すと、どこを中心に回っているのか分からない）。
+  /// 北が上に戻す時は回転を 0 に戻す（方位は現在地の扇のために聞き続ける）。
+  void _toggleHeading() {
+    if (_headingUp) {
+      setState(() {
+        _headingUp = false;
+        _follow = false;
+      });
+      _controller.rotate(0);
+      return;
+    }
+    setState(() {
+      _headingUp = true;
+      _follow = true;
+    });
+    _listenCompass();
+    unawaited(_locate());
+  }
+
+  /// 方位のセンサーを聞き始める（既に聞いていれば何もしない）。**現在地が
+  /// 分かってから**聞く（現在地の扇と、進行方向が上のモードに使う）。
+  /// 聞いている間だけセンサーが動く（`CompassRepository`）。
+  void _listenCompass() {
+    if (_compass != null) return;
+    _compass = ref.read(compassRepositoryProvider).headingStream().listen(
+      (heading) {
+        if (!mounted) return;
+        if (_follow) _controller.rotate(-heading);
+        // 扇は 1 度以上変わった時だけ描き直す（センサーは細かく揺れる）
+        final prev = _heading;
+        if (prev == null || _angleDiff(prev, heading) >= 1) {
+          setState(() => _heading = heading);
+        }
+      },
+      // 方位を出せない端末（センサーが無い・シミュレータ）では扇を出さず、
+      // 北が上のまま
+      onError: (_) {},
+    );
+  }
+
+  static double _angleDiff(double a, double b) {
+    final d = (a - b).abs() % 360;
+    return d > 180 ? 360 - d : d;
   }
 
   /// 現在地へ寄せる（まだ聞いていなければ許可を求める）。[quiet] なら取れなくても
@@ -191,7 +266,12 @@ class _MapPageState extends ConsumerState<MapPage> {
       }
       return;
     }
-    setState(() => _me = me);
+    setState(() {
+      _me = me;
+      // 進行方向が上の間は、現在地へ戻ったら向きの追従も戻す
+      if (_headingUp) _follow = true;
+    });
+    _listenCompass();
     _controller.move(me, MapPage.locateZoom);
   }
 
@@ -242,14 +322,12 @@ class _MapPageState extends ConsumerState<MapPage> {
     return _theme!;
   }
 
-  void _openShop(ShopEntry entry) {
-    // **開く時点の時刻で求め直す**（`entry` は最後に組んだ時のもの。
+  void _openShop(Shop shop) {
+    // **開く時点の時刻で求め直す**（印は最後に組んだ時のもの。
     // 印の組み直しを待たずに、押した時の状態を出す）
     final now = clock.now();
-    final state = shopStateOf(entry.shop, now: now);
-    final limited = ref
-        .read(limitedIndexProvider)
-        .at(entry.shop.code, now: now);
+    final state = shopStateOf(shop, now: now);
+    final limited = ref.read(limitedIndexProvider).at(shop.code, now: now);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -260,7 +338,7 @@ class _MapPageState extends ConsumerState<MapPage> {
         maxHeight: MediaQuery.sizeOf(context).height * 0.75,
       ),
       builder: (sheetContext) => ShopSheet(
-        shop: entry.shop,
+        shop: shop,
         state: state,
         limited: limited,
         onOpenArticle: (slug) {
@@ -334,18 +412,89 @@ class _MapPageState extends ConsumerState<MapPage> {
             maximumZoom: MapPage.maxZoom,
           ),
         StationsLayer(stations: stations, locale: locale),
-        ShopsLayer(entries: entries, small: _small, onTap: _openShop),
+        ShopsLayer(
+          entries: entries,
+          small: _small,
+          onTap: (e) => _openShop(e.shop),
+        ),
         if (_me case final me?)
           MarkerLayer(
             markers: [
               Marker(
                 point: me,
-                width: 30,
-                height: 30,
-                child: const IgnorePointer(child: MyLocationMarker()),
+                width: MyLocationMarker.size,
+                height: MyLocationMarker.size,
+                child: IgnorePointer(
+                  child: MyLocationMarker(
+                    heading: _heading,
+                    rotation: _rotation,
+                  ),
+                ),
               ),
             ],
           ),
+        // **左下に凡例、その横に縮尺**（ユーザーの指定）。縮尺は地図の位置と
+        // 倍率を読む（`MapCamera.of`）ので、並べる行ごと地図の層として置く
+        Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 72, 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // ── 動画広告（リワード。#5）─────────────────────
+                // **視聴のボタンは凡例の上に置く**予定。視聴と報酬の対応を画面に
+                // 明示する（Issue #8 のユーザーの指定）。広告の SDK は #5 で
+                // 入れるので、ここには何も置かない
+                Flexible(child: MapLegend(present: present)),
+                // 文字は地名と同じ色・書体
+                Scalebar(
+                  alignment: Alignment.bottomLeft,
+                  // 凡例から離す（ユーザーの指摘。くっつくと凡例の一部に見える）。
+                  // 長さは中（短いと読みにくい。ユーザーの指摘）
+                  padding: const EdgeInsets.only(left: 20, bottom: 4),
+                  length: ScalebarLength.m,
+                  lineColor: colors.textSub,
+                  strokeWidth: 1.5,
+                  textStyle: TextStyle(
+                    fontSize: 10,
+                    color: colors.textSub,
+                    fontFamily: AppTheme.defaultFontFamily,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // 画面の外の**店舗限定の店**の数（方角ごと。普通の店は数えない ――
+        // ユーザーの指定。このマップの主役は店舗限定の店）。**縁の余白は
+        // 検索・品・ボタン・凡例を避ける**: 下は凡例・縮尺・現在地・著作権表記
+        // （〜84）、左右は札の半分の幅（〜44）
+        OffscreenCounts(
+          points: [
+            for (final e in entries)
+              if (e.availability != null) LatLng(e.shop.lat, e.shop.lon),
+          ],
+          // 上は左上の検索と絞り込みの列の下（品の数と「含める」で高さが変わる。
+          // 目安の高さ: 検索 44・併設 34・品 1 つ 52・「含める」42）
+          padding: EdgeInsets.fromLTRB(
+            44,
+            12 +
+                44 +
+                8 +
+                34 +
+                menus.length * 52 +
+                (_filter.menuIds.isEmpty ? 0 : 42) +
+                16,
+            44,
+            84,
+          ),
+          onTap: (p) {
+            _follow = false;
+            _controller.move(p, _controller.camera.zoom);
+          },
+        ),
       ],
     );
 
@@ -354,54 +503,88 @@ class _MapPageState extends ConsumerState<MapPage> {
       body: Column(
         children: [
           const TonsokuAppBar(hidden: 0),
-          MapFilterBand(
-            filter: _filter,
-            menus: menus,
-            shownCount: shops.hasValue ? entries.length : null,
-            onChanged: (f) => setState(() => _filter = f),
-          ),
           Expanded(
             child: Stack(
               children: [
                 Positioned.fill(child: map),
-                // 店を取れなかった（キャッシュも無い初回）。地図は見せたまま
-                // 上に重ねる
+                // **並び（ユーザーの指定）**: 左上に検索と絞り込み、右上に
+                // コンパスと店の数、右下に現在地と著作権表記、左下に凡例と縮尺
+                // （凡例と縮尺は地図の層。`FlutterMap` の子）
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _CompassButton(
+                        label: _headingUp ? t.mapHeadingUp : t.mapNorthUp,
+                        headingUp: _headingUp,
+                        rotation: _rotation,
+                        onTap: _toggleHeading,
+                      ),
+                      // 出している店の数（丸で囲む。ユーザーの指定）
+                      if (shops.hasValue) ...[
+                        const SizedBox(height: 10),
+                        ShopCountBadge(count: entries.length),
+                      ],
+                    ],
+                  ),
+                ),
+                // 右下に著作権表記、その上に現在地（ユーザーの指定）
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: _LocateButton(
+                          label: t.mapMyLocation,
+                          busy: _locating,
+                          onTap: _locate,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const MapAttribution(),
+                    ],
+                  ),
+                ),
+                // 店を取れなかった（キャッシュも無い初回）。地図は見せたまま、
+                // 検索の下に重ねる
                 if (shops.hasError && !shops.hasValue)
                   Positioned(
-                    top: 16,
-                    left: 16,
-                    right: 16,
+                    top: 64,
+                    left: 12,
+                    right: 12,
                     child: _LoadFailed(
                       message: t.commonError,
                       retry: t.commonRetry,
                       onRetry: () => ref.invalidate(shopsProvider),
                     ),
                   ),
+                // 検索は最後に重ねる（候補の一覧が他の部品より上に出るように）
                 Positioned(
-                  left: 8,
-                  right: 72,
-                  bottom: 4,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // ── 動画広告（リワード。#5）─────────────────────
-                      // **視聴のボタンはここ（凡例の上）に置く**予定。視聴と報酬の
-                      // 対応を画面に明示する（Issue #8 のユーザーの指定）。広告の
-                      // SDK は #5 で入れるので、ここには何も置かない
-                      MapLegend(present: present),
-                      const SizedBox(height: 4),
-                      const MapAttribution(),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  right: 12,
-                  bottom: 12,
-                  child: _LocateButton(
-                    label: t.mapMyLocation,
-                    busy: _locating,
-                    onTap: _locate,
+                  top: 12,
+                  left: 12,
+                  right: 12 + 44 + 10,
+                  child: MapSearch(
+                    // 探すのは地図に出している店（牛めしレーダーと同じ）
+                    shops: [for (final e in entries) e.shop],
+                    resetKey: _filter,
+                    onShop: (shop) {
+                      _follow = false;
+                      _controller.move(
+                        LatLng(shop.lat, shop.lon),
+                        math.max(_controller.camera.zoom, MapPage.locateZoom),
+                      );
+                      _openShop(shop);
+                    },
+                    below: MapFilters(
+                      filter: _filter,
+                      menus: menus,
+                      onChanged: (f) => setState(() => _filter = f),
+                    ),
                   ),
                 ),
               ],
@@ -475,6 +658,72 @@ class _LocateButton extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Icon(Icons.my_location, size: 22, color: colors.text),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 地図の向きのボタン（牛めしレーダーのコンパスのボタンを、とん速の丸いボタンの
+/// 形にしたもの）。
+///
+/// - 北が上 … 「N」
+/// - 進行方向が上 … 北を指す矢印（地図の回転に合わせて回る）
+class _CompassButton extends StatelessWidget {
+  const _CompassButton({
+    required this.label,
+    required this.headingUp,
+    required this.rotation,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool headingUp;
+
+  /// 地図の回転（度）。北は画面上でこの角度の向きに来る。
+  final double rotation;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: colors.surface,
+        shape: CircleBorder(side: BorderSide(color: colors.border)),
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: headingUp
+                  ? Transform.rotate(
+                      angle: rotation * math.pi / 180,
+                      // 地の上の赤（`primaryText`。塗りの `primary` は地の上に置かない）
+                      child: Icon(
+                        Icons.navigation_rounded,
+                        size: 22,
+                        color: colors.primaryText,
+                      ),
+                    )
+                  : ExcludeSemantics(
+                      child: Text(
+                        'N',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                          fontFamily: AppTheme.defaultFontFamily,
+                        ),
+                      ),
+                    ),
             ),
           ),
         ),

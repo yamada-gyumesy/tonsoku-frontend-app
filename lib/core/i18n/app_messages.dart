@@ -154,6 +154,11 @@ class AppMessages {
     required this.mapUpcoming,
     required this.mapLegendLabel,
     required this.mapMyLocation,
+    required this.mapNorthUp,
+    required this.mapSearchHint,
+    required this.mapShopsUnit,
+    required this.mapMenuShops,
+    required this.mapHeadingUp,
     required this.mapLocationUnavailable,
     required this.mapOpenInGoogleMaps,
     required this.mapAddress,
@@ -430,6 +435,20 @@ class AppMessages {
   /// 凡例全体の読み上げ名。
   final String mapLegendLabel;
   final String mapMyLocation;
+
+  /// 地図の向きのボタン（読み上げ）。いまの向きを言う。
+  final String mapNorthUp;
+
+  /// 地図の検索バー（店を店名・ローマ字名・店舗番号で探す）。
+  final String mapSearchHint;
+
+  /// 出している店の数の丸（`ShopCountBadge`）の、数の下の単位。
+  final String mapShopsUnit;
+
+  /// 店舗限定の品のチップの店の数（終売を含めた合計と、終売の数。
+  /// 終売が無ければ合計だけ。ユーザーの指定の文言）。
+  final String Function(int total, int ended) mapMenuShops;
+  final String mapHeadingUp;
   final String mapLocationUnavailable;
   final String mapOpenInGoogleMaps;
   final String mapAddress;
@@ -625,6 +644,12 @@ class AppMessages {
     mapUpcoming: '発売前',
     mapLegendLabel: '凡例',
     mapMyLocation: '現在地',
+    mapNorthUp: '北が上',
+    mapSearchHint: '店舗を探す',
+    mapShopsUnit: '店舗',
+    mapMenuShops: (total, ended) =>
+        ended > 0 ? '$total店舗（終売: $ended件）' : '$total店舗',
+    mapHeadingUp: '進行方向が上',
     mapLocationUnavailable: '現在地を取得できません',
     mapOpenInGoogleMaps: 'Google マップで開く',
     mapAddress: '住所',
@@ -818,6 +843,12 @@ class AppMessages {
     mapUpcoming: 'Coming soon',
     mapLegendLabel: 'Legend',
     mapMyLocation: 'My location',
+    mapNorthUp: 'North up',
+    mapSearchHint: 'Search stores',
+    mapShopsUnit: 'stores',
+    mapMenuShops: (total, ended) =>
+        ended > 0 ? '$total stores ($ended ended)' : '$total stores',
+    mapHeadingUp: 'Heading up',
     mapLocationUnavailable: 'Your location is unavailable',
     mapOpenInGoogleMaps: 'Open in Google Maps',
     mapAddress: 'Address',
@@ -1000,6 +1031,12 @@ class AppMessages {
     mapUpcoming: '即将发售',
     mapLegendLabel: '图例',
     mapMyLocation: '当前位置',
+    mapNorthUp: '北方朝上',
+    mapSearchHint: '搜索门店',
+    mapShopsUnit: '家门店',
+    mapMenuShops: (total, ended) =>
+        ended > 0 ? '$total家门店（已停售: $ended家）' : '$total家门店',
+    mapHeadingUp: '前进方向朝上',
     mapLocationUnavailable: '无法获取当前位置',
     mapOpenInGoogleMaps: '在 Google 地图中打开',
     mapAddress: '地址',
