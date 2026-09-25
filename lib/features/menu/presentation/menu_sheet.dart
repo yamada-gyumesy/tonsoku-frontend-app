@@ -7,6 +7,9 @@ import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/app_messages.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
+import 'package:tonsoku/core/utils/article_date.dart';
+import 'package:tonsoku/features/calendar/data/calendar_repository.dart';
+import 'package:tonsoku/features/calendar/domain/calendar_window.dart';
 import 'package:tonsoku/features/menu/presentation/app_version_provider.dart';
 import 'package:tonsoku/features/menu/presentation/licenses_page.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
@@ -29,20 +32,24 @@ import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
 ///
 /// ## web・gyumesy との違い
 ///
-/// - **カレンダー・ランキングはここに詰める**（ランキングは実装済み）（とん速の下タブは ホーム / マップ /
-///   クーポン / メニュー。ユーザーの指定）。**それぞれの画面ができた PR で行を足す**
-///   （カレンダー #15）
-///   （行き先の無い行は置かない）
+/// - **カレンダー・ランキングはここに詰める**（とん速の下タブは ホーム / マップ /
+///   クーポン / メニュー。ユーザーの指定）
+/// - **並びは「とん速とは → カレンダー → ランキング → 通知設定 → 外観 → 言語」**
+///   （ユーザーの指定）。web のメニューとも gyumesy とも違う
 /// - **通知設定の行は通知の Issue（#6）で足す**（web は常に出すが、アプリはまだ
-///   受け口が無い）
+///   受け口が無い。**行き先の無い行は置かない**）。足す場所はランキングの下
 class MenuSheet extends ConsumerStatefulWidget {
   const MenuSheet({
     required this.onClose,
+    required this.onOpenCalendar,
     required this.onOpenRanking,
     super.key,
   });
 
   final VoidCallback onClose;
+
+  /// カレンダーを開く。**積むのは [AppShell] の仕事**（ランキングと同じ）。
+  final VoidCallback onOpenCalendar;
 
   /// ランキングを開く。**積むのは [AppShell] の仕事**（どのタブに積むかを
   /// 知っているのはあちら）。
@@ -329,6 +336,23 @@ class MenuSheetState extends ConsumerState<MenuSheet>
       // **並びはユーザーの指定**: とん速とは → カレンダー → ランキング →
       // 通知設定 → 外観 → 言語（web の `CoMenuSheet` はとん速とは・通知設定・
       // 外観・言語。web で下タブにあるカレンダー・ランキングをここへ詰めた）
+      // **カレンダーもここに詰める**（web は下タブに置いているが、とん速の
+      // アプリの下タブには入らない。ユーザーの指定）。**行ける月に予定が 1 件も
+      // 無ければ行ごと出さない**（空の画面へ行ける入口を残さない。web の
+      // `hasEvents` と同じく**画面に出る範囲で数える** —— `hasCalendarEventsInRange`）。
+      // **取得できるまでは出しておく**（先に隠して後から現れると押し間違える。
+      // ランキングの行と同じ判断）
+      if (ref.watch(calendarEventsProvider).value case final events
+          when events == null ||
+              hasCalendarEventsInRange(events, todayInJst())) ...[
+        MenuListRow(
+          label: t.navCalendar,
+          // web の `calendar_month`
+          icon: Icons.calendar_month_outlined,
+          onTap: widget.onOpenCalendar,
+        ),
+        _divider(colors),
+      ],
       // **ランキングはここに詰める**（web は下タブに置いているが、とん速の
       // アプリの下タブには入らない。ユーザーの指定）。**中身が無い言語では行ごと
       // 出さない**（空の画面へ行ける入口を残さない。web の `hasRanking`）。

@@ -33,6 +33,20 @@ class AppMessages {
     required this.rankingUpdatedAt,
     required this.rankingRank,
     required this.rankingEmpty,
+    required this.navCalendar,
+    required this.calendarPageTitle,
+    required this.calendarViewCalendar,
+    required this.calendarPrevMonth,
+    required this.calendarNextMonth,
+    required this.calendarToday,
+    required this.calendarAll,
+    required this.calendarLineCategoryGroup,
+    required this.calendarEventCount,
+    required this.calendarWeekdays,
+    required this.calendarWeekdayColumnWidth,
+    required this.calendarMonthLabel,
+    required this.calendarMonthOnly,
+    required this.commonOfficial,
     required this.navAbout,
     required this.navTerms,
     required this.navPrivacy,
@@ -160,6 +174,51 @@ class AppMessages {
   final String Function(String date) rankingUpdatedAt;
   final String Function(int rank) rankingRank;
   final String rankingEmpty;
+
+  /// カレンダー（web の `nav.calendar` と `calendar.*`）。
+  final String navCalendar;
+
+  /// 画面の見出し。**「カレンダー」ではなく「松のやカレンダー」**（web と同じ。
+  /// 何のカレンダーかがメニューの行の名前だけでは伝わらない）。
+  final String calendarPageTitle;
+
+  /// クーポンのスケジュールの見出しから飛ぶ導線（web の `calendar.viewCalendar`）。
+  final String calendarViewCalendar;
+  final String calendarPrevMonth;
+  final String calendarNextMonth;
+  final String calendarToday;
+
+  /// 絞り込みの「すべて」。**この時だけ線を出さない**（線は 1 カテゴリに
+  /// 絞らないと、常時並走するキャンペーンや一時閉店で画面が線だらけになる）。
+  final String calendarAll;
+
+  /// 線を出すカテゴリを選ぶ操作全体の読み上げ名。
+  final String calendarLineCategoryGroup;
+
+  /// 1 本の線がまとめている予定の件数（線の読み上げ名）。**英語は単数形を持つ**
+  /// （`1 events` は誤り。web と同じ）。
+  final String Function(int count) calendarEventCount;
+
+  /// 曜日。**日曜始まり**（web の `calendar.weekdays` と同じ並び）。
+  final List<String> calendarWeekdays;
+
+  /// 日リストの日付列の幅。**[calendarWeekdays] の長さで決まるのでここに置く**
+  /// （gyumesy と同じ）。日本語・中国語は 1 文字だが英語は 3 文字（`Wed`）で、
+  /// web の `w-11`（44）のままだと溢れる。
+  final double calendarWeekdayColumnWidth;
+
+  /// 月の見出し。**言語で語順が違う**（`2026年9月` / `September 2026`）。
+  final String Function(int year, int month) calendarMonthLabel;
+
+  /// 日リストが月をまたぐ時の見出し（`10月`）。web の `calendar.monthOnly`。
+  final String Function(int month) calendarMonthOnly;
+
+  /// 出典チップの語（web の `common.official`）。**配信の `source_label` を
+  /// 使わないこと**（全ロケールで日本語のまま届く。gyumesy と同じ判断）。
+  ///
+  /// **「公式」はとん速のことではない。** 出どころが松のや公式である、という意味
+  /// （web の `CmSourceChip` の注記）。
+  final String commonOfficial;
 
   /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` のうち特商法を除く 2 つ）。
   final String navAbout;
@@ -348,6 +407,20 @@ class AppMessages {
     rankingUpdatedAt: (date) => '更新日：$date',
     rankingRank: (rank) => '$rank位',
     rankingEmpty: 'まだランキングがありません',
+    navCalendar: 'カレンダー',
+    calendarPageTitle: '松のやカレンダー',
+    calendarViewCalendar: 'カレンダーをみる',
+    calendarPrevMonth: '前の月',
+    calendarNextMonth: '次の月',
+    calendarToday: '今日',
+    calendarAll: 'すべて',
+    calendarLineCategoryGroup: '線を表示するカテゴリ',
+    calendarEventCount: (n) => '$n件の予定',
+    calendarWeekdays: const ['日', '月', '火', '水', '木', '金', '土'],
+    calendarWeekdayColumnWidth: 44,
+    calendarMonthLabel: (year, month) => '$year年$month月',
+    calendarMonthOnly: (month) => '$month月',
+    commonOfficial: '公式',
     navAbout: 'とん速とは',
     navTerms: '利用規約',
     navPrivacy: 'プライバシーポリシー',
@@ -490,6 +563,21 @@ class AppMessages {
     rankingUpdatedAt: (date) => 'Updated: $date',
     rankingRank: (rank) => 'No. $rank',
     rankingEmpty: 'No ranking yet',
+    navCalendar: 'Calendar',
+    calendarPageTitle: 'Matsunoya Calendar',
+    calendarViewCalendar: 'Open calendar',
+    calendarPrevMonth: 'Previous month',
+    calendarNextMonth: 'Next month',
+    calendarToday: 'Today',
+    calendarAll: 'All',
+    calendarLineCategoryGroup: 'Category to show as a timeline',
+    calendarEventCount: (n) => n == 1 ? '1 event' : '$n events',
+    calendarWeekdays: const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    calendarWeekdayColumnWidth: 66,
+    calendarMonthLabel: (year, month) =>
+        '${_calendarEnMonths[month - 1]} $year',
+    calendarMonthOnly: (month) => _calendarEnMonths[month - 1],
+    commonOfficial: 'Official',
     navAbout: 'About Tonsoku',
     navTerms: 'Terms of Service',
     navPrivacy: 'Privacy Policy',
@@ -643,6 +731,20 @@ class AppMessages {
     rankingUpdatedAt: (date) => '更新日期：$date',
     rankingRank: (rank) => '第$rank名',
     rankingEmpty: '暂无排行榜',
+    navCalendar: '日历',
+    calendarPageTitle: '松乃家日历',
+    calendarViewCalendar: '查看日历',
+    calendarPrevMonth: '上个月',
+    calendarNextMonth: '下个月',
+    calendarToday: '今天',
+    calendarAll: '全部',
+    calendarLineCategoryGroup: '显示时间线的分类',
+    calendarEventCount: (n) => '$n项日程',
+    calendarWeekdays: const ['日', '一', '二', '三', '四', '五', '六'],
+    calendarWeekdayColumnWidth: 44,
+    calendarMonthLabel: (year, month) => '$year年$month月',
+    calendarMonthOnly: (month) => '$month月',
+    commonOfficial: '官方',
     navAbout: '关于豚速',
     navTerms: '使用条款',
     navPrivacy: '隐私政策',
@@ -777,3 +879,20 @@ const _enReferenceTranslation =
     'This is a reference translation. '
     'The Japanese version is the authoritative original.';
 const _zhReferenceTranslation = '本文为参考译文，正式版本以日语原文为准。';
+
+/// カレンダーの英語の月名（web の `calendar.monthLabel` / `monthOnly`）。
+/// **略さない**（記事の日付の `Sep` とは別。web も月の見出しは全綴り）。
+const _calendarEnMonths = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];

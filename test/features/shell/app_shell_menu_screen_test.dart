@@ -7,10 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
+import 'package:tonsoku/features/calendar/data/calendar_repository.dart';
 import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
 
-/// メニューから開く画面（ランキング）とタブの行き来。
+/// メニューから開く画面（ランキング・カレンダー）とタブの行き来。
 ///
 /// **メニューから開いた画面はどのタブにも属さない**ので、タブを移ったら畳む
 /// （ユーザーの指摘: ホーム → ランキング → クーポン → ホームでランキングが出た）。
@@ -36,6 +37,11 @@ void main() {
                         builder: (context, state) => const Text('ランキング画面'),
                       ),
                       GoRoute(
+                        path: 'calendar',
+                        builder: (context, state) =>
+                            Text('カレンダー画面 ${state.uri}'),
+                      ),
+                      GoRoute(
                         path: 'article',
                         builder: (context, state) => const Text('記事'),
                       ),
@@ -55,6 +61,7 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(store),
           // 取得中はランキングの行を出しておく（`MenuSheet` の注記）
           rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
+          calendarEventsProvider.overrideWithValue(const AsyncValue.loading()),
         ],
         child: MaterialApp.router(
           theme: AppTheme.light(AppLocale.ja),
@@ -132,6 +139,28 @@ void main() {
     await tester.tap(find.text('クーポン'));
     await tester.pumpAndSettle();
     expect(find.text('ランキング画面'), findsNothing);
+    expect(find.text('root /coupon'), findsOneWidget);
+  });
+
+  /// **カレンダーもランキングと同じ扱い**（いま居るタブの中に積み、タブを
+  /// 移ったら畳む）。
+  testWidgets('カレンダーはいま居るタブの中に積み、タブを移ると畳まれる', (tester) async {
+    await pump(tester);
+    await tester.tap(find.text('クーポン'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('メニュー'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('カレンダー'));
+    await tester.pumpAndSettle();
+    // クーポンのタブの中に、絞り込みなしで積まれる
+    expect(find.text('カレンダー画面 /coupon/calendar'), findsOneWidget);
+
+    await tester.tap(find.text('ホーム'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('クーポン'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('カレンダー画面'), findsNothing);
     expect(find.text('root /coupon'), findsOneWidget);
   });
 }
