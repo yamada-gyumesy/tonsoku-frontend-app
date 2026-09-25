@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/features/article/presentation/article_page.dart';
+import 'package:tonsoku/features/coupon/presentation/coupon_page.dart';
 import 'package:tonsoku/features/home/presentation/article_list_page.dart';
 import 'package:tonsoku/features/home/presentation/home_page.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
@@ -108,7 +109,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.coupon,
-                builder: (context, state) => const PlaceholderPage(),
+                builder: (context, state) => CouponPage(
+                  // **記事はクーポンタブの上に積む**（戻るとクーポンへ帰る）
+                  onOpenArticle: (slug) =>
+                      context.push('${AppRoutes.coupon}/articles/$slug'),
+                ),
+                routes: [articleRoute(AppRoutes.coupon)],
               ),
             ],
           ),

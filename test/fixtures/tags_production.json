@@ -1,0 +1,110 @@
+[
+ {
+  "slug": "x",
+  "label": "X公式"
+ },
+ {
+  "slug": "tiktok",
+  "label": "TikTok公式"
+ },
+ {
+  "slug": "term-limited",
+  "label": "期間限定"
+ },
+ {
+  "slug": "store-limited",
+  "label": "店舗限定"
+ },
+ {
+  "slug": "announcement",
+  "label": "予告"
+ },
+ {
+  "slug": "new-menu",
+  "label": "新発売"
+ },
+ {
+  "slug": "revival",
+  "label": "復活"
+ },
+ {
+  "slug": "discontinued",
+  "label": "終売"
+ },
+ {
+  "slug": "app",
+  "label": "松屋アプリ"
+ },
+ {
+  "slug": "app-notification",
+  "label": "アプリ通知"
+ },
+ {
+  "slug": "price-change",
+  "label": "価格改定"
+ },
+ {
+  "slug": "added",
+  "label": "追加"
+ },
+ {
+  "slug": "update",
+  "label": "更新"
+ },
+ {
+  "slug": "deleted",
+  "label": "削除"
+ },
+ {
+  "slug": "new-store",
+  "label": "新店"
+ },
+ {
+  "slug": "close",
+  "label": "閉店"
+ },
+ {
+  "slug": "temp-close",
+  "label": "一時閉店"
+ },
+ {
+  "slug": "coupon",
+  "label": "クーポン"
+ },
+ {
+  "slug": "discount",
+  "label": "割引"
+ },
+ {
+  "slug": "matsuya-pass",
+  "label": "MATSUYA PASS"
+ },
+ {
+  "slug": "point",
+  "label": "ポイント還元"
+ },
+ {
+  "slug": "matsuya-point",
+  "label": "松屋ポイント"
+ },
+ {
+  "slug": "paypay",
+  "label": "PayPay"
+ },
+ {
+  "slug": "rakuten-pay",
+  "label": "楽天ペイ"
+ },
+ {
+  "slug": "d-payment",
+  "label": "d払い"
+ },
+ {
+  "slug": "au-pay",
+  "label": "au PAY"
+ },
+ {
+  "slug": "collab",
+  "label": "コラボ"
+ }
+]

@@ -11,7 +11,7 @@ part 'coupon.g.dart';
 /// **配信は無検証で素通しする。** ネストした配列ごと欠けた JSON も来うるので、
 /// 配列は `@Default([])`、任意の値は null 許容にする。
 ///
-/// **`best_deal` / `combos` はまだ読まない**（クーポンタブの Issue #3 で足す）。
+/// **`combos` は読まない**（web も画面に出していない）。
 @freezed
 abstract class Coupon with _$Coupon {
   const factory Coupon({
@@ -23,6 +23,9 @@ abstract class Coupon with _$Coupon {
 
     /// これから始まるぶん。**契約上 `start_date` 昇順**で届く。
     @Default(<CouponOffer>[]) List<CouponOffer> upcoming,
+
+    /// 最大還元の組み合わせ。**無い日がある。**
+    @JsonKey(name: 'best_deal') CouponBestDeal? bestDeal,
   }) = _Coupon;
 
   factory Coupon.fromJson(Map<String, dynamic> json) => _$CouponFromJson(json);
@@ -122,4 +125,74 @@ abstract class CouponLink with _$CouponLink {
 
   factory CouponLink.fromJson(Map<String, dynamic> json) =>
       _$CouponLinkFromJson(json);
+}
+
+/// 最大還元の組み合わせ（gyumesy-frontend-app の `CouponBestDeal` の写し）。
+@freezed
+abstract class CouponBestDeal with _$CouponBestDeal {
+  const factory CouponBestDeal({
+    required String channel,
+
+    /// 前提にしている会員ランク。**倍率クーポンの率はこれに掛かっている。**
+    required String rank,
+    @Default(<CouponBestDealPart>[]) List<CouponBestDealPart> parts,
+    @JsonKey(name: 'total_percent') required double totalPercent,
+
+    /// 効いている付与上限。**null なら上限が無い**（率が下がらないので、
+    /// 「これ以上は還元率が下がる」の但し書きを出してはいけない）。
+    @JsonKey(name: 'cap_yen') int? capYen,
+
+    /// その率で頼める上限の金額。**`cap_yen` があっても null を取りうる。**
+    @JsonKey(name: 'target_spend_yen') int? targetSpendYen,
+    @Default(<CouponPattern>[]) List<CouponPattern> patterns,
+  }) = _CouponBestDeal;
+
+  factory CouponBestDeal.fromJson(Map<String, dynamic> json) =>
+      _$CouponBestDealFromJson(json);
+}
+
+/// 掛け合わせの 1 要素。**契約上 `offerId` / `brand` がどちらも null なのが
+/// 松屋ポイントぶん。**
+@freezed
+abstract class CouponBestDealPart with _$CouponBestDealPart {
+  const factory CouponBestDealPart({
+    @JsonKey(name: 'offer_id') String? offerId,
+    String? brand,
+    required double percent,
+  }) = _CouponBestDealPart;
+
+  factory CouponBestDealPart.fromJson(Map<String, dynamic> json) =>
+      _$CouponBestDealPartFromJson(json);
+}
+
+/// 取り切る買い方 1 件。
+///
+/// **`back_yen` / `net_yen` は契約では非 null だが null で受ける。** web は
+/// 配信が契約に反した回に還元・実質の行だけを消して踏みとどまっている
+/// （`utils/coupon.ts` の `?? null`）。
+@freezed
+abstract class CouponPattern with _$CouponPattern {
+  const factory CouponPattern({
+    @Default(<CouponPatternItem>[]) List<CouponPatternItem> items,
+    @JsonKey(name: 'total_yen') required int totalYen,
+    @JsonKey(name: 'back_yen') int? backYen,
+    @JsonKey(name: 'net_yen') int? netYen,
+  }) = _CouponPattern;
+
+  factory CouponPattern.fromJson(Map<String, dynamic> json) =>
+      _$CouponPatternFromJson(json);
+}
+
+/// 買い方に含まれるメニュー 1 品。**絵・値段・記事は配信が出している時だけ**。
+@freezed
+abstract class CouponPatternItem with _$CouponPatternItem {
+  const factory CouponPatternItem({
+    required String name,
+    @JsonKey(name: 'price_yen') int? priceYen,
+    @JsonKey(name: 'article_slug') String? articleSlug,
+    @Default('') String thumbnail,
+  }) = _CouponPatternItem;
+
+  factory CouponPatternItem.fromJson(Map<String, dynamic> json) =>
+      _$CouponPatternItemFromJson(json);
 }
