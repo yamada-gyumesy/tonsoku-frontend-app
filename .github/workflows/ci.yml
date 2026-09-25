@@ -75,5 +75,8 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
       - run: dart run build_runner build
+      # **ライセンスの除外リストも生成物。** ずれると表示が古くなるのではなく、
+      # 同梱物の著作権表示が消える（load-bearing なので同じジョブで見る。gyumesy と同じ）
+      - run: python3 tool/build_licenses.py
       - name: 生成物に差分が無いこと
         run: git diff --exit-code
