@@ -71,7 +71,7 @@ void main() {
     // 帰属表記は右下に常に出す（contributors は付けない。ユーザーの判断）
     expect(find.text('© OpenStreetMap'), findsOneWidget);
     // 品を選ぶまでは「含める」を出さない
-    expect(find.text('終売・売り切れの店も含める'), findsNothing);
+    expect(find.text('売り切れ・終売の店も含める'), findsNothing);
 
     // 松のや専門店・併設は畳んである。検索バーの右のフィルタのボタンで開く
     expect(find.text('松のや専門店'), findsNothing);
@@ -93,7 +93,7 @@ void main() {
     await tester.tap(find.text('たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'));
     await tester.pump();
     expect(shownCount('15店舗'), findsOneWidget);
-    expect(find.text('終売・売り切れの店も含める'), findsOneWidget);
+    expect(find.text('売り切れ・終売の店も含める'), findsOneWidget);
 
     // 全店で終売した品はチップごと出さない（行き先が無い）
     expect(find.text('“極厚”肩ロース定食'), findsNothing);

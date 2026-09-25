@@ -26,7 +26,7 @@ enum LimitedAvailability {
   ended;
 
   /// 絞り込みで「扱っている店」に数えるか。**売り切れ・終売は
-  /// 「終売・売り切れの店も含める」を入れた時だけ数える**。
+  /// 「売り切れ・終売の店も含める」を入れた時だけ数える**。
   /// 発売前は数える（その店が取扱店であることは確かなので）
   bool get isActive => this == selling || this == upcoming;
 }
