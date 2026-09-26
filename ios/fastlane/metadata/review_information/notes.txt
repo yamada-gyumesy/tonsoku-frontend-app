@@ -7,15 +7,15 @@ No account or sign-in is required. Every feature is available immediately after 
 - Calendar: new menus, campaigns, and store events laid out on a calendar (opened from the Menu tab).
 - Coupons: coupons and point rewards usable at Matsunoya right now, with expiry dates, conditions, and the best combined reward rate.
 - Ranking: the most read articles, over daily / weekly / monthly periods (opened from the Menu tab).
-- Map: Matsunoya stores on a map, showing which stores carry store-exclusive menus and whether they are sold out. The background map is bundled with the app (OpenStreetMap data).
+- Map: Matsunoya stores on a map. Which stores carry store-exclusive menus (and whether they are sold out) is shown for 6 hours after watching a rewarded video, or always after the "Remove ads" purchase. The background map is bundled with the app (OpenStreetMap data).
 
-Location permission is optional. The app asks for it only when the user taps the "current location" button on the Map tab, and uses it only to center the map on the device. Declining it does not restrict any other feature.
+Location permission is optional. The app asks for it when the user first opens the Map tab (and again when the user taps the "current location" button), and uses it only to center the map on the device. Declining it does not restrict any other feature; the map can still be moved and searched by hand.
 
 Push notifications are optional. The app asks for permission from the notification settings screen, and declining it does not restrict any other feature.
 
 The app shows ads provided by Google AdMob.
 
-In-app purchase: "Remove ads" (non-consumable). It removes all ads (the banner above the tab bar, the ad after an article, and the rewarded video on the Map tab), and the store-exclusive menus on the Map tab are always shown to buyers instead of being unlocked by the video. It can be bought from the Menu tab (the "広告を非表示にする" / "Remove ads" row) or from the prompt shown under the video button on the Map tab. "Restore purchase" ("購入を復元") is always available in the Menu tab. No account is involved; the purchase is checked against the App Store's purchase history on the device.
+In-app purchase: "Remove ads" (non-consumable). It removes all ads (the banner above the tab bar, the ad after an article, and the rewarded video on the Map tab), and the store-exclusive menus on the Map tab are always shown to buyers instead of being unlocked by the video. It can be bought from the "広告を非表示にする" / "Remove ads" screen, which opens from the top row of the Menu tab or from the small "広告を非表示" / "Remove ads" button under the video button on the Map tab. "Restore purchase" ("購入を復元") is always available on the same screen. No account is involved; the purchase is checked against the App Store's purchase history on the device.
 
 External links (for example a coupon issuer's page) open in SFSafariViewController. The app does not embed a general-purpose browser with an address bar.
 
