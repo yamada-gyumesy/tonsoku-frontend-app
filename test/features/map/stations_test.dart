@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 
 void main() {
@@ -10,7 +11,9 @@ void main() {
     );
     // 8,740 駅のうち、同じ名前で近いもの（路線・事業者ごとの重複）をまとめて 8,616
     expect(stations, hasLength(8616));
-    expect(stations.where((s) => s.name == '東京'), hasLength(1));
+    final tokyo = stations.where((s) => s.name == '東京');
+    expect(tokyo, hasLength(1));
+    expect(tokyo.single.nameZh, '东京');
     final shinjuku = stations.firstWhere((s) => s.name == '新宿');
     expect(shinjuku.nameEn, 'Shinjuku');
     expect(shinjuku.lat, closeTo(35.69, 0.01));
@@ -32,6 +35,48 @@ void main() {
       '{"fields":["name","lat","lon"],"stations":[["あ",35,139]]}',
     );
     expect(stations.single.nameEn, '');
+    expect(stations.single.nameZh, '');
+  });
+
+  test('中国語名の列を fields に従って読む', () {
+    final stations = decodeStations(
+      '{"fields":["name_zh","name","name_en","lat","lon"],'
+      '"stations":[["东京","東京","Tokyo",35.68,139.77]]}',
+    );
+    expect(stations.single.nameZh, '东京');
+    expect(stations.single.nameEn, 'Tokyo');
+  });
+
+  test('同梱の駅の英語名・中国語名に仮名が残っていない', () {
+    final stations = decodeStations(
+      File('assets/map/stations.json').readAsStringSync(),
+    );
+    final kana = RegExp(r'[\u3040-\u30ff\uff65-\uff9f]');
+    expect([for (final s in stations) s.nameEn].where(kana.hasMatch), isEmpty);
+    expect([for (final s in stations) s.nameZh].where(kana.hasMatch), isEmpty);
+  });
+
+  group('言語ごとの駅名（英語・中国語の画面に日本語を出さない。Issue #35）', () {
+    const both = Station(
+      name: '東京',
+      nameEn: 'Tokyo',
+      nameZh: '东京',
+      lat: 35.68,
+      lon: 139.77,
+    );
+    const jaOnly = Station(name: '下ノ江', nameEn: '', lat: 33.1, lon: 131.7);
+
+    test('それぞれの言語の名前を出す', () {
+      expect(both.labelFor(AppLocale.ja), '東京');
+      expect(both.labelFor(AppLocale.en), 'Tokyo');
+      expect(both.labelFor(AppLocale.zh), '东京');
+    });
+
+    test('訳が無ければ null（日本語に落とさず、描かない）', () {
+      expect(jaOnly.labelFor(AppLocale.ja), '下ノ江');
+      expect(jaOnly.labelFor(AppLocale.en), isNull);
+      expect(jaOnly.labelFor(AppLocale.zh), isNull);
+    });
   });
 
   test('同じ名前で近い駅は 1 つにまとめ、遠い同名の駅は残す', () {
@@ -44,5 +89,20 @@ void main() {
     expect(merged, hasLength(3));
     final tokyoKanda = merged.firstWhere((s) => s.nameEn == 'Kanda');
     expect(tokyoKanda.lat, closeTo(35.69275, 1e-6));
+  });
+
+  test('まとめた駅の英語名・中国語名は、名前を持つ最初の点から採る', () {
+    final merged = mergeSameName(const [
+      Station(name: '大手町', nameEn: '', lat: 35.686, lon: 139.765),
+      Station(
+        name: '大手町',
+        nameEn: 'Otemachi',
+        nameZh: '大手町',
+        lat: 35.687,
+        lon: 139.766,
+      ),
+    ]);
+    expect(merged.single.nameEn, 'Otemachi');
+    expect(merged.single.nameZh, '大手町');
   });
 }

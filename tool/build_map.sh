@@ -42,6 +42,12 @@ pmtiles extract "https://build.protomaps.com/$BUILD.pmtiles" "$WORK/japan.pmtile
   --bbox="$BBOX" --maxzoom="$MAXZOOM"
 
 # 層ごとに残すもの。**名前は地名（places）にだけ残す**（道路・水域の名前は描かない）
+#
+# 地名は `name`（現地の表記）・`name:ja`・`name:en`・`name:zh-Hans`（簡体字）。
+# **英語・中国語の画面に日本語を出さない**（ユーザーの決定。Issue #35）ので、
+# 英語・中国語はそれぞれの言語の名前だけで描き、**無ければ描かない**
+# （`lib/features/map/presentation/map_theme.dart`）。繁体字（`name:zh-Hant`）は
+# アプリが簡体字しか出さないので入れない
 cat > "$WORK/filter.json" <<'JSON'
 {
   "roads": ["any", ["==", "kind", "rail"], ["==", "kind", "highway"],
@@ -64,7 +70,7 @@ join earth kind
 join water kind
 join boundaries kind kind_detail
 join roads kind kind_detail
-join places kind kind_detail name name:ja name:en min_zoom
+join places kind kind_detail name name:ja name:en name:zh-Hans min_zoom
 
 tile-join -q -f -o "$OUT/japan.pmtiles" \
   --attribution='<a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a> / Protomaps' \
@@ -76,8 +82,48 @@ curl -sf -m 240 --retry 3 --retry-delay 60 --retry-all-errors -A "tonsoku-fronte
   --data-urlencode "data=$QUERY" https://overpass-api.de/api/interpreter -o "$WORK/stations.json"
 
 python3 - "$WORK/stations.json" "$OUT/stations.json" <<'PY'
-import json, sys
+import json, re, sys, unicodedata
 src, dst = sys.argv[1], sys.argv[2]
+
+# 仮名（平仮名・片仮名）。`name:zh` に入っているのが日本語の表記か見分ける
+KANA = re.compile(r"[\u3040-\u30ff]")
+# 仮名と漢字。英語名に日本語が入っていないか見る
+CJK = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
+
+
+def latin_punct(s):
+    # **英語・中国語の名前に残る日本語の約物を置き換える。** 中点「・」「･」は
+    # 片仮名の字（U+30FB / U+FF65）で、英語名にもそのまま入っている
+    # （「Zushi・Hayama」）。中国語でも人名などの区切りは「·」
+    return s.replace("\u30fb", "\u00b7").replace("\uff65", "\u00b7")
+
+
+def english_punct(s):
+    # 英語は全角の括弧なども半角に寄せる（NFKC）。〈〉は NFKC で変わらないので別に
+    s = unicodedata.normalize("NFKC", s)
+    return latin_punct(s).replace("\u3008", "(").replace("\u3009", ")")
+
+
+def english(t):
+    # 英語名が無ければ、日本語の読みのローマ字（`name:ja-Latn`、古い書き方の
+    # `name:ja_rm`）で補う。**どれも無ければ空**（アプリはその駅を英語の画面に描かない）
+    en = english_punct(t.get("name:en") or t.get("name:ja-Latn") or t.get("name:ja_rm") or "")
+    # 英語名の欄に日本語がそのまま入っているものは採らない（仮名・漢字が残る）
+    return "" if CJK.search(en) else en
+
+
+def chinese(t):
+    # 簡体字（`name:zh-Hans`）。無ければ `name:zh`。**`name:zh` は日本語の表記を
+    # そのまま写しただけのものがある**ので、仮名を含むものは採らない。
+    # どれも無ければ空（描かない）
+    zh = t.get("name:zh-Hans") or ""
+    if not zh:
+        cand = t.get("name:zh") or ""
+        zh = "" if KANA.search(cand) else cand
+    zh = latin_punct(zh)
+    return "" if KANA.search(zh) else zh
+
+
 rows = {}
 for e in json.load(open(src))["elements"]:
     t = e.get("tags", {})
@@ -86,16 +132,20 @@ for e in json.load(open(src))["elements"]:
         continue
     lat, lon = round(e["lat"], 5), round(e["lon"], 5)
     # **同じ名前の駅が近くに複数あれば 1 つにまとめる**（JR と地下鉄など、事業者ごとに
-    # 別の点がある。地図では 1 つの駅として見せる）。約 500m の格子でまとめる
+    # 別の点がある。地図では 1 つの駅として見せる）。約 500m の格子でまとめる。
+    # **英語・中国語の名前は、まとめた点のどれかに在れば採る**（事業者ごとに
+    # 付いている名前がまちまちなので、最初の点だけ見ると取りこぼす）
     key = (name, round(lat * 200), round(lon * 200))
-    if key not in rows:
-        rows[key] = [name, t.get("name:en") or "", lat, lon]
-out = sorted(rows.values(), key=lambda r: (r[2], r[3]))
+    row = rows.setdefault(key, [name, "", "", lat, lon])
+    row[1] = row[1] or english(t)
+    row[2] = row[2] or chinese(t)
+out = sorted(rows.values(), key=lambda r: (r[3], r[4]))
 json.dump({"source": "© OpenStreetMap contributors",
-           "fields": ["name", "name_en", "lat", "lon"],
+           "fields": ["name", "name_en", "name_zh", "lat", "lon"],
            "stations": out},
           open(dst, "w"), ensure_ascii=False, separators=(",", ":"))
-print(f"{len(out)} 駅")
+print(f"{len(out)} 駅（英語名なし {sum(1 for r in out if not r[1])}・"
+      f"中国語名なし {sum(1 for r in out if not r[2])}）")
 PY
 
 ls -la "$OUT"

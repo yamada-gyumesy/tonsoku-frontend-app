@@ -1,0 +1,4 @@
+/* 権限の確認に出す理由（Info.plist の同じ鍵の日本語。**Info.plist と同じ文を置く**）。
+   英語・中国語は en.lproj / zh-Hans.lproj。理由と持ち場は Info.plist の注記 */
+"NSLocationWhenInUseUsageDescription" = "近くの松のやを地図で探すために、現在地を使います。";
+"NSUserTrackingUsageDescription" = "あなたに合った広告を表示するために使います。";

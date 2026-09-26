@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
 
@@ -28,9 +29,16 @@ const mapTileSource = 'protomaps';
 ///
 /// ## 地名の言語
 ///
-/// 日本語は `name:ja`、英語は `name:en`。**中国語は `name`（日本語の表記）**
-/// ―― 地図に中国語名は入れていない（容量を増やしてまで入れる価値が薄い。
-/// 地名の漢字は中国語の話者にもおおむね読める）。無ければどれも `name` に落とす。
+/// 日本語は `name:ja`（無ければ `name`）、英語は `name:en`、中国語は
+/// `name:zh-Hans`（簡体字）。
+///
+/// **英語・中国語は `name` に落とさない。訳の無い地名は描かない。**
+/// `name` は現地の表記（日本では日本語）なので、落とすと英語・中国語の画面に
+/// 日本語が出る。**英語・中国語の画面に日本語を出さないのはユーザーの決定**
+/// （Issue #35。地名の漢字が中国語の話者に読めるかどうかでは決めない）。
+/// `get` が無い属性で null を返すと、`vector_tile_renderer` はその地名を
+/// 描かずに飛ばす（`symbol_point_renderer.dart` の「text も icon も無い」の分岐）。
+/// 訳の付き具合は `tool/build_map.sh` を作り直した時に測る。
 ///
 /// ## 版（`metadata.version`）
 ///
@@ -47,19 +55,7 @@ vtr.Theme buildMapTheme(
 }) {
   final p = MapPalette.of(colors);
   final font = [AppTheme.fontFamilyFor(locale)];
-  final name = switch (locale) {
-    AppLocale.ja => [
-      'coalesce',
-      ['get', 'name:ja'],
-      ['get', 'name'],
-    ],
-    AppLocale.en => [
-      'coalesce',
-      ['get', 'name:en'],
-      ['get', 'name'],
-    ],
-    AppLocale.zh => ['get', 'name'],
-  };
+  final name = placeNameField(locale);
 
   String hex(Color c) =>
       '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
@@ -273,3 +269,15 @@ vtr.Theme buildMapTheme(
   json['metadata'] = {'version': '$style-$dataVersion'};
   return vtr.ThemeReader().read(json);
 }
+
+/// 地名の `text-field`（どの属性を描くか。理由は [buildMapTheme] の「地名の言語」）。
+@visibleForTesting
+List<Object> placeNameField(AppLocale locale) => switch (locale) {
+  AppLocale.ja => [
+    'coalesce',
+    ['get', 'name:ja'],
+    ['get', 'name'],
+  ],
+  AppLocale.en => ['get', 'name:en'],
+  AppLocale.zh => ['get', 'name:zh-Hans'],
+};

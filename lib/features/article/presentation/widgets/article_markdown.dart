@@ -145,6 +145,10 @@ class ArticleMarkdown extends StatelessWidget {
 /// 箇条書きの記号。web は `list-style: none` + `::before` で「・」を出している
 /// （既定の中黒より字面が大きく、日本語の本文に合う）。番号付きは `1.` のまま。
 ///
+/// **「・」は日本語の画面だけ。** 英語・中国語は `•`。「・」は片仮名の中点
+/// （U+30FB）で、英語・中国語の画面に日本語を出さないのはユーザーの決定
+/// （Issue #35。web はまだ全言語で「・」）。
+///
 /// **番号は常に 1 から振る。** `bulletBuilder` は `<ol start="N">` を渡してこない
 /// ので、途中の番号から始まるリストは 1 から振り直す。本番の記事は 1 始まりしか
 /// 無いので現状は問題にならないが、配信側が途中番号を使い始めたらここを直す。
@@ -158,7 +162,8 @@ class _Bullet extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = switch (parameters.style) {
       BulletStyle.orderedList => '${parameters.index + 1}.',
-      BulletStyle.unorderedList => '・',
+      BulletStyle.unorderedList =>
+        Localizations.localeOf(context).languageCode == 'ja' ? '・' : '•',
     };
 
     return Text(label, style: TextStyle(fontSize: 16, height: 2, color: color));

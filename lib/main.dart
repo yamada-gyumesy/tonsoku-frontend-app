@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tonsoku/app.dart';
+import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/licenses/font_licenses.dart';
 import 'package:tonsoku/core/licenses/map_data_license.dart';
 import 'package:tonsoku/core/storage/json_cache.dart';
@@ -24,6 +25,15 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final cache = await JsonCache.open();
 
+  // **コンテナを Firebase より先に作る。** 通知チャンネルの名前に、保存済みの
+  // 表示言語が要る（`registerPushHandlers`）
+  final container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      jsonCacheProvider.overrideWithValue(cache),
+    ],
+  );
+
   // **設定ファイルは `options:` で渡さない**（gyumesy と同じ）。Android は
   // `google-services.json`、iOS は `GoogleService-Info.plist` をネイティブ側が
   // 読む。Dart 側に写しを置くと、Terraform が出す値と二重管理になる
@@ -35,17 +45,17 @@ Future<void> main() async {
   // 通知が使えないことは通知設定の画面で分かる
   try {
     await Firebase.initializeApp();
-    await registerPushHandlers();
+    await registerPushHandlers(container.read(localeControllerProvider));
   } catch (error, stack) {
     debugPrint('Firebase の初期化に失敗しました: $error\n$stack');
   }
-
-  final container = ProviderContainer(
-    overrides: [
-      sharedPreferencesProvider.overrideWithValue(prefs),
-      jsonCacheProvider.overrideWithValue(cache),
-    ],
+  // **表示言語を切り替えたら、通知チャンネルの名前も付け直す**（端末の通知設定に
+  // 出る名前。[syncNotificationChannel]）。初期化に失敗した時は何もしない
+  container.listen(
+    localeControllerProvider,
+    (_, locale) => unawaited(syncNotificationChannel(locale)),
   );
+
   runApp(
     UncontrolledProviderScope(container: container, child: const TonsokuApp()),
   );

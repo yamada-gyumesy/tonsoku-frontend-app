@@ -97,6 +97,11 @@ class ShopsLayer extends StatelessWidget {
 /// 8,700 駅を全部 `Marker` にすると、動かすたびに全部を作り直すことになる。
 /// 見えている範囲で先に絞ると、z13 で数十駅に収まる。
 ///
+/// **その言語の名前が無い駅は、点ごと描かない**（[Station.labelFor]）。
+/// 英語・中国語の画面に日本語の駅名を出さない（ユーザーの決定。Issue #35）。
+/// 点だけ残すと、名前の無い四角が線路の上に散って店の印と紛れ、何の点かも
+/// 読めない。
+///
 /// **z13 から出す。** 市区町村の名前が主役の z12 以下で駅名まで並べると、
 /// 都心では駅名で地図が埋まる（山手線の内側だけで 100 駅を超える）。
 class StationsLayer extends StatelessWidget {
@@ -123,7 +128,8 @@ class StationsLayer extends StatelessWidget {
       child: MarkerLayer(
         markers: [
           for (final s in stations)
-            if (bounds.contains(LatLng(s.lat, s.lon)))
+            if (s.labelFor(locale) case final name?
+                when bounds.contains(LatLng(s.lat, s.lon)))
               Marker(
                 point: LatLng(s.lat, s.lon),
                 width: 140,
@@ -131,12 +137,7 @@ class StationsLayer extends StatelessWidget {
                 // **点を座標に置き、名前を右へ流す**（中央に置くと名前の真ん中が
                 // 駅の位置に見える）。`centerRight` は印の左端を座標に合わせる
                 alignment: Alignment.centerRight,
-                child: _StationLabel(
-                  name: locale == AppLocale.en && s.nameEn.isNotEmpty
-                      ? s.nameEn
-                      : s.name,
-                  palette: palette,
-                ),
+                child: _StationLabel(name: name, palette: palette),
               ),
         ],
       ),

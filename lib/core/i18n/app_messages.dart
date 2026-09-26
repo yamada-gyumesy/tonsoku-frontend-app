@@ -68,6 +68,7 @@ class AppMessages {
     required this.menuVersion,
     required this.navNotifications,
     required this.notificationsTitle,
+    required this.notificationChannelName,
     required this.notificationsRssAria,
     required this.notificationsRssCopied,
     required this.notificationsIntro1,
@@ -332,6 +333,11 @@ class AppMessages {
   /// メニューの行（web の `nav.notifications`）。
   final String navNotifications;
   final String notificationsTitle;
+
+  /// Android の通知チャンネルの名前（端末の「設定 > アプリ > 通知」に出る）。
+  /// web に無い語。ブランド名を含めない（gyumesy と同じ「お知らせ」）。
+  /// 作り直し方は `push_bootstrap.dart` の [syncNotificationChannel]。
+  final String notificationChannelName;
 
   /// RSS の導線。**開くのではなく URL を写す**ので、読み上げも「コピー」と言う。
   final String notificationsRssAria;
@@ -644,6 +650,7 @@ class AppMessages {
     menuVersion: 'バージョン',
     navNotifications: '通知設定',
     notificationsTitle: '通知設定',
+    notificationChannelName: 'お知らせ',
     notificationsRssAria: 'RSSのURLをコピー',
     notificationsRssCopied: 'RSSのURLをコピーしました',
     notificationsIntro1: 'とん速はわりとどうでもいい通知まで配信する可能性があります。',
@@ -857,6 +864,7 @@ class AppMessages {
     menuVersion: 'Version',
     navNotifications: 'Notifications',
     notificationsTitle: 'Notifications',
+    notificationChannelName: 'Notifications',
     notificationsRssAria: 'Copy RSS feed URL',
     notificationsRssCopied: 'RSS feed URL copied',
     notificationsIntro1:
@@ -1080,6 +1088,7 @@ class AppMessages {
     menuVersion: '版本',
     navNotifications: '通知设置',
     notificationsTitle: '通知设置',
+    notificationChannelName: '通知',
     notificationsRssAria: '复制 RSS 链接',
     notificationsRssCopied: '已复制 RSS 链接',
     notificationsIntro1: '豚速有可能连相当无关紧要的消息也推送给你。',
