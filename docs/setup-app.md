@@ -13,9 +13,10 @@
 
 ## 自動化できるもの / できないもの
 
-**「API 非対応で手動 UI のみ」という言い伝えは、鵜呑みにしない。** gyumesy の Issue #7 は
-「App Store Connect のアプリ枠 / Play のアプリ作成は API 非対応」と書いていたが、
-**Bundle ID も ASC のアプリ枠も API で作れた**。**まず叩いてみること。**
+**「API で作れる／作れない」は、叩いて確かめたものだけを信じる。** gyumesy の Issue #7 は
+「ASC のアプリ枠 / Play のアプリ作成は API 非対応」と書き、その後 gyumesy の手順書は
+「Bundle ID が API で作れたので枠も作れる見込み」と書いたが、**見込みは外れた**
+（`apps` の CREATE は弾かれる。2026-09-26 実測）。**Bundle ID は API で作れる。アプリ枠は UI のみ。**
 
 | | 手段 |
 |---|---|
@@ -32,8 +33,8 @@
 | アプリ内課金の有効化（販売開始） | iOS: 審査を通ると売られる / Android ❌ **Play Console**（lane に入れない） |
 | 有料 App 契約・お支払いプロファイル・ライセンステスター | ❌ **UI のみ** |
 
-**lane と API は Claude が叩く**（gyumesy と同じ。Bundle ID・アプリ枠・審査連絡先・
-TestFlight のグループ・アップロード鍵は、あちらでも Claude が作った）。認証情報は
+**lane と API は Claude が叩く**（gyumesy と同じ。Bundle ID・審査連絡先・TestFlight の
+グループ・アップロード鍵は、あちらでも Claude が作った。**アプリ枠は gyumesy でも手で作った**）。認証情報は
 `~/.config/gyumesy/` にあり（`docs/secrets.md`）、**中身を表示・送信しない**。
 **ユーザーの手が要るのは、上の表で ❌（UI のみ）のものと、契約・支払いに同意するものだけ。**
 
