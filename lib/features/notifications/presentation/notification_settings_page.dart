@@ -16,6 +16,7 @@ import 'package:tonsoku/features/home/data/article_providers.dart';
 import 'package:tonsoku/features/home/data/article_repository.dart';
 import 'package:tonsoku/features/notifications/data/messaging_service.dart';
 import 'package:tonsoku/features/notifications/presentation/notification_settings_controller.dart';
+import 'package:tonsoku/features/notifications/presentation/widgets/notification_sample.dart';
 import 'package:tonsoku/features/notifications/presentation/widgets/notification_toggle_row.dart';
 import 'package:tonsoku/shared/models/category.dart';
 import 'package:tonsoku/shared/utils/pull_to_refresh.dart';
@@ -38,26 +39,12 @@ import 'package:tonsoku/shared/widgets/back_header.dart';
 /// - **見出しの下線は `primaryText`**（web の `border-brand-primary-text`。
 ///   塗りの `primary` を地の上に置かない）
 /// - **サンプルは説明の箱の外**（web のとん速版の並び。gyumesy は箱の中）。
-///   絵は web がとん速のぶんを焼いたもの（`assets/notifications/`）
+///   中身は web の見本の絵と同じ題材だが、**絵ではなくウィジェットで描き、
+///   表示言語で出す**（[NotificationSample]。web は全ロケールで日本語の絵）
 /// - RSS は**そのロケールのフィードに記事がある時だけ**そのロケールの URL を写す
 ///   （web の `hasLocaleFeed`。無いロケールの `feed.xml` は 404）
 class NotificationSettingsPage extends ConsumerWidget {
   const NotificationSettingsPage({super.key});
-
-  /// 通知のサンプル画像。**中身は web と同じもの**（`assets/notifications/`）。
-  ///
-  /// **テーマごとに別の絵を使う。** サンプルは面色を持つカードなので、
-  /// 1 種類だとどちらかのテーマで地に沈む（ライトは明るい灰、ダークは黒の半透明）。
-  static List<String> _samplesFor(Brightness brightness) {
-    final suffix = brightness == Brightness.dark ? '-dark' : '';
-    return [
-      for (var i = 1; i <= 5; i++)
-        'assets/notifications/notification-sample-$i$suffix.webp',
-    ];
-  }
-
-  /// サンプル画像の縦横比（web の `width={450} height={135}`）。
-  static const _sampleAspect = 450 / 135;
 
   /// 本文の左右余白（web の `px-4`）。**罫線だけは画面いっぱいに伸ばしたい**ので、
   /// 一覧側ではなく要素ごとに持たせる。
@@ -154,9 +141,15 @@ class NotificationSettingsPage extends ConsumerWidget {
                         const SizedBox(height: 8),
                         inset(
                           AutoSlider(
-                            images: _samplesFor(Theme.of(context).brightness),
-                            alt: t.notificationsSampleAlt,
-                            aspectRatio: _sampleAspect,
+                            // **テーマごとに色を変える。** 見本は面色を持つ
+                            // カードなので、1 種類だとどちらかのテーマで地に
+                            // 沈む（ライトは明るい灰、ダークは黒の半透明）
+                            items: NotificationSample.all(
+                              t,
+                              ref.watch(localeControllerProvider),
+                              Theme.of(context).brightness,
+                            ),
+                            aspectRatio: NotificationSample.aspectRatio,
                             // web の `visibleCount={2.7} visibleCountSp={1} gap={16}`
                             visibleCount: 2.7,
                             visibleCountSp: 1,
