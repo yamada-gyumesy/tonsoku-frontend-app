@@ -6,7 +6,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tonsoku/core/i18n/app_locale.dart';
+import 'package:tonsoku/core/i18n/app_messages.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
+import 'package:tonsoku/core/purchase/purchase_gateway.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/core/theme/theme_mode_controller.dart';
@@ -17,6 +20,8 @@ import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
 import 'package:tonsoku/shared/models/calendar_event.dart';
 
+import '../../core/purchase/fake_purchase_gateway.dart';
+
 /// メニューのボトムシート。web の `CoMenuSheet` に合わせている。
 void main() {
   Future<GlobalKey<MenuSheetState>> pumpSheet(
@@ -24,18 +29,34 @@ void main() {
     Brightness platform = Brightness.light,
     Map<String, Object> prefs = const {},
     AsyncValue<List<CalendarEvent>> calendar = const AsyncValue.loading(),
+    FakePurchaseGateway? store,
+    AppLocale locale = AppLocale.ja,
+    bool started = false,
   }) async {
+    // **電話の大きさで組む**（iPhone 17 Pro の論理 402×874）。既定の 800×600 は
+    // 背が低く、シートの上限（画面の 7 割）を一覧が超えて中で送れるようになり、
+    // 行の上から払っても一覧のスクロールが先に取る
+    tester.view.physicalSize = const Size(1206, 2622);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
     // **表示言語を固定する。** 既定は端末の言語設定から推定するので、
     // 指定しないと実行環境（テストは en）で文言が変わる
-    SharedPreferences.setMockInitialValues({'app_locale': 'ja', ...prefs});
-    final store = await SharedPreferences.getInstance();
+    SharedPreferences.setMockInitialValues({
+      'app_locale': locale.name,
+      ...prefs,
+    });
+    final prefsStore = await SharedPreferences.getInstance();
     final key = GlobalKey<MenuSheetState>();
     var open = true;
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          sharedPreferencesProvider.overrideWithValue(store),
+          sharedPreferencesProvider.overrideWithValue(prefsStore),
+          // **本物のストアに触れない**（広告を外す課金の行）
+          purchaseGatewayProvider.overrideWithValue(
+            store ?? FakePurchaseGateway(),
+          ),
           // ランキングの行は配信を見て出し分ける。テストでは取得中として置く
           // （配信の取得を組まない）
           rankingWindowsProvider.overrideWithValue(const AsyncValue.loading()),
@@ -69,6 +90,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    if (started) {
+      // 起動時の突き合わせ（`main.dart`）。価格はこの後に取れる
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MenuSheet)),
+      );
+      await container.read(removeAdsProvider.notifier).start();
+      await tester.pumpAndSettle();
+    }
     return key;
   }
 
@@ -83,8 +112,8 @@ void main() {
     // いてメニューには置かない）。落とすとストア審査で止まる
     expect(find.text('利用規約'), findsOneWidget);
     expect(find.text('プライバシーポリシー'), findsOneWidget);
-    // **特商法は置かない。** アプリ内に有償の取引が無いので対象にならない
-    expect(find.text('特定商取引法に基づく表記'), findsNothing);
+    // **特商法は「その他」に置く**（広告を外す課金で有償の取引ができた）
+    expect(find.text('特定商取引法に基づく表記'), findsOneWidget);
 
     // **通知設定の行は常に出す**（web と同じ。配信の有無に依らない面）
     expect(find.widgetWithText(MenuListRow, '通知設定'), findsOneWidget);
@@ -365,8 +394,8 @@ void main() {
       expect(find.text('プライバシーポリシー'), findsOneWidget);
       expect(find.text('ライセンス表記'), findsOneWidget);
       expect(find.text('バージョン'), findsOneWidget);
-      // 有償の取引が無いので対象にならない
-      expect(find.text('特定商取引法に基づく表記'), findsNothing);
+      // **広告を外す課金を入れたので置く**（web の `LEGAL_PAGES` の 3 つ目）
+      expect(find.text('特定商取引法に基づく表記'), findsOneWidget);
     });
 
     testWidgets('web へ出る行だけ外部リンクの記号にする', (tester) async {
@@ -519,5 +548,146 @@ void main() {
     expect(labels(), contains('とん速とは'));
 
     handle.dispose();
+  });
+
+  group('広告を外す課金（Issue #42）', () {
+    Finder row(String label) =>
+        find.ancestor(of: find.text(label), matching: find.byType(MenuListRow));
+
+    testWidgets('2 行を常に置き、価格はストアの表示価格を出す', (tester) async {
+      await pumpSheet(tester, started: true);
+
+      expect(row('広告を非表示にする'), findsOneWidget);
+      expect(row('購入を復元'), findsOneWidget);
+      expect(
+        find.descendant(of: row('広告を非表示にする'), matching: find.text('¥550')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('買ったら知らせ、「購入済み」にして押せなくする', (tester) async {
+      final store = FakePurchaseGateway();
+      await pumpSheet(tester, store: store, started: true);
+
+      await tester.tap(find.text('広告を非表示にする'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('広告を非表示にしました'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+
+      expect(
+        find.descendant(of: row('広告を非表示にする'), matching: find.text('購入済み')),
+        findsOneWidget,
+      );
+      expect(find.text('¥550'), findsNothing);
+      expect(tester.widget<MenuListRow>(row('広告を非表示にする')).onTap, isNull);
+      // 復元は買ってあっても置く
+      expect(row('購入を復元'), findsOneWidget);
+      expect(store.calls.where((c) => c == 'buy'), hasLength(1));
+    });
+
+    testWidgets('買ってある端末は最初から「購入済み」', (tester) async {
+      await pumpSheet(tester, prefs: {RemoveAdsController.prefsKey: true});
+      expect(find.text('購入済み'), findsOneWidget);
+    });
+
+    testWidgets('シートを閉じた時は何も知らせない', (tester) async {
+      await pumpSheet(
+        tester,
+        store: FakePurchaseGateway(buyResult: PurchaseUpdate.canceled),
+        started: true,
+      );
+      await tester.tap(find.text('広告を非表示にする'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('購入できませんでした'), findsNothing);
+      expect(find.text('広告を非表示にしました'), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text('購入済み'), findsNothing);
+    });
+
+    testWidgets('買えなかった・ストアに繋がらない時は知らせる', (tester) async {
+      final store = FakePurchaseGateway(buyResult: PurchaseUpdate.failed);
+      await pumpSheet(tester, store: store, started: true);
+      await tester.tap(find.text('広告を非表示にする'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('購入できませんでした'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+
+      store.buyStart = BuyStart.unavailable;
+      await tester.tap(find.text('広告を非表示にする'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('ストアに接続できませんでした'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+    });
+
+    testWidgets('保留: 知らせて「保留中」にし、二重に買わせない', (tester) async {
+      await pumpSheet(
+        tester,
+        store: FakePurchaseGateway(buyResult: PurchaseUpdate.pending),
+        started: true,
+      );
+      await tester.tap(find.text('広告を非表示にする'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('支払いが済むと広告が非表示になります'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+
+      expect(find.text('保留中'), findsOneWidget);
+      expect(tester.widget<MenuListRow>(row('広告を非表示にする')).onTap, isNull);
+    });
+
+    testWidgets('復元: 見つかった・見つからない', (tester) async {
+      final store = FakePurchaseGateway(ownership: Ownership.notOwned);
+      await pumpSheet(tester, store: store, started: true);
+
+      await tester.tap(find.text('購入を復元'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('復元できる購入はありません'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+
+      store.ownership = Ownership.owned;
+      await tester.tap(find.text('購入を復元'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('購入を復元しました'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+      expect(find.text('購入済み'), findsOneWidget);
+    });
+
+    for (final locale in [AppLocale.en, AppLocale.zh]) {
+      testWidgets('${locale.name}: 課金の行に仮名が出ない', (tester) async {
+        // **英語・中国語の画面に日本語を出さない**（ユーザーの決定）
+        await pumpSheet(tester, locale: locale, started: true);
+        final kana = RegExp('[\u3040-\u30ff]');
+        final t = locale == AppLocale.en ? AppMessages.en : AppMessages.zh;
+        for (final text in [
+          t.removeAds,
+          t.restorePurchase,
+          t.removeAdsPurchased,
+          t.removeAdsPending,
+          t.removeAdsDone,
+          t.restoreDone,
+          t.restoreNotFound,
+          t.purchasePendingNotice,
+          t.purchaseFailed,
+          t.storeUnavailable,
+          t.mapRemoveAds,
+          t.navSct,
+        ]) {
+          expect(kana.hasMatch(text), isFalse, reason: text);
+        }
+        expect(row(t.removeAds), findsOneWidget);
+        expect(row(t.restorePurchase), findsOneWidget);
+        final shown = tester
+            .widgetList<Text>(find.byType(Text))
+            .map((w) => w.data ?? '')
+            .where(kana.hasMatch);
+        expect(shown, isEmpty);
+      });
+    }
   });
 }

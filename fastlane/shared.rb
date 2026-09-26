@@ -106,3 +106,51 @@ def ensure_shippable_tree
     "コミットしてから配信してください:\n#{dirty}"
   )
 end
+
+# ── アプリ内課金の商品（`register_iap` の両 lane が使う） ──────────────
+
+# **商品の定義は `iap_products.yaml` の 1 か所だけ**（three-frontend-flutter と
+# 同じ）。両 lane はここを通して読む ―― 字数の検査を 2 つに書き写さない。
+#
+# **登録する前に字数を確かめる。** 商品を作った後に表示名・説明で弾かれると、
+# **product_id だけ消費された不完全な商品が残る**（three の iOS で踏んだ。
+# product_id は二度と使えない）。上限は両ストアの小さいほうに揃える
+# （ASC: 表示名 30・説明 45 / Play: 名前 55・説明 80）。
+IAP_NAME_MAX = 30
+IAP_DESCRIPTION_MAX = 45
+
+# アプリの表示言語（`iap_products.yaml` の鍵）→ 各ストアの言語コード。
+IAP_LOCALES = {
+  "ja" => { asc: "ja", play: "ja-JP" },
+  "en" => { asc: "en-US", play: "en-US" },
+  "zh" => { asc: "zh-Hans", play: "zh-CN" },
+}.freeze
+
+def iap_non_consumables
+  require "yaml"
+  products = YAML.load_file(File.join(REPO_ROOT, "iap_products.yaml"))
+  items = products["non_consumables"] || []
+  FastlaneCore::UI.user_error!("iap_products.yaml に non_consumables がありません") if items.empty?
+  items.each do |item|
+    pid = item.fetch("product_id")
+    # 両ストアで使える字だけ（Play は小文字始まり・大文字不可、ASC は `-` 不可）
+    unless pid.match?(/\A[a-z0-9][a-z0-9_.]*\z/)
+      FastlaneCore::UI.user_error!("product_id に使えない字がある: #{pid}")
+    end
+    Integer(item.fetch("price_jpy"))
+    locs = item.fetch("localizations")
+    unknown = locs.keys - IAP_LOCALES.keys
+    FastlaneCore::UI.user_error!("知らない言語: #{unknown.join(', ')}（#{pid}）") unless unknown.empty?
+    locs.each do |lang, loc|
+      name = loc.fetch("display_name")
+      text = loc.fetch("description")
+      if name.length > IAP_NAME_MAX
+        FastlaneCore::UI.user_error!("表示名が #{IAP_NAME_MAX} 字を超える（#{name.length} 字）: #{pid} #{lang}")
+      end
+      if text.length > IAP_DESCRIPTION_MAX
+        FastlaneCore::UI.user_error!("説明が #{IAP_DESCRIPTION_MAX} 字を超える（#{text.length} 字）: #{pid} #{lang}")
+      end
+    end
+  end
+  items
+end

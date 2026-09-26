@@ -77,6 +77,12 @@ web の `src/assets/styles/main.css`。**web の値を変えたらここも直�
   閉じている間の案内は品のチップの場所に置く（`MapUnlockNotice`）
 - **本番の ID が空の枠は何も出さない**。全部空なら SDK・同意・ATT に一切触れない
   （web の `adsenseClientId` と同じ。`lib/core/config/ad_config.dart`）
+- **広告を外す課金（買い切り 550 円。Issue #42。ユーザーの決定）**: 買った端末では広告を
+  一切出さず、広告の SDK・同意（UMP）・ATT にも触れない。マップの店舗限定は常に開く。
+  **導線はメニューとマップの動画の案内の 2 か所だけ**（下のバナーの近くに置かない）。
+  **サーバーを持たず、端末の保存とストアの購入記録だけで判定する**。作りは
+  `three-frontend-flutter` の購入の実装と `register_iap` の lane を写した（サブスク＋サーバー
+  検証なので、買い切りに合わせて変えた所は各所のコメント。仕組みは README の「広告を外す課金」）
 - **手元・テストで本番の広告を出さない**（無効なインプレッションになる。web の `config.ts`
   の `adsenseClientId` と同じ扱い）。release 以外は Google のテスト用 ID、テストは
   広告の読み込みごと偽物（`adGatewayProvider`）
@@ -88,7 +94,7 @@ web の `src/assets/styles/main.css`。**web の値を変えたらここも直�
 
 ## どのリポジトリを見るか
 
-どれも `github.com/yamada-gyumesy/` にあり、手元は `~/project/` に並んでいる。
+どれも手元の `~/project/` に並んでいる。`three-frontend-flutter` 以外は `github.com/yamada-gyumesy/` にある（three は職場の別アカウント）。
 
 | リポジトリ | こういう時に見る |
 |---|---|
@@ -97,5 +103,6 @@ web の `src/assets/styles/main.css`。**web の値を変えたらここも直�
 | `tonsoku-backend-batch` | **配信データの形**（`schema/`・`docs/app-feed.md`） |
 | `tonsoku-infra-terraform` | Firebase（アプリの登録）・CDN・ドメイン |
 | `gyumeshi-rader-app` | **マップ**（`app/*.json` は牛めしレーダーと同じ形で出ている） |
+| `three-frontend-flutter`（別アカウントなので**読むだけ**。書き込み・commit・checkout をしない） | **アプリ内課金**（`lib/features/plan/`・`register_iap` の lane）。値は流用しない（`docs/setup-app.md` の末尾） |
 
 配信データの形の意図や、これから変わる予定は tonsoku-backend-batch のセッションに聞く。推測で書かない。

@@ -7,6 +7,7 @@
 #   bundle exec fastlane android alpha     # ビルド → クローズドテスト
 #   bundle exec fastlane android promote version_code:NNN
 #   bundle exec fastlane android metadata  # 掲載情報・画像だけ
+#   bundle exec fastlane android register_iap [apply:true]  # アプリ内課金の商品（アプリに 1 回）
 #
 # **クローズドテストを主経路にする**（内部テストではない。個人開発リリースで、
 # `gyumeshi-rader-app` と同じフロー）。
@@ -124,6 +125,111 @@ platform :android do
       skip_upload_screenshots: false,
       sync_image_upload: true,
     )
+  end
+
+  desc "アプリ内課金の商品を Play に登録する（iap_products.yaml が単一の出どころ）"
+  desc "※ 既定は dry-run（API に一切書き込まない）。実登録は apply:true を明示する"
+  desc "※ product_id は登録した後に変えられない・使い回せない。叩く前に iap_products.yaml を確かめる"
+  desc "※ 有効化（公開）はしない。無効のままだとアプリから商品が取れない。有効化は Play Console で"
+  desc "例: mise exec -- bundle exec fastlane android register_iap             （dry-run）"
+  desc "例: mise exec -- bundle exec fastlane android register_iap apply:true  （実登録・不可逆）"
+  lane :register_iap do |options|
+    # **three-frontend-flutter の `register_iap` を写した**（dry-run が既定・
+    # 既存の商品は作り直さない・サービスアカウントの JSON から自分でトークンを
+    # 取って REST を直に叩く）。あちらは定期購入（`monetization.subscriptions`・
+    # base plan）なので、**買い切りの API（`inappproducts`）に置き換えた**。
+    # dev / prod の分けも無い（とん速は flavor を持たない）。
+    #
+    # **`inappproducts`（従来の API）を使う。** 新しい `monetization.onetimeproducts`
+    # は購入の選択肢（purchase option）を複数持てる作りで、1 つの値段で売るだけの
+    # とん速には要らない。従来の API で作った商品は、Play Console では
+    # 「後方互換の購入の選択肢を 1 つ持つ 1 回限りの商品」として見える。
+    # **Google が従来の API を止めたら onetimeproducts に移す**
+    apply = options[:apply].to_s == "true"
+
+    require "net/http"
+    require "json"
+    require "openssl"
+    require "base64"
+
+    # サービスアカウントの JSON から androidpublisher のトークンを取る
+    # （JWT RS256 → OAuth2。three と同じ）。鍵の置き場と package name は Appfile
+    key_path = CredentialsManager::AppfileConfig.try_fetch_value(:json_key_file)
+    pkg = CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
+    sa = JSON.parse(File.read(File.expand_path(key_path)))
+    now = Time.now.to_i
+    b64 = ->(d) { Base64.urlsafe_encode64(d).delete("=") }
+    signing_input = "#{b64.call(JSON.dump({ alg: 'RS256', typ: 'JWT' }))}." \
+                    "#{b64.call(JSON.dump({ iss: sa.fetch('client_email'),
+                                            scope: 'https://www.googleapis.com/auth/androidpublisher',
+                                            aud: 'https://oauth2.googleapis.com/token',
+                                            iat: now, exp: now + 3600 }))}"
+    sig = b64.call(OpenSSL::PKey::RSA.new(sa.fetch("private_key")).sign(OpenSSL::Digest::SHA256.new, signing_input))
+    tok = Net::HTTP.post_form(URI("https://oauth2.googleapis.com/token"),
+                              "grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                              "assertion" => "#{signing_input}.#{sig}")
+    UI.user_error!("トークンを取れません: #{tok.code} #{tok.body}") unless tok.code.to_i.between?(200, 299)
+    access_token = JSON.parse(tok.body).fetch("access_token")
+
+    base = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/#{pkg}"
+    # allow_404: true なら 404 を失敗にせず nil を返す（有無の確認用）
+    api = lambda do |method, path, body = nil, allow_404: false|
+      uri = URI("#{base}#{path}")
+      req = method == :post ? Net::HTTP::Post.new(uri) : Net::HTTP::Get.new(uri)
+      req["Authorization"] = "Bearer #{access_token}"
+      req["Content-Type"] = "application/json"
+      req.body = JSON.dump(body) if body
+      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |h| h.request(req) }
+      return nil if allow_404 && res.code.to_i == 404
+      UI.user_error!("Play API #{method.upcase} #{path} 失敗: #{res.code} #{res.body}") unless res.code.to_i.between?(200, 299)
+      res.body.to_s.empty? ? {} : JSON.parse(res.body)
+    end
+
+    UI.message("対象: #{pkg} / apply=#{apply}")
+
+    iap_non_consumables.each do |item|
+      pid = item.fetch("product_id")
+      listings = item.fetch("localizations").to_h do |lang, loc|
+        [IAP_LOCALES.fetch(lang)[:play], { title: loc.fetch("display_name"), description: loc.fetch("description") }]
+      end
+
+      # **既存の商品は作り直さない**（不可逆。three と同じ）
+      found = api.call(:get, "/inappproducts/#{pid}", nil, allow_404: true)
+      if found
+        UI.success("既存のため skip: #{pid}（status=#{found['status']}）")
+        next
+      end
+
+      unless apply
+        titles = listings.map { |lang, l| "#{lang}=#{l[:title]}" }.join(" ")
+        UI.message("[DRY-RUN] 登録予定: #{pid} managedUser ¥#{item['price_jpy']}（他の国は自動換算） #{titles}")
+        next
+      end
+
+      # ---- ここから先は apply:true の時だけ（不可逆） ----
+      # **無効（inactive）で作る。** 有効化は販売開始なので lane に入れない
+      # （three が base plan を draft で作るのと同じ判断。apply の勢いで売り出す
+      # 事故の道を作らない）。**無効のままだと `queryProductDetails` に何も返らず、
+      # テストでも買えない**（three の 1.2.0 の実測。審査とは関係ない）
+      #
+      # **価格は日本円を基準にし、他の国は Play に換算させる**
+      # （`autoConvertMissingPrices`）。販売地域を日本に絞る前提が無いので、
+      # 日本の値段だけだと他の国で買えない。Play は iOS と違って価格も API で
+      # 付けられる（three も Play の価格は lane で付けている）
+      api.call(:post, "/inappproducts?autoConvertMissingPrices=true", {
+        packageName: pkg,
+        sku: pid,
+        status: "inactive",
+        purchaseType: "managedUser",
+        defaultLanguage: "ja-JP",
+        defaultPrice: { priceMicros: (Integer(item.fetch("price_jpy")) * 1_000_000).to_s, currency: "JPY" },
+        listings: listings,
+      })
+      UI.success("商品を作りました（無効のまま）: #{pid}")
+      UI.important("※ 有効にするまでアプリから商品が取れない。Play Console（収益化 > 商品 > アプリ内アイテム）で有効にする（販売開始なので慎重に）")
+    end
+
+    UI.success(apply ? "登録しました（有効化は Play Console で）" : "DRY-RUN 完了（実登録は apply:true）")
   end
 
   desc "AAB を作るだけ（アップロードしない）"

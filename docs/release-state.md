@@ -19,6 +19,7 @@
 | リリース署名の設定 | `android/app/build.gradle.kts`。**鍵が無い環境では debug 鍵のまま**（鍵を持たない人でもビルドできるように）。配信の lane は鍵が無いと止まる |
 | 鍵の同期 | `scripts/sync-secrets.sh`（`gdrive:gyumesy-secrets/repo/tonsoku-frontend-app/`） |
 | ユニバーサルリンク / App Links（アプリ側） | entitlement（`applinks:ton-soku.com`）・intent-filter（`autoVerify`）・受け口（`_listenAppLinks`） |
+| 広告を外す課金（アプリ側。Issue #42） | 購入・復元・起動時の突き合わせ・導線（メニュー / マップ）。商品の定義は `iap_products.yaml`、登録の lane は `register_iap`（iOS / Android）。審査メモにも書いた |
 
 **掲載は日本語だけ**（gyumesy と同じ。en / zh の掲載情報は置かない）。App Store Connect は
 **掲載言語ごとにスクリーンショットを 1 枚以上**要求するので、増やすならスクショもセットで要る。
@@ -52,7 +53,18 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
    - 同意（UMP）の GDPR メッセージを AdMob の「プライバシーとメッセージ」で公開する（ユーザー）
    - 発行者 ID を web の `app-ads.txt` に載せる（web の作業）
    - ストアに公開した後、AdMob の各アプリを「ストアに追加」で紐づける（ユーザー）
-9. **初回のテスト配信**: `release-1.0.0` を切って
+9. **広告を外す課金**（`docs/setup-app.md` の「アプリ内課金の商品」。**lane で済むことと
+   Web UI でしかできないことを分けてある**）:
+   - Web UI（先に）: **ASC の有料 App 契約**（契約・銀行口座・税務。Account Holder）／
+     **Play のお支払いプロファイルの連携**（管理者）
+   - lane: `cd ios && mise exec -- bundle exec fastlane ios register_iap`（dry-run）→ `apply:true`
+     （ASC のアプリ枠＝上の 3 が先）
+   - lane: `cd android && mise exec -- bundle exec fastlane android register_iap`（dry-run）→
+     `apply:true`（**課金の入ったビルドを Play に 1 度上げてから**＝下の 10 の alpha の後）
+   - Web UI（後で）: **ASC で価格 ¥550 を付ける**・**審査用のスクリーンショット**／
+     **Play で商品を有効にする**・**ライセンステスターの登録**
+   - 最初の審査は、アプリの版と一緒に商品を審査に加える（Web UI。`docs/release.md` の「提出前の確認」）
+10. **初回のテスト配信**: `release-1.0.0` を切って
    `cd android && mise exec -- bundle exec fastlane android alpha draft:true`（**初回だけ draft**）→
    `cd ios && mise exec -- bundle exec fastlane ios beta`
 

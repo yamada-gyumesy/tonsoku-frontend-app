@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -6,6 +8,8 @@ import 'package:tonsoku/core/config/app_config_provider.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/app_messages.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
+import 'package:tonsoku/core/purchase/remove_ads_result_text.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/utils/article_date.dart';
 import 'package:tonsoku/features/calendar/data/calendar_repository.dart';
@@ -16,6 +20,7 @@ import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
 import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
 import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
+import 'package:tonsoku/shared/widgets/app_toast.dart';
 
 /// 画面下のナビ「メニュー」から開くボトムシート。web の `CoMenuSheet`
 /// （gyumesy-frontend-app の `MenuSheet` を写した）。
@@ -38,6 +43,9 @@ import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
 ///   （ユーザーの指定）。web のメニューとも gyumesy とも違う
 /// - **通知設定の行は常に出す**（web と同じ。配信の有無に依らない面なので、
 ///   カレンダー・ランキングのように中身で閉じる対象ではない）
+/// - **広告を外す課金の 2 行（「広告を非表示にする」「購入を復元」）を末尾に
+///   常に置く**（アプリ独自。Issue #42。導線はこことマップの動画の案内の 2 か所
+///   だけで、**下の広告バナーの近くには置かない**（ユーザーの判断））
 class MenuSheet extends ConsumerStatefulWidget {
   const MenuSheet({
     required this.onClose,
@@ -88,6 +96,13 @@ class MenuSheetState extends ConsumerState<MenuSheet>
   void initState() {
     super.initState();
     _controller.forward();
+    // 起動時に価格を取れなかった時（圏外など）のために、開くたびに取り直す
+    // （取れていれば何もしない）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(ref.read(removeAdsProvider.notifier).refreshProduct());
+      }
+    });
   }
 
   @override
@@ -391,20 +406,100 @@ class MenuSheetState extends ConsumerState<MenuSheet>
         value: ref.watch(localeControllerProvider).label,
         onTap: () => setState(() => _view = 1),
       ),
+      _divider(colors),
+      ..._removeAdsRows(colors, t),
       // **最後の行の下にも線を引く。** 高さを一番高いビューに合わせている都合で
       // 下に空きが出るので、線が無いと一覧が途中で切れて見える
       _divider(colors),
     ],
   );
 
+  /// 広告を外す課金の 2 行（Issue #42）。**どちらも常に置く**（ユーザーの決定。
+  /// 復元は App Store の審査でも必須）。
+  ///
+  /// - **買ってある時は、押せない行に「購入済み」を出す**（もう一度買わせない）
+  /// - **保留中は「保留中」を出して押せなくする**（二重に買わせない）
+  /// - **価格はストアが返した表示価格**（取れるまでは出さない。アプリで金額を
+  ///   持たない）。取れなくても押せる ―― 押せばもう一度ストアに聞き、繋がら
+  ///   なければそう知らせる（押しても何も起きない形にしない）
+  /// - 購入・復元の途中は、押した行に回る印を出して両方とも押せなくする
+  List<Widget> _removeAdsRows(AppColors colors, AppMessages t) {
+    final state = ref.watch(removeAdsProvider);
+    final spinner = SizedBox.square(
+      dimension: 16,
+      child: CircularProgressIndicator(strokeWidth: 2, color: colors.textSub),
+    );
+    return [
+      if (state.purchased)
+        MenuListRow(
+          label: t.removeAds,
+          icon: Icons.block,
+          value: t.removeAdsPurchased,
+          trailing: Icon(Icons.check, size: 16, color: colors.primaryText),
+        )
+      else if (state.pending)
+        MenuListRow(
+          label: t.removeAds,
+          icon: Icons.block,
+          value: t.removeAdsPending,
+        )
+      else
+        MenuListRow(
+          label: t.removeAds,
+          icon: Icons.block,
+          value: state.price,
+          trailing: state.busy && _action == _RemoveAdsAction.buy
+              ? spinner
+              : null,
+          onTap: state.busy ? null : _buy,
+        ),
+      _divider(colors),
+      MenuListRow(
+        label: t.restorePurchase,
+        icon: Icons.restore,
+        trailing: state.busy && _action == _RemoveAdsAction.restore
+            ? spinner
+            : null,
+        chevron: !state.busy,
+        onTap: state.busy ? null : _restore,
+      ),
+    ];
+  }
+
+  /// いま走っている操作（回る印をどちらの行に出すか）。
+  _RemoveAdsAction? _action;
+
+  Future<void> _buy() async {
+    setState(() => _action = _RemoveAdsAction.buy);
+    final result = await ref.read(removeAdsProvider.notifier).buy();
+    _notify(result);
+  }
+
+  Future<void> _restore() async {
+    setState(() => _action = _RemoveAdsAction.restore);
+    final result = await ref.read(removeAdsProvider.notifier).restore();
+    _notify(result);
+  }
+
+  /// 結果を画面の上端に短く出す（`AppToast`。通知設定の画面と同じ）。
+  /// **メニューを閉じた後に返ってきた時は出さない**（結果は行の状態と、消えた
+  /// 広告そのものに出ている）。
+  void _notify(RemoveAdsResult result) {
+    if (!mounted) return;
+    setState(() => _action = null);
+    final text = removeAdsResultText(ref.read(messagesProvider), result);
+    if (text == null) return;
+    AppToast.show(context, text.text, isError: text.isError);
+  }
+
   /// 「その他」。**読む頻度が最も低いものだけを置く。**
   Widget _otherView(AppColors colors, AppMessages t) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       _heading(colors, t.menuOther, leading: _backButton(colors, t)),
-      // 並びは web のフッターと同じ（`LEGAL_PAGES`）。**特商法は置かない**
-      // （アプリ内に有償の取引が無いので対象にならない。gyumesy と同じ判断）。
-      // **広告を消す課金を入れる時に足すこと**（web には `/legal/sct/` がある）
+      // 並びは web のフッターと同じ（`LEGAL_PAGES`）。**特商法も置く** ――
+      // 広告を外す課金（Issue #42）でアプリ内に有償の取引ができた（gyumesy は
+      // 課金が無いので置いていない）
       MenuListRow(
         label: t.navTerms,
         icon: Icons.description_outlined,
@@ -417,6 +512,13 @@ class MenuSheetState extends ConsumerState<MenuSheet>
         icon: Icons.lock_outline,
         external: true,
         onTap: () => _openOnWeb('/legal/privacy/'),
+      ),
+      _divider(colors),
+      MenuListRow(
+        label: t.navSct,
+        icon: Icons.storefront_outlined,
+        external: true,
+        onTap: () => _openOnWeb('/legal/sct/'),
       ),
       _divider(colors),
       MenuListRow(
@@ -487,3 +589,5 @@ class MenuSheetState extends ConsumerState<MenuSheet>
   Widget _divider(AppColors colors) =>
       Divider(height: 1, thickness: 1, color: colors.border);
 }
+
+enum _RemoveAdsAction { buy, restore }

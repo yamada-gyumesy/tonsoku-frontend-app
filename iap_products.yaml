@@ -1,0 +1,45 @@
+# アプリ内課金の商品（単一の出どころ）
+#
+# **とん速のアプリ内課金の商品の定義はここだけ。** three-frontend-flutter の
+# `iap_products.yaml` を写し、買い切り（非消耗型）に合わせた。
+#
+# - ストアへの登録は `register_iap` の lane がこのファイルを読んで行う
+#   （iOS: `ios/fastlane/Fastfile` / Android: `android/fastlane/Fastfile`）。
+#   **手でストアに登録しない**（ここと食い違う）。手順は docs/setup-app.md の
+#   「アプリ内課金の商品」
+# - **アプリが読む商品 ID（`lib/core/purchase/purchase_gateway.dart` の
+#   `removeAdsProductId`）はここの写し。** `test/core/purchase/iap_products_test.dart`
+#   が突き合わせている（食い違うと商品が 1 件も取れず、誰も買えない）
+#
+# **product_id は登録した後に変えられない・使い回せない**（両ストアとも。消しても
+# 同じ ID は二度と使えない）。命名は three の規則（`<アプリ>.<種類>.<商品>`）に
+# 揃えた。使える字は両ストアの共通部分（小文字・数字・`_`・`.`。先頭は小文字か
+# 数字）だけ。
+#
+# **three と違って dev / prod の分けが無い**（とん速は flavor を持たず、アプリは 1 つ）。
+#
+# **価格は lane では付けない**（iOS。ASC の Web UI で手動。理由は
+# `ios/fastlane/Fastfile` の `register_iap`）。`price_jpy` はその手動設定の正の値で、
+# Android は lane がこの値で登録する。
+
+non_consumables:
+  - product_id: tonsoku.non_consumable.remove_ads
+    # **広告を外す**（アンカーバナー・記事の枠・マップのリワード動画。買った人は
+    # マップの店舗限定も常に開く。Issue #42）
+    price_jpy: 550            # 税込（ユーザーの決定）
+    # ASC の参照名（ストアには出ない。ASC の中で見分けるための名前。64 字まで）
+    reference_name: Remove Ads
+    # ストアに出る表示名と説明（ASC: 表示名 30 字・説明 45 字まで /
+    # Play: 名前 55 字・説明 200 字まで。lane が登録前に字数を確かめる）。
+    # **文言はアプリの `AppMessages.removeAds` と揃える**（同じものを別の名前で
+    # 呼ばない）
+    localizations:
+      ja:
+        display_name: 広告を非表示にする
+        description: アプリ内の広告をすべて非表示にします
+      en:
+        display_name: Remove ads
+        description: Hides all ads in the app
+      zh:
+        display_name: 移除广告
+        description: 隐藏应用内的所有广告

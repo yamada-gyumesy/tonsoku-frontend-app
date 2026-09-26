@@ -132,60 +132,135 @@ class MapFilters extends ConsumerWidget {
 /// 店舗限定の表示を閉じている時に、品のチップの場所に置く案内（ユーザーの指定）。
 /// **押すとリワード動画を出す**（見終えると 6 時間開放。`MapUnlockController`）。
 ///
+/// **その下に、動画の代わりに広告を外す課金を添える**（[onRemoveAds]。買えば
+/// 店舗限定を常に出す。Issue #42。ユーザーの決定）。動画と同じ板の 2 行目に
+/// 置く ―― 何が開くのかが、同じ場所で分かる。**導線はこことメニューの 2 か所
+/// だけ**（下の広告バナーの近くには置かない。ユーザーの判断）。
+///
 /// 見た目は品のチップ（[MenuChip]）と同じ角丸の板。文言は状態だけ（開放の長さは
-/// 書かない。ユーザーの指定）。読み込み中は鍵の代わりに回る印を出し、押せなくする。
+/// 書かない。ユーザーの指定）。読み込み中は記号の代わりに回る印を出し、押せなくする。
 class MapUnlockNotice extends ConsumerWidget {
-  const MapUnlockNotice({required this.busy, required this.onTap, super.key});
+  const MapUnlockNotice({
+    required this.busy,
+    required this.onTap,
+    this.onRemoveAds,
+    this.removeAdsBusy = false,
+    this.price,
+    super.key,
+  });
+
+  /// 1 行の目安の高さ（地図の画面外の吹き出しの余白の見積もりに使う）。
+  static const rowHeight = 42.0;
 
   final bool busy;
   final VoidCallback onTap;
+
+  /// 広告を外す課金を買う。**null なら 2 行目を出さない。**
+  final VoidCallback? onRemoveAds;
+
+  /// 購入の途中（ストアのシートを出している）。
+  final bool removeAdsBusy;
+
+  /// ストアの表示価格。取れるまでは null（出さない）。
+  final String? price;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final t = ref.watch(messagesProvider);
+    final onRemoveAds = this.onRemoveAds;
+    final price = this.price;
+    return Material(
+      color: MapPalette.of(colors).panel,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: MapPalette.of(colors).panelBorder),
+      ),
+      elevation: 2,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _NoticeRow(
+            icon: Icons.movie_outlined,
+            label: t.mapUnlockLimited,
+            busy: busy,
+            onTap: onTap,
+          ),
+          if (onRemoveAds != null) ...[
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: MapPalette.of(colors).panelBorder,
+            ),
+            _NoticeRow(
+              icon: Icons.block,
+              label: t.mapRemoveAds,
+              busy: removeAdsBusy,
+              onTap: onRemoveAds,
+              trailing: price == null
+                  ? null
+                  : Text(
+                      price,
+                      style: TextStyle(fontSize: 13, color: colors.textSub),
+                    ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// [MapUnlockNotice] の 1 行。
+class _NoticeRow extends StatelessWidget {
+  const _NoticeRow({
+    required this.icon,
+    required this.label,
+    required this.busy,
+    required this.onTap,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool busy;
+  final VoidCallback onTap;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
     return Semantics(
       button: true,
-      child: Material(
-        color: MapPalette.of(colors).panel,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: MapPalette.of(colors).panelBorder),
-        ),
-        elevation: 2,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: busy ? null : onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-            child: Row(
-              children: [
-                SizedBox.square(
-                  dimension: 20,
-                  child: busy
-                      ? const Padding(
-                          padding: EdgeInsets.all(2),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          Icons.movie_outlined,
-                          size: 20,
-                          color: colors.textSub,
-                        ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    t.mapUnlockLimited,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.2,
-                      color: colors.text,
-                    ),
+      child: InkWell(
+        onTap: busy ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+          child: Row(
+            children: [
+              SizedBox.square(
+                dimension: 20,
+                child: busy
+                    ? const Padding(
+                        padding: EdgeInsets.all(2),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(icon, size: 20, color: colors.textSub),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.2,
+                    color: colors.text,
                   ),
                 ),
-              ],
-            ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
           ),
         ),
       ),

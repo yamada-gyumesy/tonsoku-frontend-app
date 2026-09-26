@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/ads/ads_controller.dart';
@@ -11,9 +13,20 @@ import 'package:tonsoku/features/onboarding/data/onboarding_store.dart';
 ///   （[waitForOnboarding] の doc）
 /// - **2 回目以降**: 待たずにすぐ始める（オンボーディングを出さないため）
 ///
-/// 出す枠が 1 つも無い時（本番の ID が空・広告を外す課金）は、
+/// 出す枠が 1 つも無い時（本番の ID が空・広告を外す課金を買ってある）は、
 /// [AdsController.start] が SDK にも ATT にも触れない。
+///
+/// **始めた後に [AdsStatus.idle] へ戻ったら、もう一度始める。** 起動時の
+/// 突き合わせで広告を外す課金が取り消されていた（返金など。
+/// `RemoveAdsController.start`）時に、広告の設定が組み直されて idle に戻る。
+/// 誰も始め直さないと、その起動の間ずっと広告が出ず、マップは広告の準備を
+/// 待ったまま（`MapLimitedGate.waiting`）になる。
 Future<void> startAdsAfterOnboarding(ProviderContainer container) async {
   await waitForOnboarding(container);
+  container.listen<AdsStatus>(adsControllerProvider, (_, next) {
+    if (next == AdsStatus.idle) {
+      unawaited(container.read(adsControllerProvider.notifier).start());
+    }
+  });
   await container.read(adsControllerProvider.notifier).start();
 }

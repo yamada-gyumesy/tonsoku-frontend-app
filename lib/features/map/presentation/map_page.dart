@@ -17,6 +17,8 @@ import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/lifecycle/app_resume.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
+import 'package:tonsoku/core/purchase/remove_ads_result_text.dart';
 import 'package:tonsoku/core/router/app_router.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
@@ -171,6 +173,8 @@ class _MapPageState extends ConsumerState<MapPage> {
     // 許可を求める）。取れるまでは最後に見ていた位置（無ければ日本全体）を出しておき、
     // 取れなければそのまま。開いただけで失敗を知らせない（`quiet`）
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 動画の案内に添える課金の価格（起動時に取れていなければ取り直す）
+      unawaited(ref.read(removeAdsProvider.notifier).refreshProduct());
       await _locate(quiet: true);
       // **動画は現在地の許可が片付いてから出す。** 同時に出すと、OS の許可の
       // ダイアログが動画の上に重なる（シミュレータで確かめた）
@@ -483,6 +487,19 @@ class _MapPageState extends ConsumerState<MapPage> {
     );
   }
 
+  /// 広告を外す課金を買う（Issue #42）。**買えたら店舗限定がその場で開く**
+  /// （`mapLimitedGateProvider` が課金を見ている）。結果は動画の失敗と同じく
+  /// 下に短く知らせる。本人が閉じた時は知らせない。
+  Future<void> _removeAds() async {
+    final result = await ref.read(removeAdsProvider.notifier).buy();
+    if (!mounted) return;
+    final text = removeAdsResultText(ref.read(messagesProvider), result);
+    if (text == null) return;
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text(text.text)));
+  }
+
   void _openShop(Shop shop) {
     // **開く時点の時刻で求め直す**（印は最後に組んだ時のもの。
     // 印の組み直しを待たずに、押した時の状態を出す）
@@ -552,6 +569,7 @@ class _MapPageState extends ConsumerState<MapPage> {
     }
     // 品のチップの代わりの案内（閉じていて、開放すれば見える品がある時だけ）
     final showNotice = !open && (menusValue?.isNotEmpty ?? false);
+    final removeAds = ref.watch(removeAdsProvider);
     _offerIfLocked(gate, unlock, menusValue);
 
     final entries = _entries(shops.value ?? const [], index);
@@ -651,7 +669,9 @@ class _MapPageState extends ConsumerState<MapPage> {
                 44 +
                 8 +
                 (_brandsOpen ? 40 : 0) +
-                (showNotice ? 42 : menus.length * 52) +
+                (showNotice
+                    ? MapUnlockNotice.rowHeight * 2
+                    : menus.length * 52) +
                 (_filter.menuIds.isEmpty ? 0 : 42) +
                 16,
             44,
@@ -756,6 +776,11 @@ class _MapPageState extends ConsumerState<MapPage> {
                                     unlock.busy ||
                                     gate == MapLimitedGate.waiting,
                                 onTap: _watchVideo,
+                                // **広告の準備を待っている間も買える**（買うのに
+                                // 広告の SDK は要らない）
+                                onRemoveAds: _removeAds,
+                                removeAdsBusy: removeAds.busy,
+                                price: removeAds.price,
                               )
                             : null,
                       ),

@@ -36,6 +36,7 @@
 - **geolocator** - マップの現在地
 - **firebase_messaging / flutter_local_notifications** - プッシュ通知（下の「プッシュ通知」）
 - **google_mobile_ads / app_tracking_transparency** - 広告（AdMob）と iOS の ATT
+- **in_app_purchase** - 広告を外すアプリ内課金（買い切り。下の「広告を外す課金」）
 - **app_links** - ユニバーサルリンク / App Links（[docs/deep-links.md](docs/deep-links.md)）
 - **firebase_analytics** - GA4 の画面計測（下の「計測（GA4）」）
 
@@ -97,6 +98,7 @@ lib/
     config/     # 環境設定
     i18n/       # ロケール定義・UI固定文言
     network/    # CDN クライアント
+    purchase/   # 広告を外すアプリ内課金（ストアとの境目・購入の状態）
     router/     # ルート定義
     storage/    # キャッシュ
     theme/      # 配色トークン・ThemeData
@@ -181,6 +183,31 @@ AdMob。置き場と方針は [CLAUDE.md](CLAUDE.md) の「広告」。
 - **アプリ ID とユニット ID は同じ AdMob のアプリのものをそろえる。** 片方だけ差し替えると広告が配信されない
 - **同意（UMP）のメッセージは AdMob の「プライバシーとメッセージ」で公開しておく**（公開していないと同意の画面が出ない）
 - 起動の順は **同意（UMP）→ ATT → SDK の初期化**（`lib/core/ads/ads_controller.dart`。呼ぶのは `main.dart` の 1 か所）。**初回起動はオンボーディングを閉じてから始める**（ATT を通知の許可やオンボーディングに重ねない。`lib/features/onboarding/data/ads_after_onboarding.dart`）
+
+## 広告を外す課金
+
+**買い切り（非消耗型）で、買った端末では広告を一切出さない**（Issue #42。判断の拠りどころは
+[CLAUDE.md](CLAUDE.md) の「広告」）。サーバーは持たず、端末の保存とストアの購入記録だけで判定する。
+
+### ストアに登録する商品
+
+**定義の出どころは [`iap_products.yaml`](iap_products.yaml) の 1 か所だけ**（ストアへの登録は
+そこを読む `register_iap` の lane。手順は [docs/setup-app.md](docs/setup-app.md) の「アプリ内課金の商品」）。
+
+| 商品 ID（iOS / Android 共通） | 種類 | 価格 | 表示名（ja / en / zh） |
+|---|---|---|---|
+| `tonsoku.non_consumable.remove_ads` | 非消耗型（iOS: Non-Consumable / Play: アプリ内アイテム（管理対象）） | 550 円（税込） | 広告を非表示にする / Remove ads / 移除广告 |
+
+- **商品 ID は登録した後に変えられない・使い回せない。** アプリが読む写し（`lib/core/purchase/purchase_gateway.dart` の `removeAdsProductId`）と yaml が食い違うと誰も買えないので、`test/core/purchase/iap_products_test.dart` が突き合わせている
+- **価格はアプリに持たない**（画面に出すのはストアが返した表示価格）
+
+### 動き
+
+- **導線はメニュー（「広告を非表示にする」「購入を復元」）とマップの動画の案内の 2 か所だけ**。下の広告バナーの近くには置かない
+- **買ったことは端末に残す**（`ads_removed`）。起動した瞬間から広告の SDK・同意（UMP）・ATT に触れない（`adConfigProvider`）
+- **起動のたびにストアの購入記録と突き合わせる**（`RemoveAdsController.start`。呼ぶのは `main.dart` の 1 か所）。ストアが「持っていない」とはっきり答えた時（返金・取り消し）だけ広告を戻し、聞けない時（圏外など）は端末の記録のまま
+- **ストアに触るのは `lib/core/purchase/purchase_gateway.dart` だけ**。テストは偽物に差し替える（`purchaseGatewayProvider`。広告の `adGatewayProvider` と同じ）
+- **商品が取れるのは、ストアで商品が使える状態になってから**（iOS は価格まで付いた後・Android は有効化の後。試し方は docs/setup-app.md の「試し方」）。取れない間、画面は価格を出さず、押すと「ストアに接続できませんでした」と出る
 
 ## 書体
 

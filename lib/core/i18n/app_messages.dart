@@ -69,6 +69,17 @@ class AppMessages {
     required this.menuOther,
     required this.menuLicenses,
     required this.menuVersion,
+    required this.navSct,
+    required this.removeAds,
+    required this.removeAdsPurchased,
+    required this.removeAdsPending,
+    required this.restorePurchase,
+    required this.removeAdsDone,
+    required this.restoreDone,
+    required this.restoreNotFound,
+    required this.purchasePendingNotice,
+    required this.purchaseFailed,
+    required this.storeUnavailable,
     required this.navNotifications,
     required this.notificationsTitle,
     required this.notificationChannelName,
@@ -188,6 +199,7 @@ class AppMessages {
     required this.mapLocationUnavailable,
     required this.mapUnlockLimited,
     required this.mapVideoUnavailable,
+    required this.mapRemoveAds,
     required this.mapOpenInGoogleMaps,
     required this.mapAddress,
     required this.mapHours,
@@ -315,7 +327,7 @@ class AppMessages {
   /// （web の `CmSourceChip` の注記）。
   final String commonOfficial;
 
-  /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` のうち特商法を除く 2 つ）。
+  /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` の 3 つ。特商法は [navSct]）。
   final String navAbout;
   final String navTerms;
   final String navPrivacy;
@@ -331,6 +343,43 @@ class AppMessages {
   final String menuOther;
   final String menuLicenses;
   final String menuVersion;
+
+  /// 特商法（web の `nav.sct`）。**広告を外す課金を入れたので置く**（有償の
+  /// 取引ができた。web のフッターの `LEGAL_PAGES` の 3 つ目）。
+  final String navSct;
+
+  // ---- 広告を外す課金（Issue #42。アプリ独自で web に無い） ----
+  //
+  // **画面に書くのは状態だけ**（web の CLAUDE.md「画面に出す文言」）。
+  // 理由（ストアの仕組み・保留になる支払い方法）は書かない。
+
+  /// メニューの行と、ストアの商品の表示名（`iap_products.yaml`）。
+  final String removeAds;
+
+  /// 買ってある（メニューの行の値）。
+  final String removeAdsPurchased;
+
+  /// 保留中の購入がある（メニューの行の値）。
+  final String removeAdsPending;
+  final String restorePurchase;
+
+  /// 買えた。
+  final String removeAdsDone;
+
+  /// 復元できた。
+  final String restoreDone;
+
+  /// 復元できる購入が無い。
+  final String restoreNotFound;
+
+  /// 保留になった。**支払いが済めば外れることだけ書く**（もう一度買わずに済む）。
+  final String purchasePendingNotice;
+
+  /// 買えなかった。
+  final String purchaseFailed;
+
+  /// ストアに繋がらない（圏外・ストアのアプリが無い・商品が取れない）。
+  final String storeUnavailable;
 
   // ---- 通知設定（web の `nav.notifications` と `notifications` 節） ----
 
@@ -584,6 +633,10 @@ class AppMessages {
 
   /// リワード動画を読み込めなかった。
   final String mapVideoUnavailable;
+
+  /// 動画の案内に添える、広告を外す課金（買えば店舗限定を常に出す。Issue #42）。
+  /// 右に表示価格を添える。
+  final String mapRemoveAds;
   final String mapOpenInGoogleMaps;
   final String mapAddress;
   final String mapHours;
@@ -666,6 +719,17 @@ class AppMessages {
     menuOther: 'その他',
     menuLicenses: 'ライセンス表記',
     menuVersion: 'バージョン',
+    navSct: '特定商取引法に基づく表記',
+    removeAds: '広告を非表示にする',
+    removeAdsPurchased: '購入済み',
+    removeAdsPending: '保留中',
+    restorePurchase: '購入を復元',
+    removeAdsDone: '広告を非表示にしました',
+    restoreDone: '購入を復元しました',
+    restoreNotFound: '復元できる購入はありません',
+    purchasePendingNotice: '支払いが済むと広告が非表示になります',
+    purchaseFailed: '購入できませんでした',
+    storeUnavailable: 'ストアに接続できませんでした',
     navNotifications: '通知設定',
     notificationsTitle: '通知設定',
     notificationChannelName: 'お知らせ',
@@ -815,6 +879,7 @@ class AppMessages {
     mapLocationUnavailable: '現在地を取得できません',
     mapUnlockLimited: '動画を見て店舗限定を表示',
     mapVideoUnavailable: '動画を読み込めませんでした',
+    mapRemoveAds: '広告なしでいつでも表示',
     mapOpenInGoogleMaps: 'Google マップで開く',
     mapAddress: '住所',
     mapHours: '営業時間',
@@ -887,6 +952,17 @@ class AppMessages {
     menuOther: 'More',
     menuLicenses: 'Licenses',
     menuVersion: 'Version',
+    navSct: 'Commercial Transactions Act Notice',
+    removeAds: 'Remove ads',
+    removeAdsPurchased: 'Purchased',
+    removeAdsPending: 'Pending',
+    restorePurchase: 'Restore purchase',
+    removeAdsDone: 'Ads removed',
+    restoreDone: 'Purchase restored',
+    restoreNotFound: 'No purchase to restore',
+    purchasePendingNotice: 'Ads will be removed once payment is complete',
+    purchaseFailed: "Couldn't complete the purchase",
+    storeUnavailable: "Couldn't connect to the store",
     navNotifications: 'Notifications',
     notificationsTitle: 'Notifications',
     notificationChannelName: 'Notifications',
@@ -1049,6 +1125,7 @@ class AppMessages {
     mapLocationUnavailable: 'Your location is unavailable',
     mapUnlockLimited: 'Watch a video to show Store Exclusives',
     mapVideoUnavailable: "Couldn't load the video",
+    mapRemoveAds: 'Show anytime without ads',
     mapOpenInGoogleMaps: 'Open in Google Maps',
     mapAddress: 'Address',
     mapHours: 'Hours',
@@ -1118,6 +1195,17 @@ class AppMessages {
     menuOther: '其他',
     menuLicenses: '许可信息',
     menuVersion: '版本',
+    navSct: '特定商业交易法标示',
+    removeAds: '移除广告',
+    removeAdsPurchased: '已购买',
+    removeAdsPending: '待付款',
+    restorePurchase: '恢复购买',
+    removeAdsDone: '已移除广告',
+    restoreDone: '已恢复购买',
+    restoreNotFound: '没有可恢复的购买',
+    purchasePendingNotice: '付款完成后将移除广告',
+    purchaseFailed: '无法完成购买',
+    storeUnavailable: '无法连接到商店',
     navNotifications: '通知设置',
     notificationsTitle: '通知设置',
     notificationChannelName: '通知',
@@ -1267,6 +1355,7 @@ class AppMessages {
     mapLocationUnavailable: '无法获取当前位置',
     mapUnlockLimited: '观看视频以显示店铺限定',
     mapVideoUnavailable: '无法加载视频',
+    mapRemoveAds: '无广告随时显示',
     mapOpenInGoogleMaps: '在 Google 地图中打开',
     mapAddress: '地址',
     mapHours: '营业时间',

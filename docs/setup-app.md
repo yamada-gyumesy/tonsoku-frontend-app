@@ -27,6 +27,10 @@
 | 年齢・コンテンツレーティング | iOS ✅（`ios/fastlane/rating_config.json`） / Android ❌ UI のみ（IARC） |
 | データ収集の申告（App Privacy） | iOS ❌ **ASC の UI のみ** / Android ✅ API |
 | 広告の有無・対象年齢・プライバシーポリシー URL | iOS ✅ / Android ❌ **UI のみ** |
+| アプリ内課金の商品（ID・表示名・販売地域） | ✅ **lane**（`register_iap`。下の「アプリ内課金の商品」） |
+| アプリ内課金の価格 | iOS ❌ **Web UI**（lane で付けない。理由は同節） / Android ✅ lane |
+| アプリ内課金の有効化（販売開始） | iOS: 審査を通ると売られる / Android ❌ **Play Console**（lane に入れない） |
+| 有料 App 契約・お支払いプロファイル・ライセンステスター | ❌ **UI のみ** |
 
 **lane を叩くのは、認証情報を持っている人（ユーザー）だけ。** 認証情報の置き場は
 `docs/secrets.md`。
@@ -184,6 +188,95 @@ UI でしか入れられない申告（gyumesy と違うところだけ）:
   消しているが、AdMob は広告 ID を使う。消すと広告の配信が制限される）
 - データ セーフティ: 位置情報（端末内のみ）・デバイス ID（FCM）・広告 SDK が集めるもの
 - 対象年齢・コンテンツレーティング（IARC）
+
+---
+
+## アプリ内課金の商品（広告を外す。Issue #42）
+
+**three-frontend-flutter の `register_iap`（§3-G）を写した。** あちらは自動更新サブスクなので、
+**買い切り（非消耗型）の API に置き換えた**（iOS: ASC の `inAppPurchasesV2` の `NON_CONSUMABLE` /
+Play: `inappproducts` の管理対象アイテム）。dev / prod の分けは無い（とん速は flavor を持たない）。
+
+### ストアに登録する商品
+
+**定義の出どころは `iap_products.yaml` の 1 か所だけ。手でストアに登録しない**（ずれる）。
+
+| 商品 ID（iOS / Android 共通） | 種類 | 価格 | 表示名（ja / en / zh） |
+|---|---|---|---|
+| `tonsoku.non_consumable.remove_ads` | 非消耗型（iOS: Non-Consumable / Play: アプリ内アイテム（管理対象）） | 550 円（税込） | 広告を非表示にする / Remove ads / 移除广告 |
+
+- **商品 ID は登録した後に変えられない・消せない・使い回せない**（両ストア）。叩く前に yaml を確かめる
+- ASC の参照名は `Remove Ads`（ASC の中で見分けるだけで、ストアには出ない）
+- **ファミリー共有は切ってある**（一度入れると戻せない。入れるならユーザーが決めて Web UI で）
+
+### lane でやること（Claude は叩かない。認証情報を使うので、叩くのはユーザー）
+
+```bash
+cd ios     && mise exec -- bundle exec fastlane ios register_iap              # dry-run（既定）
+cd ios     && mise exec -- bundle exec fastlane ios register_iap apply:true   # 実登録（不可逆）
+cd android && mise exec -- bundle exec fastlane android register_iap              # dry-run（既定）
+cd android && mise exec -- bundle exec fastlane android register_iap apply:true   # 実登録（不可逆）
+```
+
+- **まず dry-run で、何を作るかを見てから apply する**（three と同じ 2 段）
+- **途中で落ちても同じコマンドで続きから直る。** iOS は既にある商品を作り直さず、足りない表示名・
+  販売地域だけ補う。Android は既にある商品を飛ばす
+- **登録する前に字数を確かめる**（`fastlane/shared.rb` の `iap_non_consumables`）。商品を作った後に
+  表示名で弾かれると、商品 ID だけ消費された不完全な商品が残る（three の iOS で踏んだ）
+- iOS の販売地域は**全地域**にする（アプリが出ていない地域では商品も買えないので、商品の側で絞る
+  意味が無い）。three が JPN だけにしているのは、あちらのアプリの販売地域が日本だけだから
+- Android は**無効のまま**作り、価格は日本円を基準に他の国を Play に換算させる
+
+### Web UI でやること（ユーザー）
+
+**iOS（App Store Connect）**
+
+1. **有料 App 契約**（ビジネス → 契約・銀行口座・税務）。**済んでいないと、商品を作れても
+   アプリから 1 件も取れない。** 結べるのは Account Holder だけ
+2. `register_iap` を apply した後、**価格を付ける**: アプリ内課金 → `Remove Ads` → 価格 →
+   基準の国を日本にして ¥550。**lane では付けない** —— three はサブスクの価格を API で日本だけに
+   付け、他の地域の価格が作られずに `MISSING_METADATA` から抜けなくなった（ASC の画面にも
+   足りない所が出ない。three の setup-app.md「IAP サブスクの価格は ASC Web UI で手動設定」）。
+   Web UI の価格の設定だけが全地域の等価の価格を作る。買い切りの価格の API は基準の国から他を
+   作る作りだが、**このアカウントで確かめておらず、抜けられない状態に落ちると商品 ID ごと
+   使えなくなる**ので、1 回きりの手作業を採る
+3. **審査用のスクリーンショット**（購入の画面 = メニューの「広告を非表示にする」の行）を付ける。
+   無いと審査に出せない
+4. **最初の審査は、アプリの版と一緒に出す**（初めてのアプリ内課金は版の審査に添える決まり）。
+   `ios release` の lane は版しか審査に載せない（`precheck_include_in_app_purchases: false`。
+   three の release.md の注記と同じ）ので、**審査に出す時に Web UI で商品を審査に加える**
+   （`docs/release.md` の「提出前の確認」）
+
+**Android（Play Console）**
+
+1. **お支払いプロファイル（マーチャント アカウント）の連携**（設定 → お支払いプロファイル。
+   アカウントの管理者だけ）。無いと lane の apply が
+   `Cannot create ... without first registering a payments profile` で落ちる（three の
+   troubleshooting ⑥ と同じ）
+2. **課金の入ったビルドを 1 度上げておく**（`android alpha draft:true` で足りる）。Play は
+   `com.android.vending.BILLING` 権限を持つ版が上がるまで、アプリ内アイテムを作らせない
+   （権限は in_app_purchase の Billing ライブラリがマニフェストに足す）
+3. `register_iap` を apply した後、**有効にする**（収益化 → 商品 → アプリ内アイテム →
+   `tonsoku.non_consumable.remove_ads` → 有効化）。**無効のままだとアプリから商品が取れず、
+   テストでも買えない**（three の 1.2.0 の実測。審査とは関係ない）。販売開始なので lane に入れていない
+4. **ライセンステスター**を登録する（設定 → ライセンス テスト）。テスターは実際には請求されない
+
+### 試し方
+
+- **iOS: TestFlight から入れる**（TestFlight のアプリの購入は Apple ID に関係なくサンドボックスで、
+  請求されない）。**StoreKit の設定ファイル（`.storekit`）は置かない**（three の判断と同じ。商品 ID と
+  価格を ASC と二重に持つことになり、ずれた時に商品が取れなくなる）。TestFlight・サンドボックスでは
+  価格が USD で出ることがある（Apple 側の既知の挙動。本番では出ない。three の実測）
+- **Android: ライセンステスターの端末に、クローズドテストの版をストアから入れる**
+  （手元でビルドした版では買えない）
+- 確かめること: 買う → 広告（下のバナー・記事の枠）がその場で消え、マップの店舗限定が開く／
+  アプリを消して入れ直す → 「購入を復元」で戻る／キャンセル・保留（Android のコンビニ払い）
+
+### 申告
+
+- **App Privacy / データ セーフティの「購入」は「収集しない」のまま**。購入の記録は端末とストアの
+  間だけで、こちらのサーバーへは送らない（サーバーを持たない）
+- Play のストアの掲載には、商品を有効にすると「アプリ内購入あり」が自動で付く
 
 ---
 

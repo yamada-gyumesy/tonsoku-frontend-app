@@ -36,9 +36,9 @@ enum AdSlot {
 /// ---- アプリ内課金で広告を外す時 ----
 ///
 /// [adsRemoved] が真なら全部の枠が空扱いになり、**SDK の初期化も ATT の確認も
-/// 起きない**。広告を外す課金（将来）を入れる時は、購入済みの端末でここを真に
-/// する ―― **購入済みの人に SDK を初期化させない・ATT を聞かない**こと
-/// （追跡しない人に追跡の許可を求めるのは筋が通らない）。
+/// 起きない**。広告を外す課金（Issue #42。`RemoveAdsController`）を買った端末で
+/// 真になる（`adConfigProvider`）―― **購入済みの人に SDK を初期化させない・
+/// ATT を聞かない**（追跡しない人に追跡の許可を求めるのは筋が通らない）。
 @immutable
 class AdConfig {
   const AdConfig({required this.units, this.adsRemoved = false});
@@ -46,7 +46,7 @@ class AdConfig {
   /// 枠ごとの広告ユニット ID。空文字・欠けは「その枠は出さない」。
   final Map<AdSlot, String> units;
 
-  /// 広告を外す（将来の課金）。真なら全部の枠が出ない。
+  /// 広告を外す課金を買ってある。真なら全部の枠が出ない。
   final bool adsRemoved;
 
   /// [slot] の広告ユニット ID。**出さない枠は null。**
@@ -99,13 +99,18 @@ class AdConfig {
   };
 
   /// ビルドの種類と OS から決める。**release だけが本番の ID を使う。**
-  factory AdConfig.resolve({bool? release, TargetPlatform? platform}) {
+  factory AdConfig.resolve({
+    bool? release,
+    TargetPlatform? platform,
+    bool adsRemoved = false,
+  }) {
     final isRelease = release ?? kReleaseMode;
     final isIos = (platform ?? defaultTargetPlatform) == TargetPlatform.iOS;
     return AdConfig(
       units: isRelease
           ? (isIos ? productionIos : productionAndroid)
           : (isIos ? testIos : testAndroid),
+      adsRemoved: adsRemoved,
     );
   }
 }

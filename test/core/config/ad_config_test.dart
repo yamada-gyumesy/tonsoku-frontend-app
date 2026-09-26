@@ -71,7 +71,7 @@ void main() {
     });
   });
 
-  test('広告を外した端末（将来の課金）は全部の枠が出ず、SDK に触れない', () {
+  test('広告を外す課金を買った端末は全部の枠が出ず、SDK に触れない', () {
     const config = AdConfig(units: AdConfig.testIos, adsRemoved: true);
     for (final slot in AdSlot.values) {
       expect(config.unitId(slot), isNull);
