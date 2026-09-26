@@ -48,7 +48,7 @@
 | 2 | iOS の Bundle ID（Push・Associated Domains 込み） | Claude | `ios register_app_id` |
 | 3 | App Store Connect のアプリ枠 | Claude | `ios create_app`（名前「とん速」が取られていたらユーザーが決める） |
 | 4 | App Store ID を infra へ | Claude | tonsoku-infra-terraform のセッションへ連絡 |
-| 5 | 審査連絡先 | Claude | API（`appStoreReviewDetails`。連絡先は牛めしレーダー・gyumesy と同じ値を ASC から写す） |
+| 5 | 審査連絡先 | Claude | API（`appStoreReviewDetails`。連絡先は **gyumesy の審査連絡先を ASC から写す**） |
 | 6 | TestFlight の内部グループ（全ビルド自動） | Claude | API（`betaGroups` / `betaTesters`。gyumesy #39 と同じ） |
 | 7 | 価格（無料）・販売地域・年齢レーティング | Claude | API（three の setup-app.md §4 のレシピ。販売地域は全世界＝訪日客のため。gyumesy と同じ判断） |
 | 8 | **App Privacy**（広告・位置情報・通知・計測・トラッキング） | **ユーザー** | ASC の UI のみ（中身は `docs/setup-app.md` の「App Privacy」） |

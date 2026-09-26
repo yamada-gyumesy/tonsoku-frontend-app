@@ -96,7 +96,8 @@ cd ios && mise exec -- bundle exec fastlane ios create_app
 （`POST /v1/appStoreReviewDetails` に `appStoreVersion` を紐づける。gyumesy と同じ）。
 
 - `contactFirstName` / `contactLastName` / `contactPhone` / `contactEmail` は**個人の連絡先**。
-  **牛めしレーダー・gyumesy の審査連絡先（ASC にある）と同じ値を API で写す**。
+  **gyumesy の審査連絡先（ASC にある）を API で写す**（とん速の手本は gyumesy。gyumesy の値は
+  牛めしレーダーと同じ）。
   **リポジトリに置かない**（ファイルが無い項目は `deliver` が送らない）
 - `demoAccountRequired` は `false`（ログインが無いアプリなので）
 - `notes` は `ios/fastlane/metadata/review_information/notes.txt` が持つ（`deliver` が送る）
