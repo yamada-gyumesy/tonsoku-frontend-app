@@ -1,7 +1,10 @@
+import 'dart:io';
+import 'dart:math' as math;
+
+import 'package:flutter_test/flutter_test.dart';
 import 'package:tonsoku/features/map/data/pmtiles.dart';
 import 'package:tonsoku/features/map/data/bundled_tile_provider.dart';
-import 'dart:io';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:vector_tile_renderer/vector_tile_renderer.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/map/presentation/map_theme.dart';
@@ -69,5 +72,44 @@ void main() {
   test('同梱の地図の指紋は読むたびに同じ', () {
     final bytes = File(BundledTileProvider.asset).readAsBytesSync();
     expect(PmTiles(bytes).fingerprint, PmTiles(bytes).fingerprint);
+  });
+
+  group('地名の言語（英語・中国語の画面に日本語を出さない。Issue #35）', () {
+    test('日本語は name:ja、無ければ name', () {
+      expect(placeNameField(AppLocale.ja), [
+        'coalesce',
+        ['get', 'name:ja'],
+        ['get', 'name'],
+      ]);
+    });
+
+    // **`name` に落とすと、訳の無い地名が日本語で出る。** 無ければ null
+    // （その地名を描かない）になるよう、`get` 1 つだけにしてある
+    test('英語は name:en だけ（name に落とさない）', () {
+      expect(placeNameField(AppLocale.en), ['get', 'name:en']);
+    });
+
+    test('中国語は name:zh-Hans だけ（name に落とさない）', () {
+      expect(placeNameField(AppLocale.zh), ['get', 'name:zh-Hans']);
+    });
+
+    // **地図を作り直して属性を落とすと、中国語・英語の地図から地名が黙って
+    // 全部消える**（`get` が null を返すだけで例外にならない）
+    test('同梱の地図の地名に英語・中国語の名前が入っている', () {
+      final archive = PmTiles(
+        File(BundledTileProvider.asset).readAsBytesSync(),
+      );
+      const z = 11;
+      final n = 1 << z;
+      const lat = 35.6938, lon = 139.7034; // 新宿
+      final x = ((lon + 180) / 360 * n).floor();
+      final r = lat * math.pi / 180;
+      final y =
+          ((1 - math.log(math.tan(r) + 1 / math.cos(r)) / math.pi) / 2 * n)
+              .floor();
+      final tile = VectorTileReader().read(archive.tile(z, x, y)!);
+      final places = tile.layers.firstWhere((l) => l.name == 'places');
+      expect(places.keys, containsAll(['name:en', 'name:zh-Hans']));
+    });
   });
 }

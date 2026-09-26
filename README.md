@@ -190,11 +190,12 @@ AdMob。置き場と方針は [CLAUDE.md](CLAUDE.md) の「広告」。
 | ファイル | 中身 |
 |---|---|
 | `assets/map/japan.pmtiles`（約 30MB） | [Protomaps](https://protomaps.com/) の basemap（OpenStreetMap 由来）から日本の範囲（経度 122〜154・緯度 20〜46）を切り出したベクタータイル。**z0〜11 だけ**で、層は陸（`earth`）・湖と川（`water`。海は陸の外側として描く）・境界・主な道路と鉄道・地名に絞ってある |
-| `assets/map/stations.json`（約 390KB） | OpenStreetMap の駅 8,740 件（名前・英語名・座標）。**地図には主要駅しか入っていない**ので別に持ち、寄った時（z13 以上）に印として描く |
+| `assets/map/stations.json`（約 420KB） | OpenStreetMap の駅 8,740 件（名前・英語名・中国語名・座標）。**地図には主要駅しか入っていない**ので別に持ち、寄った時（z13 以上）に印として描く |
 
 - **作り方は `tool/build_map.sh`**（`pmtiles` と `tippecanoe` が要る。`brew install pmtiles tippecanoe`）。層と属性の絞り方、z11 で止めた理由（z12 まで入れると約 70MB）もスクリプトの冒頭にある
 - **地図を作り直して層や属性を変えたら、描き方（`lib/features/map/presentation/map_theme.dart`）も直す。** 名前がずれても例外にはならず、その層が黙って描かれなくなる（`test/features/map/map_theme_test.dart` は描き方の側しか見ていない）
 - 読み手は自前（`lib/features/map/data/pmtiles.dart`）。公開の PMTiles のパッケージは今の依存と解決できない（理由は同ファイル）
+- **地名・駅名は英語・中国語の名前が無ければ描かない**（日本語に落とさない。英語・中国語の画面に日本語を出さないのはユーザーの決定。`map_theme.dart` の「地名の言語」と `Station.labelFor`）。中国語名は駅だけ付き具合が薄い（地名はほぼ全部に在る）
 - 配色はアプリ側で持つ（`MapPalette`。`lib/core/theme/app_colors.dart`）。ライト／ダークで描き分ける
 - **地図の右下に「© OpenStreetMap」を常に出す**（ODbL の帰属表示。押すと著作権のページ。contributors を付けない理由は `MapAttribution` の注記）。メニューのライセンス一覧にも載せる（`lib/core/licenses/map_data_license.dart`）
 

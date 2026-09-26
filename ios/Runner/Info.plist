@@ -4,6 +4,23 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- **App Store に出る「対応言語」の申告**（gyumesy-frontend-app と同じ）。
+	     `ios/Runner/` の言語別のフォルダ（`*.lproj`）は権限の確認の文言
+	     （`InfoPlist.strings`）にしか無いので、宣言しないとストアからは対応言語が
+	     足りないアプリに見える。
+
+	     **実行時のロケール決定には効かない**（gyumesy で実測。Flutter が受け取る
+	     ロケールはこの一覧で絞られていない）。
+
+	     **言語を増やす時は pbxproj の `knownRegions` と `*.lproj/InfoPlist.strings`
+	     も一緒に直す。** Xcode の画面から言語を足すと `knownRegions` しか
+	     書き換わらず、この一覧が取り残される。 -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ja</string>
+		<string>en</string>
+		<string>zh-Hans</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -27,7 +44,15 @@
 	<!-- マップの「現在地」。**ここだけは理由を書く**（Apple の審査が、何のために
 	     位置情報を使うかを利用者に示すことを求めている。画面の文言の「状態だけを
 	     書く」とは別の決まり）。許可を求めるのは「現在地」を押した時だけで、
-	     開いただけでは求めない（lib/features/map/data/location_repository.dart） -->
+	     開いただけでは求めない（lib/features/map/data/location_repository.dart）。
+
+	     **英語・中国語は `en.lproj` / `zh-Hans.lproj` の `InfoPlist.strings`**
+	     （英語・中国語の画面に日本語を出さないのはユーザーの決定。Issue #35）。
+	     `ja.lproj` にもここと同じ文を置く（日本語の端末で、言語の選び方に
+	     関係なく日本語の文が出るように、3 言語とも同じ置き方にする）。**文を変えたら
+	     ここと 3 つの `InfoPlist.strings` を一緒に直す。** どの言語が選ばれるかは
+	     **端末（または iOS の設定のアプリごと）の言語**で決まり、アプリの中で
+	     選んだ表示言語には従わない（OS が出す確認なので、アプリから変えられない） -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>近くの松のやを地図で探すために、現在地を使います。</string>
 	<!-- **自動の `screen_view` を切る。** Flutter は ViewController が 1 つしか
@@ -254,7 +279,7 @@
 	<!-- App Tracking Transparency（広告の最適化に使う端末の識別子）。**ここは理由を
 	     書く**（Apple の審査が求める。位置情報の文言と同じ扱い）。確認を出すのは
 	     広告の SDK を始める時（lib/core/ads/ads_controller.dart）で、広告の枠が
-	     全部空の間は出さない -->
+	     全部空の間は出さない。英語・中国語は位置情報と同じく `*.lproj/InfoPlist.strings` -->
 	<key>NSUserTrackingUsageDescription</key>
 	<string>あなたに合った広告を表示するために使います。</string>
 	<key>LSRequiresIPhoneOS</key>

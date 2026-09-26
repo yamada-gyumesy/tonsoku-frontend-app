@@ -3,19 +3,41 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'package:tonsoku/core/i18n/app_locale.dart';
+
 /// 駅 1 つ。
 class Station {
   const Station({
     required this.name,
     required this.nameEn,
+    this.nameZh = '',
     required this.lat,
     required this.lon,
   });
 
   final String name;
 
-  /// 英語名。**無い駅は空文字**（OpenStreetMap に `name:en` が無い）。
+  /// 英語名。**無い駅は空文字**（OpenStreetMap に `name:en` も読みのローマ字も
+  /// 無い）。
   final String nameEn;
+
+  /// 中国語名（簡体字）。**無い駅は空文字**（`name:zh-Hans` も、仮名を含まない
+  /// `name:zh` も無い。`tool/build_map.sh`）。
+  final String nameZh;
+
+  /// [locale] の画面に出す名前。**訳が無ければ null**（その駅を描かない）。
+  ///
+  /// **英語・中国語で日本語の [name] に落とさない**（英語・中国語の画面に日本語を
+  /// 出さないのはユーザーの決定。Issue #35）。
+  String? labelFor(AppLocale locale) {
+    final label = switch (locale) {
+      AppLocale.ja => name,
+      AppLocale.en => nameEn,
+      AppLocale.zh => nameZh,
+    };
+    return label.isEmpty ? null : label;
+  }
+
   final double lat;
   final double lon;
 }
@@ -27,14 +49,16 @@ class Station {
 /// `tool/build_map.sh`）。店の最寄り駅が出ないと場所の見当が付かないので、
 /// OpenStreetMap の駅を名前と座標だけにして印として描く。
 ///
-/// 形は `{"fields": ["name","name_en","lat","lon"], "stations": [[…], …]}`。
+/// 形は `{"fields": ["name","name_en","name_zh","lat","lon"], "stations": [[…], …]}`。
 /// **列の並びは `fields` に従って読む**（並びを決め打ちにすると、作り直して
-/// 列を足した時に黙ってずれる）。
+/// 列を足した時に黙ってずれる）。`name_en` / `name_zh` の列が無ければ空として読む
+/// （その言語では描かない）。
 List<Station> decodeStations(String body) {
   final json = jsonDecode(body) as Map<String, dynamic>;
   final fields = (json['fields'] as List<dynamic>).cast<String>();
   final name = fields.indexOf('name');
   final nameEn = fields.indexOf('name_en');
+  final nameZh = fields.indexOf('name_zh');
   final lat = fields.indexOf('lat');
   final lon = fields.indexOf('lon');
   if (name < 0 || lat < 0 || lon < 0) {
@@ -46,6 +70,7 @@ List<Station> decodeStations(String body) {
         Station(
           name: r[name] as String,
           nameEn: nameEn < 0 ? '' : (r[nameEn] as String? ?? ''),
+          nameZh: nameZh < 0 ? '' : (r[nameZh] as String? ?? ''),
           lat: (r[lat] as num).toDouble(),
           lon: (r[lon] as num).toDouble(),
         ),
@@ -58,7 +83,8 @@ List<Station> decodeStations(String body) {
 ///
 /// 近いとみなすのは [mergeWithin]（度。緯度で約 1km）以内。遠い同名の駅
 /// （長崎の「神田」と東京の「神田」）はまとめない。まとめた駅の位置は平均、
-/// 英語名は最初の駅のもの。
+/// 英語名・中国語名は**名前を持つ最初の駅のもの**（事業者ごとの点で付き具合が
+/// まちまちなので、最初の点だけ見ると訳のある駅を描かずに落とす）。
 List<Station> mergeSameName(List<Station> stations) {
   final groups = <String, List<List<Station>>>{};
   for (final st in stations) {
@@ -79,17 +105,21 @@ List<Station> mergeSameName(List<Station> stations) {
       for (final c in clusters)
         Station(
           name: c.first.name,
-          nameEn: c.first.nameEn,
+          nameEn: _firstNonEmpty(c.map((s) => s.nameEn)),
+          nameZh: _firstNonEmpty(c.map((s) => s.nameZh)),
           lat: c.map((s) => s.lat).reduce((a, b) => a + b) / c.length,
           lon: c.map((s) => s.lon).reduce((a, b) => a + b) / c.length,
         ),
   ];
 }
 
+String _firstNonEmpty(Iterable<String> names) =>
+    names.firstWhere((n) => n.isNotEmpty, orElse: () => '');
+
 /// [mergeSameName] で同じ駅とみなす距離（度）。
 const mergeWithin = 0.01;
 
-/// 駅の一覧。**マップを初めて開いた時に 1 回だけ読む**（390KB・8,700 駅）。
+/// 駅の一覧。**マップを初めて開いた時に 1 回だけ読む**（420KB・8,600 駅）。
 final stationsProvider = FutureProvider<List<Station>>((ref) async {
   final body = await rootBundle.loadString('assets/map/stations.json');
   return decodeStations(body);

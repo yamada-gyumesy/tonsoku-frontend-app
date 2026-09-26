@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'package:tonsoku/core/i18n/app_locale.dart';
+import 'package:tonsoku/core/i18n/app_messages.dart';
+
 /// 受け取り側の用意。**画面（通知設定）とは別の関心事**なのでここに分ける。
 /// gyumesy-frontend-app の `push_bootstrap.dart` を写した（チャンネル ID・色だけ違う）。
 ///
@@ -15,7 +18,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 /// - Android にはその仕組みが無いので、ローカル通知で自分で出す
 ///
 /// **両方でローカル通知を使わない。** iOS で両方やると同じ通知が 2 つ出る。
-Future<void> registerPushHandlers() async {
+///
+/// [locale] は起動時の表示言語（通知チャンネルの名前に使う。[syncNotificationChannel]）。
+Future<void> registerPushHandlers(AppLocale locale) async {
   // **終了状態から通知で起動した時の 1 通。** `onMessageOpenedApp` には
   // 流れてこないので、両方を見ないと**その状態でだけ飛ばない**という
   // 再現しにくい形になる
@@ -53,11 +58,8 @@ Future<void> registerPushHandlers() async {
     onDidReceiveNotificationResponse: (response) =>
         pushedLink.value = response.payload,
   );
-  await _local
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.createNotificationChannel(_channel);
+  _androidReady = true;
+  await syncNotificationChannel(locale);
 
   // **終了状態で、前面で出したローカル通知をタップして起動した時の 1 通。**
   // `onDidReceiveNotificationResponse` は起動中にしか呼ばれず（プラグインの
@@ -114,13 +116,48 @@ const _smallIcon = 'ic_stat_notification';
 /// アプリ側（トピック）と端末側（チャンネル）の 2 か所で持つことになり、
 /// 片方だけ切った人に何も届かない理由が説明できなくなる。
 ///
-/// **名前（`お知らせ`）は端末の通知設定に出る。** gyumesy と同じ語で、
-/// ブランド名を含まない。
-const _channel = AndroidNotificationChannel(
-  'tonsoku_default',
-  'お知らせ',
-  importance: Importance.defaultImportance,
-);
+/// **名前は端末の通知設定に出るので、表示言語で出し分ける**（日本語は gyumesy と
+/// 同じ「お知らせ」。[AppMessages.notificationChannelName]）。英語・中国語の画面を
+/// 選んだ人の端末の設定に日本語を出さない（ユーザーの決定。Issue #35）。
+/// 作り方は [syncNotificationChannel]。
+AndroidNotificationChannel notificationChannelFor(AppLocale locale) =>
+    AndroidNotificationChannel(
+      _channelId,
+      AppMessages.of(locale).notificationChannelName,
+      importance: Importance.defaultImportance,
+    );
+
+/// 通知チャンネルの ID。**`AndroidManifest.xml` の
+/// `default_notification_channel_id` と同じ値**（理由は [notificationChannelFor]
+/// の doc）。**言語で ID を変えないこと** ―― 言語ごとに別のチャンネルに
+/// なり、端末側のオン・オフが言語を切り替えるたびに初期値へ戻る。
+const _channelId = 'tonsoku_default';
+
+/// いまのチャンネル（[_showOnAndroid] が名前を渡す。チャンネルが既にあれば
+/// 使われないが、無い時に作られる名前が表示言語とずれないように持つ）。
+AndroidNotificationChannel _channel = notificationChannelFor(AppLocale.ja);
+
+/// [registerPushHandlers] が Android のローカル通知を用意し終えたか。
+bool _androidReady = false;
+
+/// 通知チャンネルを [locale] の名前で作る（**既にあれば名前だけ変わる**）。
+///
+/// **表示言語を切り替えた時にも呼ぶ**（`main.dart`）。Android は同じ ID で
+/// `createNotificationChannel` を呼び直すと名前と説明を書き換え、利用者が端末で
+/// 変えた設定（オン・オフ・音など）はそのまま残す（`NotificationManager` の
+/// 仕様。重要度は同じ値を渡しているので変わらない）。端末の言語ではなく**アプリの表示言語**に合わせるのは、アプリの中で
+/// 言語を選べるから（端末が日本語でも英語の画面を選んだ人には英語で出す）。
+///
+/// Android 以外と、Firebase の初期化に失敗して用意が済んでいない時は何もしない。
+Future<void> syncNotificationChannel(AppLocale locale) async {
+  if (!_androidReady) return;
+  _channel = notificationChannelFor(locale);
+  await _local
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(_channel);
+}
 
 /// 小アイコンに乗る色。**`res/values/colors.xml` の `notification_color` と
 /// 同じ値**（背面で FCM が出す時はそちらが使われる）。とん速のロゴの赤
