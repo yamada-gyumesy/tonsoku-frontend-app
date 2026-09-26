@@ -260,8 +260,7 @@ AASA を `scripts/prepare-locale-assets.mts` で `ROUTES` とロケール表か�
 
 ### `/.well-known/assetlinks.json`
 
-**署名の指紋はまだ無い**（Android のアップロード鍵をまだ作っていない。`docs/setup-app.md`）。
-鍵ができたら `<…>` を差し替える。**指紋は 2 つ要る**:
+**指紋は 2 つ要る**（アップロード鍵の指紋は `docs/setup-app.md` の「済んだもの（とん速）」）:
 
 - **アップロード鍵**（`keytool -list -v -keystore android/keystore/upload.jks -alias upload` の SHA256）
   —— 手元で入れた端末・クローズドテストの前に手で入れた端末
@@ -287,9 +286,10 @@ AASA を `scripts/prepare-locale-assets.mts` で `ROUTES` とロケール表か�
 ]
 ```
 
-**指紋が入るまで web に置かない**（置き場所だけ先に作ると、Android は検証に失敗して
-「アプリで開くか」を毎回聞く形に落ちる。置かないのと同じで害は無いが、「置いたのに効かない」
-と誤読される）。**AASA のほうは今置いてよい**（appID は確定している）。
+**片方の指紋でも先に置く**（web #162 でアップロード鍵の指紋 1 つで置いた）。**Play のアプリ署名鍵の
+指紋は、最初の AAB を上げた後に出る**ので、出たら web のセッションに送って配列に足してもらう
+（`docs/release-state.md` の 16b）。それまでは、ストアから入れた端末ではリンクがブラウザで開く。
+AASA は置いてある（web #144・#148）。
 
 ## 確かめ方
 
