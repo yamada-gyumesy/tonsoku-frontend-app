@@ -153,7 +153,7 @@ void main() {
     test('本番の ID が空・同意が得られない時は開放扱い', () async {
       final empty = await containerFor(
         FakeAdGateway(),
-        config: AdConfig.resolve(release: true),
+        config: const AdConfig(units: {}),
       );
       expect(empty.read(mapLimitedGateProvider), MapLimitedGate.open);
 

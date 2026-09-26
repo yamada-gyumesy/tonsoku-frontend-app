@@ -24,7 +24,6 @@ enum AdSlot {
 /// **本番の広告ユニット ID が空の枠は、枠も初期化も一切しない**（web の
 /// 「ID が空の間は広告に関わる出力が 1 つも出ない」と同じ）。**全部の枠が空なら
 /// SDK の初期化も、同意（UMP）も、ATT の確認も出さない**（[enabled]）。
-/// いまは AdMob のアプリとユニットを作る前なので、本番はすべて空。
 ///
 /// ---- 手元・テストでは本番の広告を出さない ----
 ///
@@ -60,26 +59,26 @@ class AdConfig {
   /// 1 つでも出す枠があるか。**偽なら SDK に一切触れない**（初期化・UMP・ATT）。
   bool get enabled => AdSlot.values.any((s) => unitId(s) != null);
 
-  // ---- 本番の広告ユニット ID（リリース前に埋める）----
+  // ---- 本番の広告ユニット ID ----
   //
   // **AdMob ではアプリが OS ごとに別**なので、ユニットも OS ごとに 3 つずつ作る。
   // **アプリ ID（`ca-app-pub-…~…`）は別の場所**: iOS は `ios/Runner/Info.plist` の
   // `GADApplicationIdentifier`、Android は `android/app/src/main/AndroidManifest.xml`
-  // の `com.google.android.gms.ads.APPLICATION_ID`（どちらも今はテスト用の値）。
+  // の `com.google.android.gms.ads.APPLICATION_ID`。
   //
   // **これは秘密ではない**（アプリに埋め込んで配る前提の識別子。web の
   // `adsenseClientId` と同じ扱い）。
 
   static const productionIos = <AdSlot, String>{
-    AdSlot.anchorBanner: '',
-    AdSlot.articleInline: '',
-    AdSlot.mapRewarded: '',
+    AdSlot.anchorBanner: 'ca-app-pub-7838125849960397/7010002104',
+    AdSlot.articleInline: 'ca-app-pub-7838125849960397/4383838767',
+    AdSlot.mapRewarded: 'ca-app-pub-7838125849960397/3394105002',
   };
 
   static const productionAndroid = <AdSlot, String>{
-    AdSlot.anchorBanner: '',
-    AdSlot.articleInline: '',
-    AdSlot.mapRewarded: '',
+    AdSlot.anchorBanner: 'ca-app-pub-7838125849960397/2081023331',
+    AdSlot.articleInline: 'ca-app-pub-7838125849960397/8454859990',
+    AdSlot.mapRewarded: 'ca-app-pub-7838125849960397/5661175690',
   };
 
   // ---- Google 公式のテスト用 ID ----
