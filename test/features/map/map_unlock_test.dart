@@ -20,8 +20,10 @@ import 'package:tonsoku/features/map/data/location_repository.dart';
 import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/map_unlock.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
+import 'package:tonsoku/features/map/domain/map_link_filter.dart';
 import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_filter_band.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 
 import '../../core/ads/fake_ad_gateway.dart';
@@ -178,6 +180,7 @@ void main() {
       WidgetTester tester,
       FakeAdGateway gateway, {
       Map<String, Object> prefs = const {},
+      MapLinkFilter? link,
     }) async {
       SharedPreferences.setMockInitialValues({'app_locale': 'ja', ...prefs});
       final store = await SharedPreferences.getInstance();
@@ -202,7 +205,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.light(AppLocale.ja),
-            home: MapPage(onOpenArticle: (_) {}),
+            home: MapPage(onOpenArticle: (_) {}, link: link),
           ),
         ),
       );
@@ -268,6 +271,35 @@ void main() {
       await tester.pump();
       expectLimitedShown(true);
       expect(find.text(_notice), findsNothing);
+    });
+
+    /// **閉じている間にリンクの品で開いても印は出さない。** いつもの流れで
+    /// 開放すれば、リンクの品で絞られた状態になる（Issue #30）
+    testWidgets('閉じている時のリンクの品は、開放したら入る', (tester) async {
+      final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
+      await pumpMap(
+        tester,
+        gateway,
+        link: MapLinkFilter.fromFragment('menu=177979&include=1'),
+      );
+      expectLimitedShown(false);
+      expect(find.text('売り切れ・終売の店も含める'), findsNothing);
+
+      gateway.rewardOutcome = RewardOutcome.earned;
+      await tester.tap(find.text(_notice));
+      await tester.pump();
+      await tester.pump();
+      // 検索バーの右端の、地図に出している店の数（品のチップの数とは別）
+      expect(tester.widget<Text>(find.byKey(MapSearch.countKey)).data, '15店舗');
+      expect(
+        tester
+            .widget<MenuChip>(
+              find.widgetWithText(MenuChip, 'たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食'),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(find.text('売り切れ・終売の店も含める'), findsOneWidget);
     });
 
     testWidgets('期限が切れていたら閉じる。読み込めなければ押した時に知らせる', (tester) async {

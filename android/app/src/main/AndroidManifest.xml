@@ -86,8 +86,10 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <!-- **`deepLinkTarget` がアプリ内で開ける面だけを名乗る。**
                      パスを絞らないと `https://ton-soku.com/` 配下の全 URL を奪う。
-                     名乗るのはホーム・記事一覧・記事・クーポン・カレンダー・
-                     ランキング・通知設定。**`/about`・`/legal/*`・`/category/*` は
+                     名乗るのはホーム・記事一覧・記事・マップ・クーポン・
+                     カレンダー・ランキング・通知設定。**マップの絞り込みは
+                     ハッシュ（`/map/#menu=…`）で渡る**ので、名乗るのはパスだけで
+                     足りる（フラグメントは照合に使われない）。**`/about`・`/legal/*`・`/category/*` は
                      名乗らない**（アプリに画面が無い。とん速のホームにはカテゴリの
                      タブが無いので、gyumesy と違ってカテゴリも外す）。
 
@@ -137,6 +139,8 @@
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/articles"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/articles/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/map"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/map/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/coupon"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/coupon/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/calendar"/>
@@ -150,6 +154,8 @@
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/en/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/en/articles"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/en/articles/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/map"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/en/map/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/en/coupon"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/en/coupon/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/en/calendar"/>
@@ -163,6 +169,8 @@
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/articles"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/articles/"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/map"/>
+                <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/map/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/coupon"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/coupon/"/>
                 <data android:scheme="https" android:host="ton-soku.com" android:path="/zh/calendar"/>
