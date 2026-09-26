@@ -306,6 +306,13 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- **輸出コンプライアンスの回答**（gyumesy の #39 を写した）。無いと TestFlight に
+	     上げたビルドが MISSING_EXPORT_COMPLIANCE で止まり、処理が済んでいても
+	     誰にも配信されない（ASC で毎回手で答えることになる）。
+	     **通信は HTTPS だけで OS 標準の暗号化しか使っていないので非該当。**
+	     牛めしレーダー・gyumesy も同じ申告をしている -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!-- **プッシュ通知を背面でも受け取る**（firebase_messaging の手順が求める
 	     Background Modes の「Remote notifications」）。gyumesy には無いが、
 	     送る側（tonsoku-backend-batch の `app/notify/push.py`）は `apns` に表示用の
