@@ -109,7 +109,7 @@ draft にしておけば審査・公開が手動になり、自動公開の事�
 | `resubmit` | **審査中の**ものを取り下げてビルドを差し替え、再提出 |
 | `rejected_rebuild` | **リジェクト後**①: ビルドと掲載情報を差し替える（提出しない。`skip_build:true` / `skip_screenshots:true`） |
 | `rejected_submit` | **リジェクト後**②: 却下項目を解決して再提出 |
-| `register_app_id` / `create_app` | アプリに 1 回だけ（`docs/setup-app.md`） |
+| `register_app_id` / `create_app` | アプリに 1 回だけ（`docs/setup-app.md`）。`create_app` は枠があるかを確かめるだけ（枠は ASC の UI で作る） |
 | `build` | ipa を作るだけ |
 
 **`release` はバイナリを上げない。** 上げるのは `beta` で、`release` は掲載情報と

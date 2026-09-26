@@ -422,33 +422,27 @@ platform :ios do
     end
   end
 
-  desc "App Store Connect のアプリ枠を作る（アプリに 1 回だけ）"
-  desc "**手で作らない。** gyumesy の Issue #7 の「API 非対応で UI のみ」は誤りだった"
+  desc "App Store Connect のアプリ枠があるかを確かめる（作れない。作るのは ASC の UI）"
+  desc "**API ではアプリ枠を作れない。** `apps` の CREATE は弾かれる（2026-09-26 実測）"
   lane :create_app do
     asc_auth
 
     existing = Spaceship::ConnectAPI::App.find(APP_ID)
     if existing
-      UI.important("ASC のアプリ枠は既にあります（id=#{existing.id} / #{existing.name}）。作り直しません。")
+      UI.success("ASC のアプリ枠があります（id=#{existing.id} / #{existing.name}）。")
       next
     end
 
-    # **Bundle ID が先。** 枠は Bundle ID に紐づくので、無いと作れない
-    bundle_id = Spaceship::ConnectAPI::BundleId.find(APP_ID)
-    UI.user_error!("Bundle ID #{APP_ID} がありません。先に `register_app_id` を実行してください。") unless bundle_id
-
-    Spaceship::ConnectAPI::App.create(
-      name: APP_NAME,
-      # **`version_string` は最初のバージョン。** ここで作った枠は
-      # `PREPARE_FOR_SUBMISSION` で始まる
-      version_string: "1.0",
-      # **SKU は後から変えられない。** bundle id と同じにしておくと迷わない
-      sku: APP_ID,
-      primary_locale: "ja",
-      bundle_id: APP_ID,
-      platforms: ["IOS"],
+    # **`Spaceship::ConnectAPI::App.create` は使えない。** 叩くと
+    # `The resource 'apps' does not allow 'CREATE'. Allowed operations are:
+    # GET_COLLECTION, GET_INSTANCE, UPDATE` で弾かれる（2026-09-26 実測）。
+    # gyumesy の「Bundle ID が API で作れたので枠も作れる見込み」は確かめられて
+    # いなかった（gyumesy も枠は手で作っている）
+    UI.user_error!(
+      "ASC のアプリ枠がありません。ASC の UI で作ってください（マイ App → ＋ → 新規 App: " \
+      "iOS・名前「#{APP_NAME}」・主言語 日本語・バンドル ID #{APP_ID}・SKU #{APP_ID}）。" \
+      "API では作れません（docs/setup-app.md の「App Store Connect のアプリ枠」）。"
     )
-    UI.success("ASC のアプリ枠 #{APP_NAME}（#{APP_ID}）を作りました。")
   end
 
   desc "アプリ内課金の商品を ASC に登録する（iap_products.yaml が単一の出どころ）"
