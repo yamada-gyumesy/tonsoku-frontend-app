@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+html,body{width:1080px;height:1920px}
+.stage{width:1080px;height:1920px}
+
+/* 3 枚目からの続き */
+
+/* **4 枚を 5160x2796 の 1 枚として扱い、円が枚をまたぐ。**
+   1・2 枚目の位置は確定。その続きとして置く */
+.blob.c3{width:636px;height:522px;left:-695px;top:-55px;opacity:0.08}
+.blob.c4{width:871px;height:714px;left:-209px;top:1305px;opacity:0.10}
+.blob.c5{width:737px;height:604px;left:728px;top:233px;opacity:0.08}
+.catch{position:absolute;left:100px;top:137px;font-size:74px;line-height:1.52;z-index:3}
+
+/* 端末は正対・中央。**下は切る** */
+.device{left:110px;top:439px}
+.frame{border-radius:80px;padding:12px}
+.frame img{width:837px;border-radius:74px}
+</style></head>
+<body>
+<div class="stage">
+  <div class="blob red c3"></div>
+  <div class="blob brown c4"></div>
+  <div class="blob red c5"></div>
+
+  <div class="catch">今、クーポンの
+一番おトクがわかる。</div>
+
+  <div class="device"><div class="frame">
+    <img src="../../source/coupon_android.png"></div></div>
+</div>
+<script src="../_fit.js"></script>
+</body></html>

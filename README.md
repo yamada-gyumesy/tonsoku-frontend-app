@@ -262,3 +262,16 @@ dart run flutter_native_splash:create
 | [docs/deep-links.md](docs/deep-links.md) | ユニバーサルリンク / App Links（名乗る面・web に置くファイルの中身） |
 
 ストアの掲載情報は `ios/fastlane/metadata/` と `android/fastlane/metadata/`（日本語のみ）。**名前・サブタイトルに「松のや」を入れない**（gyumesy は「松屋」で App Store の 4.1(a) を 2 回受けた）。非公式であることは説明文に書く。
+
+### ストアの画像
+
+スクリーンショット（iPhone 6.9" / 6.5"・iPad 13"・Play のスマホ / 7" / 10"）・Play のフィーチャー画像とアイコン 512・募集フォームのヘッダーは、**全部 HTML の組版から書き出す**（gyumesy と同じ作り）。**シミュレータで撮らない** ―― 素材が撮った日のまま固まるうえ、機種ごとにシミュレータを立てるとディスクが数十 GB 埋まる。
+
+```bash
+node tool/build_store_map.mts        # マップの背景地図と店の印を焼く（地図か store/fixtures/app を変えた時だけ）
+python3 tool/build_store_images.py   # 画面（store/source/）→ 額縁（fastlane の置き場）の順に全部書き出す
+```
+
+- 額縁（見出し・端末・背景の円）は `store/marketing/*.html`、端末の中の画面は `store/marketing/screens/`（`?d=` で端末の寸法を切り替える）
+- 画面の中身は撮った日の配信の写し（`store/fixtures/`）。**見出しに「松のや」を入れない**（理由は `store/marketing/pair12.html`）
+- 要るもの: Google Chrome・`magick`（`brew install imagemagick`）・`pmtiles`（`brew install pmtiles`）・web のチェックアウトの `node_modules`（`tool/build_store_map.mts` の冒頭）

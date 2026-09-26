@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="_screen.css">
+<style>
+/* マップの画面（`lib/features/map/presentation/map_page.dart`）。
+ * `?v=shop` で「阿佐ヶ谷南店を選んだところ」（店のシートが開いた状態）。
+ * 寸法はユーザーの手元の 2 枚（iPhone 17 Pro）を実測したもの。 */
+
+.area { position: relative; flex: 1; overflow: hidden; background: var(--map-water); }
+.area svg.map { position: absolute; }
+.area text { font-family: 'Klee One', sans-serif; font-weight: 600; }
+
+/* 検索バー（`MapSearchBar`） */
+.search { position: absolute; left: 13px; right: 13px; top: 13px; height: 42px; z-index: 3;
+  display: flex; align-items: center; gap: 10px; padding: 0 12px 0 13px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(35, 24, 21, .16); }
+.search [data-i="search"] { width: 22px; height: 22px; color: var(--sub); }
+.search .ph { flex: 1; font-size: 15px; color: var(--sub); letter-spacing: .1em; }
+.search .count { font-size: 12.5px; color: var(--sub); letter-spacing: .06em; }
+.search .rule { width: 1px; height: 20px; background: var(--border); }
+.search [data-i="tune"] { width: 22px; height: 22px; color: var(--sub); }
+
+/* 品のチップ（`MapFilterBand`）。選んでいる品が 1 つ */
+.menu { position: absolute; left: 13px; right: 13px; top: 64px; height: 41px; z-index: 3;
+  display: flex; align-items: center; gap: 9px; padding: 0 10px 0 3px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(35, 24, 21, .16); }
+.menu img { width: 35px; height: 35px; border-radius: 5px; object-fit: cover; flex: none; }
+.menu .body { flex: 1; min-width: 0; }
+.menu .ttl { font-size: 12.5px; letter-spacing: .08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu .meta { display: flex; align-items: center; gap: 4px; margin-top: 2px;
+  font-size: 10.5px; color: var(--sub); letter-spacing: .06em; white-space: nowrap; }
+.menu .meta .gap { width: 6px; }
+.mk { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 13px; height: 13px; border-radius: 50%; background: var(--primary); color: #fff;
+  box-shadow: 0 0 0 1.2px #fff; }
+.mk.sold { background: var(--map-sold-out); }
+.mk.ended { background: none; box-shadow: none; color: var(--sub); }
+.mk i { display: block; width: 9px; height: 9px; }
+.mk i svg { display: block; }
+.mk.ended i { width: 11px; height: 11px; }
+
+/* 画面の外の店舗限定（`OffscreenCounts`）。**web の `CoMapBackdrop` と同じ組み** */
+.bubbles { position: absolute; left: 13px; right: 13px; top: 118px; bottom: 130px; z-index: 2; pointer-events: none; }
+.bubble { position: absolute; display: flex; align-items: center; gap: 3px; padding: 4px 12px 4px 6px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  transform: translate(calc(-50% - var(--sx, 0) * 50%), calc(-50% - var(--sy, 0) * 50%)); }
+.bubble .mk { width: 17px; height: 17px; box-shadow: 0 0 0 1.5px #fff; }
+.bubble .mk i { width: 12px; height: 12px; }
+.bubble b { margin-left: 5px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.bubble::after { position: absolute; width: 8px; height: 8px; border: solid var(--border);
+  border-width: 1px 1px 0 0; background: var(--surface); content: ''; }
+.bubble[data-s='0'] { --sy: -1; }
+.bubble[data-s='1'] { --sx: 1; --sy: -1; border-top-right-radius: 0; }
+.bubble[data-s='2'] { --sx: 1; }
+.bubble[data-s='3'] { --sx: 1; --sy: 1; border-bottom-right-radius: 0; }
+.bubble[data-s='4'] { --sy: 1; }
+.bubble[data-s='5'] { --sx: -1; --sy: 1; border-bottom-left-radius: 0; }
+.bubble[data-s='6'] { --sx: -1; }
+.bubble[data-s='7'] { --sx: -1; --sy: -1; border-top-left-radius: 0; }
+.bubble[data-s='0']::after { top: -5px; left: calc(50% - 4px); transform: rotate(-45deg); }
+.bubble[data-s='2']::after { top: calc(50% - 4px); right: -5px; transform: rotate(45deg); }
+.bubble[data-s='4']::after { bottom: -5px; left: calc(50% - 4px); transform: rotate(135deg); }
+.bubble[data-s='6']::after { top: calc(50% - 4px); left: -5px; transform: rotate(-135deg); }
+.bubble:is([data-s='1'], [data-s='3'], [data-s='5'], [data-s='7'])::before,
+.bubble:is([data-s='1'], [data-s='3'], [data-s='5'], [data-s='7'])::after {
+  top: -5px; left: -5px; width: 14px; height: 14px; border: 0; content: ''; }
+.bubble:is([data-s='1'], [data-s='3'], [data-s='5'], [data-s='7'])::before {
+  position: absolute; background: var(--border); clip-path: polygon(0 0, 100% 36%, 36% 100%); }
+.bubble:is([data-s='1'], [data-s='3'], [data-s='5'], [data-s='7'])::after {
+  background: var(--surface); clip-path: polygon(1.5px 1.5px, 100% calc(36% + 1px), calc(36% + 1px) 100%); }
+.bubble[data-s='1']::before, .bubble[data-s='1']::after { left: auto; right: -5px; transform: scaleX(-1); }
+.bubble[data-s='3']::before, .bubble[data-s='3']::after { left: auto; right: -5px; top: auto; bottom: -5px; transform: scale(-1, -1); }
+.bubble[data-s='5']::before, .bubble[data-s='5']::after { top: auto; bottom: -5px; transform: scaleY(-1); }
+
+/* 右下のボタン（方位・現在地） */
+.fab { position: absolute; right: 13px; width: 44px; height: 44px; border-radius: 50%; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); box-shadow: 0 2px 5px rgba(35, 24, 21, .25); color: var(--text); }
+.fab.compass { bottom: 146px; }
+.fab.compass svg { width: 30px; height: 30px; }
+.fab.locate { bottom: 92px; }
+.fab.locate i { width: 24px; height: 24px; }
+
+/* 縮尺と帰属 */
+.scale { position: absolute; left: 50%; bottom: 14px; width: 129px; height: 8px; margin-left: -65px; z-index: 3;
+  border: 1.6px solid var(--text); border-top: 0; }
+.scale::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 1.4px; height: 4px; background: var(--text); }
+.scale b { position: absolute; right: 0; bottom: 10px; transform: translateX(50%); font-size: 12px; white-space: nowrap;
+  -webkit-text-stroke: .03em currentColor; }
+.osm { position: absolute; left: 11px; bottom: 11px; z-index: 3; font-size: 10.5px; color: var(--sub);
+  letter-spacing: .03em; font-family: -apple-system, 'Helvetica Neue', sans-serif; font-weight: 400; }
+
+/* ── 店のシート（`ShopSheet`）── */
+.scrim { position: absolute; inset: 0; z-index: 5; background: rgba(0, 0, 0, .32); display: none; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: none;
+  background: var(--surface); border-radius: 24px 24px 0 0; padding: 22px 16px 16px; }
+body.shop .scrim, body.shop .sheet { display: block; }
+.sheet .grip { width: 32px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 26px; }
+.sheet h2 { font-size: 18px; letter-spacing: .08em; -webkit-text-stroke: .02em currentColor; }
+.sheet .lbl { margin-top: 20px; font-size: 13px; color: var(--sub); letter-spacing: .06em; }
+.sheet .item { display: flex; align-items: center; gap: 14px; padding: 14px 0 18px; border-bottom: 1px solid var(--border); }
+.sheet .item img { width: 54px; height: 54px; object-fit: cover; border-radius: 6px; flex: none; }
+.sheet .item .body { flex: 1; min-width: 0; }
+.sheet .item .ttl { font-size: 14.5px; line-height: 1.45; letter-spacing: .1em; }
+.sheet .item .st { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; color: var(--primary-text); }
+.sheet .item .st .mk { width: 14px; height: 14px; }
+.sheet .item [data-i="chevron"] { width: 22px; height: 22px; color: var(--sub); }
+.sheet .row { display: flex; align-items: center; height: 40px; font-size: 14px; letter-spacing: .06em; }
+.sheet .row:first-of-type { margin-top: 6px; }
+.sheet .row i { width: 20px; height: 20px; color: var(--sub); margin-left: 1px; }
+.sheet .row .k { width: 64px; margin-left: 10px; color: var(--sub); }
+.sheet .row .tel { color: var(--primary-text); }
+.sheet .open { margin-top: 14px; height: 44px; border: 1.5px solid var(--border); border-radius: 22px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; letter-spacing: .1em; }
+.sheet .open i { width: 20px; height: 20px; }
+/* シートの下端は下タブの上で終わる（下タブはシートより手前） */
+</style>
+</head>
+<body data-d="phone" data-nav="map">
+<div class="screen">
+  <div class="status"></div>
+  <div class="head"><img src="../../../assets/brand/logo.svg" alt=""><b>とん速</b><span class="rule"></span><span>松のや速報</span></div>
+
+  <div class="area">
+    <svg class="map"></svg>
+
+    <div class="search"><i data-i="search"></i><span class="ph">店舗を探す</span><span class="count"></span><span class="rule"></span><i data-i="tune"></i></div>
+    <div class="menu"><img alt=""><div class="body"><div class="ttl"></div><div class="meta"></div></div></div>
+    <div class="bubbles"></div>
+
+    <div class="fab compass"><svg viewBox="0 0 30 30">
+      <path d="M15 2 19 15H11Z" fill="#E7B1B4"/><path d="M15 28 19 15H11Z" fill="#E4DDD6"/>
+      <text x="15" y="16" text-anchor="middle" dominant-baseline="central" font-size="17" font-family="-apple-system, Helvetica, sans-serif" font-weight="800" fill="#231815">N</text>
+    </svg></div>
+    <div class="fab locate"><i data-i="locate"></i></div>
+    <div class="scale"><b>1 km</b></div>
+    <div class="osm">© OpenStreetMap</div>
+
+    <div class="scrim"></div>
+    <div class="sheet">
+      <div class="grip"></div>
+      <h2>松のや 阿佐ヶ谷南店</h2>
+      <div class="lbl">店舗限定</div>
+      <div class="item"><img alt=""><div class="body"><div class="ttl"></div>
+        <div class="st"><span class="mk"><i data-i="star"></i></span>販売中</div></div><i data-i="chevron"></i></div>
+      <div class="row"><i data-i="place"></i><span class="k">住所</span><span>東京都杉並区阿佐谷南1-36-11</span></div>
+      <div class="row"><i data-i="schedule"></i><span class="k">営業時間</span><span>24時間営業</span></div>
+      <div class="row"><i data-i="call"></i><span class="k">電話</span><span class="tel">080-6475-4366</span></div>
+      <div class="open"><i data-i="map"></i>Google マップで開く</div>
+    </div>
+  </div>
+
+  <div class="nav"></div>
+</div>
+
+<script src="_map.js"></script>
+<script>
+// **中身は配信の写し**（`store/fixtures/app/`。`tool/build_store_map.mts` が `_map.js` に焼く）
+var shopView = /[?&]v=shop/.test(location.search);
+if (shopView) document.body.classList.add('shop');
+var M = window.MAP_MENU;
+document.querySelector('.search .count').textContent = '681店舗';
+document.querySelector('.menu img').src = '../../fixtures/img/menu.webp';
+document.querySelector('.sheet .item img').src = '../../fixtures/img/menu.webp';
+document.querySelector('.menu .ttl').textContent = M.name;
+document.querySelector('.sheet .item .ttl').textContent = M.name;
+document.querySelector('.menu .meta').innerHTML =
+  M.shops + '店舗<span class="gap"></span>' +
+  '<span class="mk"><i data-i="star"></i></span>販売中 ' + M.selling + '<span class="gap"></span>' +
+  '<span class="mk sold"><i data-i="star"></i></span>売り切れ ' + M.soldOut + '<span class="gap"></span>' +
+  '<span class="mk ended"><i data-i="close"></i></span>終売 ' + M.ended;
+</script>
+<script src="_common.js"></script>
+<script>
+(function () {
+  var V = window.MAP_VIEWS[shopView ? 'asagaya' : 'tokyo'];
+  var area = document.querySelector('.area');
+  var aw = area.clientWidth, ah = area.clientHeight;
+
+  // **見本と同じ所に中心を置く。** 最初の画面は東京駅を地図の真ん中に、店を選んだ
+  // ところは店をシートの上の見えている所に置く（アプリは選んだ店をシートの上へ寄せる）
+  var cx = aw / 2, cy = ah / 2;
+  if (shopView) {
+    var sheet = document.querySelector('.sheet');
+    var navH = document.querySelector('.nav').offsetHeight;
+    sheet.style.paddingBottom = (16 + 0) + 'px';
+    cy = ah - sheet.offsetHeight - 41;
+  }
+  var ox = cx - V.width / 2, oy = cy - V.height / 2;
+
+  var svg = document.querySelector('svg.map');
+  svg.setAttribute('width', V.width);
+  svg.setAttribute('height', V.height);
+  svg.setAttribute('viewBox', '0 0 ' + V.width + ' ' + V.height);
+  svg.style.left = ox + 'px';
+  svg.style.top = oy + 'px';
+
+  var STAR = window.ICONS.star;
+  var h = [];
+  var P = V.paths;
+  // 層の順・太さは `map_theme.dart` を z14 で評価したもの（web の `CoMapBackdrop` と同じ）
+  h.push('<rect width="' + V.width + '" height="' + V.height + '" fill="var(--map-water)"/>');
+  h.push('<path d="' + P.earth + '" fill="var(--map-land)"/>');
+  h.push('<path d="' + P.water + '" fill="var(--map-water)"/>');
+  h.push('<g fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="' + P.boundaryLocality + '" stroke="var(--map-boundary)" stroke-width="0.6" stroke-dasharray="1.8 1.2"/>' +
+    '<path d="' + P.boundaryRegion + '" stroke="var(--map-boundary)" stroke-width="1.6" stroke-dasharray="6.4 3.2"/>' +
+    '<path d="' + P.majorRoad + '" stroke="var(--map-major-road)" stroke-width="3.1"/>' +
+    '<path d="' + P.highway + '" stroke="var(--map-highway)" stroke-width="3.7"/>' +
+    '<path d="' + P.rail + '" stroke="var(--map-rail)" stroke-width="1.3" stroke-dasharray="5.2 3.9" stroke-linecap="butt"/></g>');
+  // 地名・駅名は陸の色で縁取る（`text-halo`）
+  var t = ['<g fill="var(--map-label)" stroke="var(--map-land)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">'];
+  V.places.forEach(function (p) {
+    t.push('<text x="' + p.x + '" y="' + p.y + '" font-size="' + p.size + '" text-anchor="middle" dominant-baseline="central" letter-spacing="1">' + p.ja + '</text>');
+  });
+  V.stations.forEach(function (s) {
+    t.push('<rect x="' + (s.x - 3) + '" y="' + (s.y - 3) + '" width="6" height="6" fill="var(--map-rail)" stroke-width="1"/>' +
+      '<text x="' + (s.x + 6) + '" y="' + s.y + '" font-size="10.5" dominant-baseline="central" letter-spacing="1">' + s.ja + '</text>');
+  });
+  t.push('</g>');
+  h.push(t.join(''));
+  // 店。**店舗限定の印を上に重ねる**（`ShopMarker` / `LimitedMark`）
+  var FILL = { standalone: 'var(--map-shop)', matsuya: 'var(--map-annex-matsuya)', mycurry: 'var(--brown)' };
+  h.push('<g stroke="#fff" stroke-width="2">' + V.dots.map(function (d) {
+    return '<circle cx="' + d.x + '" cy="' + d.y + '" r="5.5" fill="' + FILL[d.kind] + '"/>';
+  }).join('') + '</g>');
+  V.limited.forEach(function (s) {
+    if (s.x < -20 || s.y < -20 || s.x > V.width + 20 || s.y > V.height + 20) return;
+    h.push('<g transform="translate(' + s.x + ' ' + s.y + ')">' +
+      '<circle r="12.5" fill="' + (s.kind === 'selling' ? 'var(--primary)' : 'var(--map-sold-out)') + '" stroke="#fff" stroke-width="2"/>' +
+      '<path d="' + STAR + '" fill="#fff" transform="translate(-8.5 -8.5) scale(0.71)"/></g>');
+  });
+  // 現在地（最初の画面だけ。東京駅に立っている）
+  if (!shopView) {
+    h.push('<circle cx="' + V.width / 2 + '" cy="' + V.height / 2 + '" r="17" fill="var(--map-me)" opacity=".18"/>' +
+      '<circle cx="' + V.width / 2 + '" cy="' + V.height / 2 + '" r="7.5" fill="var(--map-me)" stroke="#fff" stroke-width="2.5"/>');
+  }
+  svg.innerHTML = h.join('');
+
+  // 画面の外の店舗限定を、方角ごとに縁へ出す（`OffscreenCounts`。web と同じ算法）
+  var SIGNS = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+  var counts = SIGNS.map(function () { return { n: 0, sold: false, selling: false }; });
+  V.limited.forEach(function (s) {
+    var x = s.x + ox, y = s.y + oy;
+    if (x >= 0 && x <= aw && y >= 0 && y <= ah) return;
+    var dx = x - aw / 2, dy = y - ah / 2;
+    var sec = ((Math.round(Math.atan2(dx, -dy) / (2 * Math.PI) * 8) % 8) + 8) % 8;
+    counts[sec].n++;
+    if (s.kind === 'selling') counts[sec].selling = true; else counts[sec].sold = true;
+  });
+  var layer = document.querySelector('.bubbles');
+  counts.forEach(function (c, sec) {
+    if (!c.n) return;
+    var b = document.createElement('div');
+    b.className = 'bubble';
+    b.dataset.s = sec;
+    b.style.left = (50 + SIGNS[sec][0] * 50) + '%';
+    b.style.top = (50 + SIGNS[sec][1] * 50) + '%';
+    var html = '';
+    if (c.selling) html += '<span class="mk"><i data-i="star"></i></span>';
+    if (c.sold) html += '<span class="mk sold"><i data-i="star"></i></span>';
+    b.innerHTML = html + '<b>' + c.n + '</b>';
+    layer.appendChild(b);
+  });
+  layer.querySelectorAll('[data-i]').forEach(function (n) {
+    n.innerHTML = '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="' + window.ICONS[n.dataset.i] + '"/></svg>';
+  });
+})();
+</script>
+</body></html>

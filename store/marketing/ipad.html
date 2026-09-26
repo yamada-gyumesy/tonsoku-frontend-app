@@ -1,0 +1,147 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+/* iPad 13"（2048×2732）。**iPhone 判とまったく同じ構成にする。**
+   ——見出しは左上（2 枚目だけ右下）、端末は傾けて下を切る、背景の円は
+   4 枚を通して流れる。gyumesy は以前ここだけ「上に見出し・下に小さい端末
+   2 台を正対で並べる」という別物の組版になっていて、**iPad の掲載なのに
+   下半分が丸ごと空いていた**（初回審査のレビュアーが最初に見たのがこれ）。
+
+   **違うのは寸法だけ。** 1 枚の幅が 1290 → 2048、高さが 2796 → 2732 に
+   なるので、**端末は高さに合わせて置き直す**（横幅に合わせて拡げると
+   下が切れすぎる）。比が違う以上、座標をそのまま倍にはできない。
+
+   **画面の絵は「SP を大きくしたもの」を組版で描いたもの**（`screens/` を `?d=pad`
+   で描く。gyumesy と同じ）。マップの背景地図も `tool/build_store_map.mts` が焼いた
+   材料から組版で描く。 */
+html,body{width:2048px;height:2732px}
+
+/* 1・2 枚目: 4096 の世界を 2048 の窓で 2 回に分けて見せる（iPhone 判と同じ） */
+.viewport{position:relative;width:2048px;height:2732px;overflow:hidden}
+.stage{position:absolute;left:0;top:0;width:4096px;height:2732px}
+body.b .stage{left:-2048px}
+/* 3・4 枚目は 1 枚で完結 */
+body.solo .viewport{overflow:hidden}
+body.solo .stage{width:2048px}
+
+/* **iPhone 判の座標を比で写す**（横 ×1.5876 ＝ 2048/1290、縦 ×0.9771 ＝ 2732/2796）。
+   構図は変えない —— 変えると iPhone と並べた時に別のアプリに見える */
+.catch{position:absolute;font-size:140px;line-height:1.52;z-index:3}
+.catch.a{left:190px;top:195px}
+.catch.b{right:190px;bottom:215px;text-align:right}
+.catch .hang{margin-right:-0.5em}
+
+/* **iPad の端末。** 角丸は浅く、額は細い。**Dynamic Island は無い** */
+.frame{border-radius:44px;padding:18px}
+.frame img{border-radius:30px}
+.frame::after{display:none}
+
+/* 1 台目: 1 枚目の主役。傾き強め・下は切る（iPhone 判の d1） */
+.d1{left:672px;top:1019px;transform:rotate(-18deg);z-index:1}
+.d1 .frame img{width:1397px}
+/* 2 台目: 継ぎ目をまたぎ、2 枚目の主役になる（iPhone 判の d2） */
+.d2{left:1772px;top:177px;transform:rotate(15.2deg);z-index:2}
+.d2 .frame img{width:1267px}
+
+/* 3・4 枚目: 正対・中央。下は切る（iPhone 判の image3 / image4） */
+.solo .device{left:208px;top:788px;transform:none}
+.solo .frame img{width:1587px}
+
+/* 通知バナー（3 枚目）。端末より広く、左右にはみ出す */
+.toast[hidden]{display:none}
+/* **通知だけは比で写さない。** iPad の通知は画面幅いっぱいにならない。
+   ただし**文字は canvas に合わせて拡げる** —— iPhone 判の絶対値のままだと
+   広い canvas では読めない大きさになる（gyumesy が実機で指摘された）。
+   幅は端末の 70%。文字は横の比（×1.5876）で拡げる */
+.toast{position:absolute;left:50%;margin-left:-556px;top:880px;width:1112px;
+  display:flex;align-items:flex-start;gap:38px;
+  padding:48px 54px;border-radius:48px;
+  background:rgba(232,232,232,.82);
+  backdrop-filter:blur(18px);
+  box-shadow:0 20px 48px rgba(0,0,0,.12);
+  z-index:4;
+  /* 書体は OS のもの（`image3.html` と同じ理由） */
+  font-family:-apple-system,'Hiragino Sans',sans-serif;-webkit-text-stroke:0}
+.toast img{width:105px;height:105px;border-radius:25px;flex:none}
+.toast .body{flex:1;min-width:0}
+.toast .app{font-size:41px;font-weight:400;color:#8A8A8E;letter-spacing:.04em}
+.toast .cat{font-size:54px;font-weight:700;margin-top:16px}
+.toast .ttl{font-size:51px;font-weight:400;line-height:1.42;margin-top:13px;color:#3A3A3C}
+.toast .when{position:absolute;right:54px;top:50px;font-size:41px;color:#8A8A8E}
+</style></head>
+<body>
+<div class="viewport"><div class="stage">
+  <div class="blob red b1"></div>
+  <div class="blob brown b2"></div>
+  <div class="blob red b3"></div>
+
+  <!-- **見出しに「松のや」を出さない**（理由は `pair12.html`） -->
+  <div class="catch a"></div>
+  <div class="catch b"></div>
+
+  <div class="device d1"><div class="frame"><img></div></div>
+  <div class="device d2"><div class="frame"><img></div></div>
+
+  <div class="toast" hidden>
+    <img src="../../assets/icon/icon.png">
+    <div class="body">
+      <div class="app">とん速</div>
+      <div class="cat">メニュー</div>
+      <div class="ttl">松のや、「たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食」を15店で掲載</div>
+    </div>
+    <div class="when">今</div>
+  </div>
+</div></div>
+
+<script>
+// **4 枚を 1 つの組版から出す**（iPhone 判は 3 ファイルに分かれているが、
+// こちらは寸法だけ違う同じ構成なので 1 枚に畳んでいる）。
+var n = (location.search.match(/n=(\d)/) || [])[1] || '1';
+var stage = document.querySelector('.stage');
+var blobs = document.querySelectorAll('.blob');
+
+function place(el, w, x, y, op, color) {
+  el.style.width = w + 'px'; el.style.height = w + 'px';
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = op;
+  el.className = 'blob ' + color;
+}
+
+// **iPhone 判の値を比で写す**（横 ×1.5876 ＝ 2048/1290、縦 ×0.9771 ＝ 2732/2796）。
+// 大きさは横に合わせて拡げる。**色の並びも写すこと** —— 3 枚目は茶→赤→
+// 茶で、ここを赤固定にすると 4 枚を通した流れが崩れる。
+if (n === '1' || n === '2') {
+  // 1・2 枚目は同じ世界。#b で右半分へ送る
+  if (n === '2') document.body.classList.add('b');
+  document.querySelector('.catch.a').textContent = '店舗限定メニューを\n扱う店が、';
+  document.querySelector('.catch.b').innerHTML =
+    '地図でわかる<span class="hang">。</span>';
+  document.querySelectorAll('.device img')[0].src = '../source/map_ipad.png';
+  document.querySelectorAll('.device img')[1].src = '../source/shop_ipad.png';
+  place(blobs[0], 1778, -413, -156, .10, 'red');
+  place(blobs[1], 1429, 3143, 1739, .10, 'brown');
+  place(blobs[2], 826, 2254, 293, .07, 'red');
+} else {
+  document.body.classList.add('solo');
+  document.querySelector('.catch.b').remove();
+  document.querySelectorAll('.device')[1].remove();
+  var a = document.querySelector('.catch.a');
+  var img = document.querySelector('.device img');
+  if (n === '3') {
+    a.textContent = '新メニューの速報が\n通知で届く。';
+    img.src = '../source/home_ipad.png';
+    document.querySelector('.toast').hidden = false;
+    place(blobs[0], 1429, -953, 1739, .10, 'brown');
+    place(blobs[1], 1207, 730, -78, .08, 'red');
+    place(blobs[2], 1651, 1651, 1856, .10, 'brown');
+  } else {
+    a.textContent = '今、クーポンの\n一番おトクがわかる。';
+    img.src = '../source/coupon_ipad.png';
+    place(blobs[0], 1207, -1318, -78, .08, 'red');
+    place(blobs[1], 1651, -397, 1856, .10, 'brown');
+    place(blobs[2], 1397, 1381, 332, .08, 'red');
+  }
+}
+</script>
+<script src="_fit.js"></script>
+</body></html>

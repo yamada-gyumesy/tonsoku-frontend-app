@@ -1,0 +1,127 @@
+/* ストア画像に写す「アプリの画面」。**実機の写しではなく、ここで組む。**
+ *
+ * **作りは gyumesy-frontend-app の `store/marketing/screens/` を写した。** 実機を撮る作りだと、
+ * 撮った日の意匠のまま素材が固まり、**iPad では間延びした実画面がそのまま出る**。
+ * それに**シミュレータを機種ごとに立てて撮ると、機種ぶんのランタイムとデータで
+ * ディスクが数十 GB 埋まる**（とん速で実際に起きた。ユーザーの指摘）。
+ *
+ * **寸法と色はアプリの実値。** 色は `lib/core/theme/app_colors.dart`（`AppColors.light` /
+ * `MapPalette.light`）、寸法はアプリの画面（iPhone 17 Pro、402 × 874pt）を実測したもの。
+ * マップの見本はユーザーの手元の 2 枚（東京駅を中心にした最初の画面・阿佐ヶ谷南店を
+ * 選んだところ）で、**それに合わせて組んである**。
+ *
+ * ## 端末ごとの寸法（`?d=`）
+ *
+ * **スマホの組版を 1 つだけ持ち、端末ごとに丸ごと拡げる**（`zoom`）。iPad も
+ * 「SP を大きくしたもの」で、段組みにしない（アプリ自体が 1 列なので、段に割ると
+ * 別のアプリに見える。gyumesy と同じ判断）。gyumesy は寸法ごとに `calc(… * var(--u))`
+ * を書いていたが、**全部の寸法に掛けるなら `zoom` 1 つで同じ**で、掛け忘れが起きない。 */
+
+@font-face {
+  font-family: 'Klee One';
+  font-weight: 600;
+  src: url('../../../assets/fonts/KleeOne-SemiBold.ttf') format('truetype');
+}
+
+:root {
+  /* `AppColors.light` */
+  --bg: #FAF7F3;
+  --surface: #FFFFFF;
+  --text: #231815;
+  --sub: #6E625B;
+  --border: #E7DFD5;
+  --primary: #A7232A;
+  --primary-text: #A7232A;
+  --primary-soft: #FBEFEF;
+  --brown: #6B4A34;
+  --green: #046240;
+  /* `MapPalette.light` */
+  --map-land: #FAF7F3;
+  --map-water: #DDE3E1;
+  --map-boundary: #CDC2B6;
+  --map-highway: #E2D2C2;
+  --map-major-road: #EAE1D7;
+  --map-rail: #A3968D;
+  --map-label: #6E625B;
+  --map-shop: #1E8A4C;
+  --map-annex-matsuya: #B58500;
+  --map-sold-out: #CFC8C2;
+  --map-me: #1A73E8;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: var(--bg); }
+body {
+  /* **アプリの日本語の書体は Klee One だけ**（README の「書体」） */
+  font-family: 'Klee One', sans-serif;
+  font-weight: 600;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+i[data-i] { display: inline-block; flex: none; }
+
+/* **画面は固定サイズの箱にする。** headless Chrome は viewport を 500 CSS px 未満に
+ * できない。窓に合わせると 402 幅の絵が 500 幅で組まれて右が欠けるので、
+ * **箱を作って左上から切り出す**（gyumesy と同じ）。
+ *
+ * `--w` / `--h` は書き出す寸法（CSS px）、`--u` は拡大率。中身はスマホの単位で組む。 */
+.screen {
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
+  width: calc(var(--w) / var(--u)); height: calc(var(--h) / var(--u));
+  zoom: var(--u);
+  background: var(--bg);
+}
+body[data-d="phone"] { --w: 402px; --h: 874px; --u: 1; }
+/* iPad 13"。拡大率は gyumesy と同じ 1.62（読む幅がスマホの 637pt 相当になる） */
+body[data-d="pad"] { --w: 1032px; --h: 1376px; --u: 1.62; }
+/* Android は Pixel 級（412 × 915dp、1:2.22）。**360 × 640dp は 2016 年頃の寸法で寸詰まり** */
+body[data-d="android"] { --w: 412px; --h: 915px; --u: 1; }
+/* Pixel Tablet 級。**拡大率は「中身が尺に届くか」で決める**（gyumesy の実測で 1.5） */
+body[data-d="androidpad"] { --w: 800px; --h: 1280px; --u: 1.5; }
+
+/* ── ステータスバー ─────────────────────────── */
+.status {
+  position: relative; flex: none; height: 62px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 40px 0 52px;
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-size: 17px; font-weight: 600; letter-spacing: .01em;
+}
+.island {
+  position: absolute; left: 50%; top: 11px; transform: translateX(-50%);
+  width: 125px; height: 37px; background: #000; border-radius: 20px;
+}
+.sig { display: flex; align-items: center; gap: 6px; }
+.sig i { display: block; background: currentColor; }
+.sig .dots { width: 19px; height: 5px; color: #B9B9BE; background: none; display: flex; gap: 2px; }
+.sig .dots::before, .sig .dots::after { content: ""; }
+.sig .dots i, .sig .dots::before, .sig .dots::after { flex: 1; background: currentColor; border-radius: 50%; }
+.sig .wifi { width: 17px; height: 12px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M8 11.2 5.6 8.6a3.4 3.4 0 0 1 4.8 0L8 11.2ZM3.6 6.5a6.3 6.3 0 0 1 8.8 0l1.5-1.6a8.5 8.5 0 0 0-11.8 0l1.5 1.6ZM.6 3.4a10.6 10.6 0 0 1 14.8 0L16.9 1.8a12.8 12.8 0 0 0-17.8 0L.6 3.4Z'/%3E%3C/svg%3E") no-repeat center/contain; }
+.sig .batt { width: 27px; height: 13px; border: 1.5px solid currentColor; border-radius: 4px;
+  position: relative; background: none; }
+.sig .batt::after { content: ""; position: absolute; inset: 1.5px; background: currentColor; border-radius: 1.5px; }
+/* iPad と Android に Dynamic Island は無い。ステータスバーも低い */
+body:not([data-d="phone"]) .island { display: none; }
+body[data-d="pad"] .status { height: 32px; padding: 0 24px; font-size: 14px; }
+body[data-d^="android"] .status { height: 36px; padding: 0 20px; font-size: 14px; font-weight: 500;
+  font-family: Roboto, 'Helvetica Neue', sans-serif; }
+
+/* ── ヘッダー（`tonsoku_app_bar.dart`）──────────── */
+.head { flex: none; height: 56px; display: flex; align-items: center; gap: 8px;
+  padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.head img { width: 32px; height: 32px; }
+.head b { font-size: 16px; letter-spacing: .08em; line-height: 1;
+  -webkit-text-stroke: .02em currentColor; }
+.head .rule { width: 1px; height: 14px; background: var(--border); margin: 0 2px; }
+.head span { font-size: 12px; color: var(--sub); letter-spacing: .06em; line-height: 1; }
+
+/* ── 下タブ（`app_shell.dart` / `nav_item.dart`）── */
+.nav { flex: none; display: flex; border-top: 1px solid var(--border); background: var(--bg);
+  padding: 10px 0 34px; position: relative; z-index: 10; }
+.nav div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--sub); letter-spacing: .2em; }
+.nav div.on { color: var(--primary-text); }
+.nav i { display: block; width: 24px; height: 24px; }
+body[data-d="pad"] .nav { padding-bottom: 20px; }
+body[data-d^="android"] .nav { padding-bottom: 16px; }
