@@ -13,7 +13,7 @@
 |---|---|
 | 起動画面 | `flutter_native_splash`（`pubspec.yaml`）。地色は `AppColors` の `bg`（ライト `#FAF7F3` / ダーク `#16110F`）、Android 12 以降はアダプティブアイコンと同じ作り（赤の丸＋字） |
 | fastlane | `ios/fastlane` と `android/fastlane`。gyumesy と同じ lane・見張り（`release-` ブランチ・未コミット・debug 鍵） |
-| 掲載情報（ja） | `ios/fastlane/metadata/ja/` と `android/fastlane/metadata/android/ja-JP/`。**名前「とん速」には「松のや」を入れない**（サブタイトル・説明文の冒頭の扱いは `docs/release.md` の「提出前の確認」）。説明文に非公認ファンメディアの断り（web の「とん速とは」と同じ文） |
+| 掲載情報（ja） | `ios/fastlane/metadata/ja/` と `android/fastlane/metadata/android/ja-JP/`。**名前「とん速」には「松のや」を入れない**（サブタイトル・説明文の冒頭の扱いは `docs/release.md` の「提出前の確認」）。説明文に非公認ファンメディアの断り |
 | 審査メモ | `ios/fastlane/metadata/review_information/notes.txt` |
 | 年齢レーティング | `ios/fastlane/rating_config.json`（gyumesy の値＋`advertising: true`） |
 | リリース署名の設定 | `android/app/build.gradle.kts`。**鍵が無い環境では debug 鍵のまま**（鍵を持たない人でもビルドできるように）。配信の lane は鍵が無いと止まる |
