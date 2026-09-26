@@ -1,0 +1,158 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+/* Play のタブレット（1600×2560）。**スマホ判とまったく同じ構成にする。**
+   ——見出しは左上（2 枚目だけ右下）、端末は傾けて下を切る、背景の円は
+   4 枚を通して流れる。
+
+   **7 インチ枠（1200×1920）も同じ比**なので、組版はこの 1 つで足りる
+   （`_fit.js` が寸法を合わせる）。
+
+   **座標は iPhone 判から canvas の比で写す**（横 ×1.24031 ＝ 1600/1290、
+   縦 ×0.91559 ＝ 2560/2796）。数字を自分で作らない —— 作ると iPhone・
+   スマホ判と並べた時に別のアプリに見える。
+
+   **画面の絵は Pixel Tablet 級（800×1280dp）の寸法で組んだもの**
+   （`screens/` を `?d=androidpad` で描く。`tool/build_store_images.py` の `SCREENS`）。
+
+   **比で写していないのは次の 3 つ。ここが唯一の索引なので、外すたびに足す。**
+
+   1. **1 枚目の見出しと端末の間**（`.d1` の `top`）: canvas の縦横比が違う
+      （2.17:1 → 1.6:1）ので、縦をそのまま写すと端末が見出しに張り付く。
+      **iPhone 判と同じ「canvas に対する割合」14.6%** で置き直した（gyumesy の値）。
+   2. **3・4 枚目の端末の位置**（`.solo .device` の `top`）: **下タブごと切り落とす**
+      ため、画面の絵の比（1:1.52）から決め直した。見出しとの間だけで置くと下タブの
+      ラベルの途中で切れて、事故に見える（iPhone・iPad 判も下タブは全部切っている）。
+   3. **通知バナー**: タブレットの通知は画面幅いっぱいにならない。端末の 70%。
+
+   **端末の額（`.frame`）も比ではない。** 角丸を浅くするぶん手で決めてある
+   （gyumesy の値）。 */
+html,body{width:1600px;height:2560px}
+
+/* 1・2 枚目: 3200 の世界を 1600 の窓で 2 回に分けて見せる（スマホ判と同じ） */
+.viewport{position:relative;width:1600px;height:2560px;overflow:hidden}
+.stage{position:absolute;left:0;top:0;width:3200px;height:2560px}
+body.b .stage{left:-1600px}
+/* 3・4 枚目は 1 枚で完結 */
+body.solo .stage{width:1600px}
+
+.catch{position:absolute;font-size:109px;line-height:1.52;z-index:3}
+.catch.a{left:149px;top:183px}
+.catch.b{right:149px;bottom:201px;text-align:right}
+.catch .hang{margin-right:-0.5em}
+
+/* **タブレットの端末。** 角丸は浅く、額は細い。
+   **パンチホールは無い**（カメラは額の中） */
+.frame{border-radius:44px;padding:16px}
+.frame img{border-radius:30px}
+.frame::after{display:none}
+
+/* 1 台目: 1 枚目の主役。傾き強め・下は切る（スマホ判の d1） */
+.d1{left:525px;top:887px;transform:rotate(-18deg);z-index:1}
+.d1 .frame img{width:1091px}
+/* 2 台目: 継ぎ目をまたぎ、2 枚目の主役になる（スマホ判の d2） */
+.d2{left:1384px;top:166px;transform:rotate(15.2deg);z-index:2}
+.d2 .frame img{width:990px}
+
+/* 3・4 枚目: 正対・中央。**下タブごと切り落とす**（冒頭の 2） */
+.solo .device{left:164px;top:800px;transform:none}
+.solo .frame img{width:1240px}
+
+/* 通知バナー（3 枚目） */
+.toast[hidden]{display:none}
+.toast{position:absolute;left:50%;margin-left:-672px;top:904px;width:1344px;
+  display:flex;align-items:flex-start;gap:30px;
+  padding:38px 43px;border-radius:38px;
+  background:rgba(232,232,232,.82);
+  backdrop-filter:blur(18px);
+  box-shadow:0 16px 38px rgba(0,0,0,.12);
+  z-index:4;
+  font-family:Roboto,-apple-system,'Hiragino Sans',sans-serif;-webkit-text-stroke:0}
+.toast img{width:84px;height:84px;border-radius:20px;flex:none}
+.toast .body{flex:1;min-width:0}
+.toast .app{font-size:33px;font-weight:400;color:#8A8A8E;letter-spacing:.04em}
+.toast .cat{font-size:43px;font-weight:700;margin-top:13px}
+.toast .ttl{font-size:41px;font-weight:400;line-height:1.42;margin-top:10px;color:#3A3A3C}
+.toast .when{position:absolute;right:43px;top:40px;font-size:33px;color:#8A8A8E}
+</style></head>
+<body>
+<div class="viewport"><div class="stage">
+  <div class="blob red b1"></div>
+  <div class="blob brown b2"></div>
+  <div class="blob red b3"></div>
+
+  <!-- 見出しは iOS 判と同じ（「松のや」を出さない。理由は `../pair12.html`） -->
+  <div class="catch a"></div>
+  <div class="catch b"></div>
+
+  <div class="device d1"><div class="frame"><img></div></div>
+  <div class="device d2"><div class="frame"><img></div></div>
+
+  <div class="toast" hidden>
+    <img src="../../../assets/icon/icon_android.png">
+    <div class="body">
+      <div class="app">とん速</div>
+      <div class="cat">メニュー</div>
+      <div class="ttl">松のや、「たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食」を15店で掲載</div>
+    </div>
+    <div class="when">今</div>
+  </div>
+</div></div>
+
+<script>
+// **4 枚を 1 つの組版から出す**（スマホ判は 3 ファイルに分かれているが、
+// こちらは寸法だけ違う同じ構成なので 1 枚に畳んでいる）。
+var n = (location.search.match(/n=(\d)/) || [])[1] || '1';
+var blobs = document.querySelectorAll('.blob');
+
+// **円も iPhone 判から比で写す。** 横と縦で伸び方が違うので楕円になる
+// （スマホ判も同じ作り）。**色の並びまで写すこと** —— 3 枚目は茶→
+// 赤→茶で、ここを赤固定にすると 4 枚を通した流れが崩れる。
+function place(el, w, h, x, y, op, color) {
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = op;
+  el.className = 'blob ' + color;
+}
+// 画面の絵（`screens/` を `?d=androidpad` で描いたもの）
+function shot(img, name) {
+  img.src = '../../source/' + name + '_androidpad.png';
+}
+
+if (n === '1' || n === '2') {
+  if (n === '2') document.body.classList.add('b');
+  document.querySelector('.catch.a').innerHTML = '店舗限定の\n<span class="thin">㊙</span>メニューが、';
+  document.querySelector('.catch.b').innerHTML =
+    '地図で見つかる<span class="hang">。</span>';
+  var imgs = document.querySelectorAll('.device img');
+  shot(imgs[0], 'map');
+  shot(imgs[1], 'shop');
+  place(blobs[0], 1389, 1025, -323, -146, .10, 'red');
+  place(blobs[1], 1116, 824, 2456, 1630, .10, 'brown');
+  place(blobs[2], 645, 476, 1761, 275, .07, 'red');
+} else {
+  document.body.classList.add('solo');
+  document.querySelector('.catch.b').remove();
+  document.querySelectorAll('.device')[1].remove();
+  var a = document.querySelector('.catch.a');
+  var img = document.querySelector('.device img');
+  if (n === '3') {
+    a.textContent = '新メニュー情報を\n爆速でお届け。';
+    shot(img, 'home');
+    document.querySelector('.toast').hidden = false;
+    place(blobs[0], 1116, 824, -744, 1630, .10, 'brown');
+    place(blobs[1], 943, 696, 571, -73, .08, 'red');
+    place(blobs[2], 1290, 952, 1290, 1740, .10, 'brown');
+  } else {
+    a.innerHTML = '<span class="thin">㊙</span>クーポンも\nすぐに使える。';
+    shot(img, 'coupon');
+    place(blobs[0], 943, 696, -1029, -73, .08, 'red');
+    place(blobs[1], 1290, 952, -310, 1740, .10, 'brown');
+    place(blobs[2], 1091, 806, 1079, 311, .08, 'red');
+  }
+}
+</script>
+<script src="../_stamps.js"></script>
+<script src="../_gutter.js"></script>
+<script src="../_fit.js"></script>
+</body></html>

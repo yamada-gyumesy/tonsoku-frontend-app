@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+html,body{width:1290px;height:2796px}
+/* 1290 の窓に 2580 の世界を流し込み、#b で右半分に送る。
+   **またぐのは端末ではなく世界**（背景の円）。端末は 2 台置く */
+.viewport{position:relative;width:1290px;height:2796px;overflow:hidden}
+.stage{position:absolute;left:0;top:0;width:2580px;height:2796px}
+body.b .stage{left:-1290px}
+
+.blob.b1{width:1120px;height:1120px;left:-260px;top:-160px;opacity:.10}
+.blob.b2{width:900px;height:900px;left:1980px;top:1780px;opacity:.10}
+.blob.b3{width:520px;height:520px;left:1420px;top:300px;opacity:.07}
+
+/* コピーは 1 枚目だけ。**2 行を塊にする**（行間を詰める） */
+/* **2 台目より上に置く。** 端末に重ねると 2 行目が読めない */
+/* **1 枚目の中に 2 行で収める。** 継ぎ目をまたぐと 2 枚目に切れ端が出る */
+.catch{position:absolute;font-size:88px;line-height:1.52;z-index:3}
+/* 左上 */
+.catch.a{left:120px;top:200px}
+/* 右下（2 枚目の右下）。**継ぎ目をまたがない** */
+/* **行末の句点は全角の左寄りグリフ**で、そのままだと右端が内側に入り
+   中央寄せに見える。ぶら下げて右端を揃える */
+.catch.b{right:120px;bottom:220px;text-align:right}
+.catch .hang{margin-right:-0.5em}
+
+/* 1 台目: 1 枚目の下半分。傾き強め・下は切る */
+/* 継ぎ目（x=1290）を画面がまたぐ位置。**下は切る** */
+/* 奥の 1 台。継ぎ目より左に置き、2 枚目へ肩を出す */
+/* 奥。**下にずらし、傾き強め。** 右上が手前に隠れる。右端は継ぎ目に少し被る程度 */
+.d1{left:423px;top:875px;transform:rotate(-18deg);z-index:1}
+.d1 .frame{border-radius:78px;padding:14px}
+.d1 .frame img{width:880px;border-radius:70px}
+
+/* 手前の 1 台。**別角度で重ねる**（SmartNews と同じ作り）。
+   継ぎ目をまたぐのはこちら */
+/* 手前。**奥より上・右・大きい。** 継ぎ目がこの端末を切り、2 枚目の主役になる */
+.d2{left:1116px;top:181px;transform:rotate(15.2deg);z-index:2}
+.d2 .frame{border-radius:78px;padding:14px}
+.d2 .frame img{width:798px;border-radius:64px}
+</style></head>
+<body>
+<div class="viewport"><div class="stage">
+  <div class="blob red b1"></div>
+  <div class="blob brown b2"></div>
+  <div class="blob red b3"></div>
+
+  <!-- **見出しに「松のや」を出さない。** gyumesy は初回審査が Guideline 4.1(a)
+       （Design - Copycats）で落ちた。指摘されたのは見出しに「松屋」がある 2 枚
+       だけで、端末の中に松屋の記事名や商品写真が並ぶ 1 枚は指摘されていない。
+       つまり**引っかかったのは見出しの文言**で、記事の中身（事実の報道）ではない。
+       とん速は iOS・Play とも見出しに出さない（Play は掲載文の冒頭に「松のや」を
+       出してよいが、画像まで分けると組版が 2 系統になる）。
+
+       **1・2 枚目はマップ**（アプリにしか無い面で、一番の売り。ユーザーの指定）。
+       見出しの文言はユーザーの指定 -->
+  <div class="catch a">店舗限定の
+<span class="thin">㊙</span>メニューが、</div>
+  <div class="catch b">地図で見つかる<span class="hang">。</span></div>
+
+  <!-- 画面は組版で描いたもの（`screens/map.html`。寸法と中身はユーザーの手元の
+       2 枚に合わせた）。1 台目は東京駅を中心にした最初の画面、2 台目は店を選んだところ -->
+  <div class="device d1"><div class="frame">
+    <img src="../source/map_ios.png"></div></div>
+  <div class="device d2"><div class="frame">
+    <img src="../source/shop_ios.png"></div></div>
+</div></div>
+<script>if(location.search.indexOf('b')>=0)document.body.classList.add('b')</script>
+<script src="_stamps.js"></script>
+<script src="_gutter.js"></script>
+<script src="_fit.js"></script>
+</body></html>

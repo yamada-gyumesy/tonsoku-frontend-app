@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+html,body{width:1290px;height:2796px}
+.stage{width:1290px;height:2796px}
+
+/* 3 枚目からの続き */
+
+/* **4 枚を 5160x2796 の 1 枚として扱い、円が枚をまたぐ。**
+   1・2 枚目の位置は確定。その続きとして置く */
+.blob.c3{width:760px;height:760px;left:-830px;top:-80px;opacity:0.08}
+.blob.c4{width:1040px;height:1040px;left:-250px;top:1900px;opacity:0.10}
+.blob.c5{width:880px;height:880px;left:870px;top:340px;opacity:0.08}
+.catch{position:absolute;left:120px;top:200px;font-size:88px;line-height:1.52;z-index:3}
+
+/* 端末は正対・中央。**下は切る** */
+.device{left:131px;top:640px}
+.frame{border-radius:96px;padding:14px}
+.frame img{width:1000px;border-radius:88px}
+</style></head>
+<body>
+<div class="stage">
+  <div class="blob red c3"></div>
+  <div class="blob brown c4"></div>
+  <div class="blob red c5"></div>
+
+  <!-- **見出しに「松のや」を出さない**（理由は `pair12.html`）。文言はユーザーの指定。
+       画面はホームを「お得なクーポン」まで送ったところ（`screens/home.html?v=coupon`） -->
+  <div class="catch"><span class="thin">㊙</span>クーポンも
+すぐに使える。</div>
+
+  <div class="device"><div class="frame">
+    <img src="../source/coupon_ios.png"></div></div>
+</div>
+<script src="_stamps.js"></script>
+<script src="_gutter.js"></script>
+<script src="_fit.js"></script>
+</body></html>

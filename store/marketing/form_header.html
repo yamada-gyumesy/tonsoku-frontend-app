@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+/* クローズドテスト応募フォームのヘッダー画像。
+ *
+ * **1600x400（4:1）。** Google フォームは横幅に合わせて拡大してから
+ * 縦を切るので、比が違うと上下が落ちる（フィーチャー画像の 1024x500 =
+ * 2.05:1 はそのままでは使えない）。
+ *
+ * **狭い画面では左右が切られる。** 中央 1000x300（x=300..1300 /
+ * y=50..350）に大事なものを収める。枠線と端末のはみ出しは切れてよい。 */
+html,body{width:1600px;height:400px}
+.stage{width:1600px;height:400px}
+
+/* web の OGP と同じ枠（赤の 1 色。理由は `feature.html`）。
+ * 太さは 1024px 版の 12px を横幅比（1600/1024）で 18px に取り直した */
+.f{position:absolute;inset:0;border:18px solid var(--primary);z-index:5}
+
+/* ロゴ・サービス名・キャッチをひと塊にして縦中央。**安全域の左端 300px から** */
+.left{position:absolute;left:380px;top:50%;transform:translateY(-50%)}
+.brand{display:flex;align-items:center;gap:16px}
+.brand img{width:66px;height:66px;display:block}
+.brand span{font-size:58px;letter-spacing:0.02em;line-height:1;
+  font-weight:600;-webkit-text-stroke:0.024em currentColor}
+/* キャッチは web の `site.tagline`。フォームは Play のテスターを集めるもので、
+ * App Store には出ない（「松のや」を出してよい。`feature.html` と同じ） */
+.tag{margin-top:24px;margin-left:3px;font-size:25px;color:var(--sub);line-height:1;
+  -webkit-text-stroke:0.024em currentColor}
+
+/* 端末。**下にブリード**（ストア画像と同じ作り）。
+ * 安全域の内側（1300px）から始めて、切られても本体が残るようにする */
+.device{position:absolute;left:1018px;top:68px;transform:rotate(-11deg)}
+.frame{border-radius:38px;padding:6px}
+.frame img{width:258px;border-radius:33px;display:block}
+</style></head>
+<body>
+<div class="stage">
+
+  <div class="left">
+    <div class="brand"><img src="assets/icon.svg"><span>とん速</span></div>
+    <div class="tag">松のや速報</div>
+  </div>
+
+  <div class="device"><div class="frame">
+    <img src="../source/map_ios.png"></div></div>
+
+  <div class="f"></div>
+</div>
+</body></html>

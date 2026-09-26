@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+html,body{width:1080px;height:1920px}
+.stage{width:1080px;height:1920px}
+
+/* 1・2 枚目からの続き。**4 枚を通して円が流れる** */
+
+/* **4 枚を 5160x2796 の 1 枚として扱い、円が枚をまたぐ。**
+   1・2 枚目の位置は確定。その続きとして置く */
+.blob.c2{width:753px;height:618px;left:-502px;top:1222px;opacity:0.10}
+.blob.c3{width:636px;height:522px;left:385px;top:-55px;opacity:0.08}
+.blob.c4{width:871px;height:714px;left:871px;top:1305px;opacity:0.10}
+.catch{position:absolute;left:100px;top:137px;font-size:74px;line-height:1.52;z-index:3}
+
+/* 端末は正対。**下は切る** */
+.device{left:110px;top:426px}
+.frame{border-radius:80px;padding:12px}
+.frame img{width:837px;border-radius:74px}
+
+/* 通知バナー。**端末より広く、左右にはみ出す**（原本と同じ） */
+.toast{position:absolute;left:84px;top:700px;width:913px;
+  /* **実際の通知は白ではなく灰がかった半透明。** SmartNews の原本を実測すると
+     バナー内は #D6D6D6〜#ECECEC で、下の画面が透けている */
+  background:rgba(232,232,232,.82);backdrop-filter:blur(18px);border-radius:25px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);padding:25px 34px;
+  display:flex;gap:24px;align-items:flex-start;z-index:4;
+  /* 書体は OS のもの（`../image3.html` と同じ理由） */
+  font-family:Roboto,-apple-system,'Hiragino Sans',sans-serif;-webkit-text-stroke:0}
+.toast img{width:55px;height:55px;border-radius:13px;flex:none}
+.toast .body{flex:1;min-width:0}
+.toast .app{font-size:22px;font-weight:400;color:#8A8A8E;letter-spacing:.04em}
+.toast .cat{font-size:28px;font-weight:700;margin-top:7px}
+.toast .ttl{font-size:27px;font-weight:400;line-height:1.42;margin-top:5px;color:#3A3A3C}
+.toast .when{position:absolute;right:28px;top:22px;font-size:22px;color:#8A8A8E}
+</style></head>
+<body>
+<div class="stage">
+  <div class="blob brown c2"></div>
+  <div class="blob red c3"></div>
+  <div class="blob brown c4"></div>
+
+  <div class="catch">新メニュー情報を
+爆速でお届け。</div>
+
+  <div class="device"><div class="frame">
+    <img src="../../source/home_android.png"></div></div>
+
+  <!-- 中身は iOS 判と同じ（`../image3.html`）。**Android のアイコンは丸い印** -->
+  <div class="toast">
+    <img src="../../../assets/icon/icon_android.png">
+    <div class="body">
+      <div class="app">とん速</div>
+      <div class="cat">メニュー</div>
+      <div class="ttl">松のや、「たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食」を15店で掲載</div>
+    </div>
+    <div class="when">今</div>
+  </div>
+</div>
+<script src="../_stamps.js"></script>
+<script src="../_gutter.js"></script>
+<script src="../_fit.js"></script>
+</body></html>

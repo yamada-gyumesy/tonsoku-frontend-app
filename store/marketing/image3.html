@@ -1,0 +1,68 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+html,body{width:1290px;height:2796px}
+.stage{width:1290px;height:2796px}
+
+/* 1・2 枚目からの続き。**4 枚を通して円が流れる** */
+
+/* **4 枚を 5160x2796 の 1 枚として扱い、円が枚をまたぐ。**
+   1・2 枚目の位置は確定。その続きとして置く */
+.blob.c2{width:900px;height:900px;left:-600px;top:1780px;opacity:0.10}
+.blob.c3{width:760px;height:760px;left:460px;top:-80px;opacity:0.08}
+.blob.c4{width:1040px;height:1040px;left:1040px;top:1900px;opacity:0.10}
+.catch{position:absolute;left:120px;top:200px;font-size:88px;line-height:1.52;z-index:3}
+
+/* 端末は正対。**下は切る** */
+.device{left:131px;top:620px}
+.frame{border-radius:96px;padding:14px}
+.frame img{width:1000px;border-radius:88px}
+
+/* 通知バナー。**端末より広く、左右にはみ出す**（原本と同じ） */
+.toast{position:absolute;left:100px;top:1020px;width:1090px;
+  /* **実際の通知は白ではなく灰がかった半透明。** SmartNews の原本を実測すると
+     バナー内は #D6D6D6〜#ECECEC で、下の画面が透けている */
+  background:rgba(232,232,232,.82);backdrop-filter:blur(18px);border-radius:30px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);padding:30px 34px;
+  display:flex;gap:24px;align-items:flex-start;z-index:4;
+  /* **通知は OS が描くので書体は OS のもの。** Klee One で描くと
+     アプリの中の文字に見える */
+  font-family:-apple-system,'Hiragino Sans',sans-serif;-webkit-text-stroke:0}
+.toast img{width:66px;height:66px;border-radius:16px;flex:none}
+.toast .body{flex:1;min-width:0}
+.toast .app{font-size:26px;font-weight:400;color:#8A8A8E;letter-spacing:.04em}
+.toast .cat{font-size:34px;font-weight:700;margin-top:10px}
+.toast .ttl{font-size:32px;font-weight:400;line-height:1.42;margin-top:8px;color:#3A3A3C}
+.toast .when{position:absolute;right:34px;top:32px;font-size:26px;color:#8A8A8E}
+</style></head>
+<body>
+<div class="stage">
+  <div class="blob brown c2"></div>
+  <div class="blob red c3"></div>
+  <div class="blob brown c4"></div>
+
+  <div class="catch">新メニュー情報を
+爆速でお届け。</div>
+
+  <div class="device"><div class="frame">
+    <img src="../source/home_ios.png"></div></div>
+
+  <!-- **通知の中身は実在の記事**（`store/fixtures/articles/feed.json` の `lsmujz`）。
+       題はカテゴリの名前、本文は記事の題（送る側の `tonsoku-backend-batch` の
+       `app/notify/push.py` と同じ組み方）。マップの 1・2 枚目と同じ品にしてある -->
+  <div class="toast">
+    <!-- 通知に出るのはホーム画面のアイコン（白いタイルに赤い丸）そのもの -->
+    <img src="../../assets/icon/icon.png">
+    <div class="body">
+      <div class="app">とん速</div>
+      <div class="cat">メニュー</div>
+      <div class="ttl">松のや、「たっぷりねぎと味噌ダレの超厚切りリブロースかつ定食」を15店で掲載</div>
+    </div>
+    <div class="when">今</div>
+  </div>
+</div>
+<script src="_stamps.js"></script>
+<script src="_gutter.js"></script>
+<script src="_fit.js"></script>
+</body></html>

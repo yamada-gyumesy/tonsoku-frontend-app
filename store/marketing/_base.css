@@ -1,0 +1,90 @@
+/* とん速のストア画像の下地。
+ *
+ * **作りは gyumesy-frontend-app の `store/marketing/_base.css` を写した**（見出し・
+ * 端末・背景の円の並べ方）。**意匠は web の OGP に揃える**
+ * （`tonsoku-frontend-web/scripts/lib/ogp-template.ts`）: 生成りの地、赤 1 色、
+ * 見出しは Klee One。gyumesy のピンク / シアンと Noto の太ゴシックは持ち込まない。 */
+
+/* **書体はアプリが同梱している Klee One**（`assets/fonts/`。web と同じ SemiBold 1 つ）。
+ * Google Fonts から取らない ―― 取れなかった時に代替の書体で焼き上がり、
+ * **終了コード 0 のまま**別の絵になる。手元のファイルなら取れないことが無い。
+ * **アプリの同梱分は字を切り出してある**（6,886 字）。見出しに無い字を足すと
+ * 端末の書体に落ちるので、書き出したら目で見ること */
+@font-face {
+  font-family: 'Klee One';
+  font-weight: 600;
+  src: url('../../assets/fonts/KleeOne-SemiBold.ttf') format('truetype');
+}
+
+:root {
+  /* web の `main.css` の `--color-brand-*`（ライト）。**ここを変えると web と揃わなくなる。**
+   * アプリでは `lib/core/theme/app_colors.dart` の `AppColors.light` */
+  --bg: #FAF7F3;       /* brand-bg（生成り） */
+  --primary: #A7232A;  /* brand-primary（とん速のロゴの赤。松のや公式の #B4252D ではない） */
+  --brown: #6B4A34;    /* brand-brown */
+  --ink: #231815;      /* brand-text */
+  --sub: #6E625B;      /* brand-text-sub */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow: hidden; background: var(--bg); }
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: 'Klee One', sans-serif;
+  color: var(--ink);
+}
+
+/* 背景の飾り。**のや子のスタンプを隅に大きく置いて余白を作る**（中身は `_stamps.js` が
+ * web の OGP のスタンプと同じ作りで描く。置き方は gyumesy の円と同じ）。
+ * **色は赤と茶の 2 色だけ。** 緑は使わない ―― web はカテゴリの意味に使っている
+ * 差し色で、OGP の枠にも混ぜていない（`ogp-template.ts` の「枠は赤の1色」）。
+ * 彩度を上げず、生成りの地を壊さない。 */
+.blob { position: absolute; pointer-events: none; }
+.blob.red { background: var(--primary); }
+.blob.brown { background: var(--brown); }
+
+/* コピー。**墨・句点まで打つ。** 色は付けない。
+ * 太さは web の OGP の見出しと同じ作り: SemiBold に同じ色の縁取りを足す
+ * （`scripts/lib/klee-one.ts` の `HEADING_STROKE_EM` = 0.024em。Klee One に
+ * 700 は無く、`font-weight` を上げても太らない） */
+.catch {
+  position: absolute;
+  font-weight: 600;
+  -webkit-text-stroke: 0.024em currentColor;
+  letter-spacing: 0.01em;
+  line-height: 1.34;
+  white-space: pre-line;
+}
+/* **ぶら下げた句点のぶんで折り返さない。** 句点を `margin-right: -0.5em` でぶら下げると、
+ * 箱の幅（中身の幅）がそのぶん縮み、**最後の 1 字が次の行へ落ちる**（「地図でわか／る。」）。
+ * ぶら下げる行は 1 行なので、折り返させない */
+.catch:has(.hang) { white-space: nowrap; }
+/* **Klee One に無い字（㊙）は細く描く。** 無い字は端末の書体（ヒラギノ）に落ち、
+ * 見出しの縁取り（`-webkit-text-stroke`）が掛かると潰れて太って見える（ユーザーの指摘）。
+ * 縁取りを外し、細いウェイトにする */
+.catch .thin { -webkit-text-stroke: 0; font-family: 'Hiragino Sans', sans-serif; font-weight: 300; }
+/* **コピーは全部墨。** 赤は背景の円だけに使う */
+.catch .em { color: inherit; }
+
+/* 端末。**黒フレーム。画面が切れる位置まで大きく置く**（全体を見せない） */
+.device { position: absolute; }
+.frame {
+  position: relative;
+  display: inline-block;
+  background: #0d0d0d;
+  box-shadow: 0 40px 80px rgba(35, 24, 21, .22);
+}
+.frame img { display: block; }
+/* Dynamic Island。**画面の絵（`screens/` のステータスバー）に島を描いているので、
+ * 額には描かない**（ここで描くと島が 2 つ重なる） */
+.frame::after { display: none; }
+
+/* 右下の但し書き。web の免責と同じ趣旨 */
+.note {
+  position: absolute;
+  color: var(--sub);
+  font-weight: 600;
+}
