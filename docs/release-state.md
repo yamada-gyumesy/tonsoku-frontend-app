@@ -72,15 +72,12 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
 
 | 相手 | 頼むこと | いつ |
 |---|---|---|
-| tonsoku-frontend-web | `/.well-known/apple-app-site-association` を置く（中身は `docs/deep-links.md`。`_headers` で `application/json`） | **いつでも**（appID は確定している） |
+| tonsoku-frontend-web | `/.well-known/apple-app-site-association` を置く（中身は `docs/deep-links.md`。`_headers` で `application/json`） | **済み**（web #144・#148。本番に出ている） |
 | tonsoku-frontend-web | `/.well-known/assetlinks.json` を置く | 上の 7 の指紋が出てから |
-| tonsoku-frontend-web | `app-ads.txt` | 上の 8 の後 |
+| tonsoku-frontend-web | `app-ads.txt` | **済み**（web #156。本番に出ている） |
 | tonsoku-infra-terraform | App Store ID・Android の指紋 | 上の 4・7 の後 |
 
 ## まだ作っていないもの
 
-- **広告の本番 ID（上の 8）。** 実装（Issue #5）は入っているが、本番の ID が空なので release は
-  広告を出さない。審査メモ・`rating_config.json`・App Privacy は広告が出る前提で書いてある。
-  **ID を入れずに出すなら、3 つとも「広告なし」に直す**（申告と中身を食い違わせない）
 - **iOS の ATT（トラッキングの許可）。** Issue #5 で入れた（`NSUserTrackingUsageDescription` は
   `Info.plist` にある）。App Privacy で「トラッキング」を申告する
