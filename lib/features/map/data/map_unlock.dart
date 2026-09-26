@@ -108,6 +108,15 @@ class MapUnlockController extends Notifier<MapUnlockState> {
     RewardOutcome outcome;
     try {
       final ad = await ref.read(adGatewayProvider).loadRewarded(unitId);
+      // **読み込みの間に広告を外す課金を買われたら、出さずに終える。** 読み込み中も
+      // 「広告なしで…」は押せるので、読み直さないと払った直後に動画広告が出る
+      if (ad != null &&
+          ref.mounted &&
+          ref.read(adUnitProvider(AdSlot.mapRewarded)) == null) {
+        ad.dispose();
+        state = _evaluate(state.until, busy: false, declined: state.declined);
+        return null;
+      }
       outcome = ad == null ? RewardOutcome.failed : await ad.show();
       ad?.dispose();
     } on Object {

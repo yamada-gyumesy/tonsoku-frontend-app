@@ -192,7 +192,7 @@ class InAppPurchaseGateway implements PurchaseGateway {
     }
 
     for (final purchase in purchases) {
-      final ours = purchase.productID == removeAdsProductId;
+      final ours = isOurs(purchase);
       final update = switch (purchase.status) {
         PurchaseStatus.pending => PurchaseUpdate.pending,
         PurchaseStatus.purchased => PurchaseUpdate.purchased,
@@ -213,6 +213,21 @@ class InAppPurchaseGateway implements PurchaseGateway {
       if (update != PurchaseUpdate.pending) await _complete(purchase);
     }
   }
+
+  /// この商品の知らせか。
+  ///
+  /// **Android のキャンセル・失敗は商品 ID が空で届く**（in_app_purchase_android 0.5.3 の
+  /// `_getPurchaseDetailsFromResult` は、購入の中身が無い結果を `productID: ''` で流す。
+  /// `ITEM_ALREADY_OWNED` も同じ）。ID だけで見ると落ちてしまい、`buy()` の結果を待っている
+  /// 側が読み込み中のまま固まる（再起動まで購入も復元も押せない）。**このアプリの商品は
+  /// 1 つだけ**なので、空 ID のキャンセル・失敗はこの商品のものとして扱う。**空 ID の
+  /// 購入済み・復元は根拠にしない**（何を買ったか分からないものを付与の根拠にしない）。
+  @visibleForTesting
+  static bool isOurs(PurchaseDetails purchase) =>
+      purchase.productID == removeAdsProductId ||
+      (purchase.productID.isEmpty &&
+          (purchase.status == PurchaseStatus.canceled ||
+              purchase.status == PurchaseStatus.error));
 
   Future<void> _complete(PurchaseDetails purchase) async {
     if (!purchase.pendingCompletePurchase) return;

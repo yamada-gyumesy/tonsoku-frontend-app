@@ -153,6 +153,32 @@ void main() {
       });
     });
 
+    test('動画の読み込み中に広告を外す課金を買ったら、動画を出さずに終える', () async {
+      // **設定は本物を使う**（購入で枠の ID が空になる流れごと確かめる）
+      SharedPreferences.setMockInitialValues({});
+      final store = await SharedPreferences.getInstance();
+      final gateway = FakeAdGateway()..rewardGate = Completer<void>();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(store),
+          adGatewayProvider.overrideWithValue(gateway),
+          purchaseGatewayProvider.overrideWithValue(FakePurchaseGateway()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(removeAdsProvider.notifier).start();
+      await container.read(adsControllerProvider.notifier).start();
+
+      final watching = container.read(mapUnlockProvider.notifier).watchVideo();
+      await container.read(removeAdsProvider.notifier).buy();
+      gateway.rewardGate!.complete();
+
+      expect(await watching, isNull);
+      expect(gateway.calls, isNot(contains('showRewarded')));
+      expect(container.read(mapUnlockProvider).busy, isFalse);
+      expect(container.read(mapLimitedGateProvider), MapLimitedGate.open);
+    });
+
     test('本番の ID が空・同意が得られない時は開放扱い', () async {
       final empty = await containerFor(
         FakeAdGateway(),
