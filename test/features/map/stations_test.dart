@@ -56,6 +56,32 @@ void main() {
     expect([for (final s in stations) s.nameZh].where(kana.hasMatch), isEmpty);
   });
 
+  // **中国語名の無い駅の補い方はユーザーの決定**（`tool/build_map_names.py`）:
+  // 日本語名が仮名を含まなければ、それを簡体字にしたもの。仮名を含めば英語名
+  test('同梱の駅の中国語名は簡体字に揃っていて、ほぼ全駅に在る', () {
+    final stations = decodeStations(
+      File('assets/map/stations.json').readAsStringSync(),
+    );
+    String zh(String name) => stations.firstWhere((s) => s.name == name).nameZh;
+    expect(zh('新宿'), '新宿');
+    expect(zh('渋谷'), '涩谷');
+    expect(zh('代々木'), '代代木');
+    // 「ケ」「ヶ」「ノ」は仮名なので英語名
+    expect(zh('霞ケ関'), 'Kasumigaseki');
+    // OpenStreetMap の中国語名に付いている「站」は落とす（日本語名に「駅」は無い）
+    expect(zh('王子神谷'), '王子神谷');
+    final names = [for (final s in stations) s.nameZh];
+    expect(names.where((n) => n.isEmpty).length, lessThan(50));
+    expect(names.where(RegExp('[澤沢區國縣県會長東鐵鉄關関島廣広渋澁條々]').hasMatch), isEmpty);
+    // 端末の書体に無いことが多い字（基本多言語面の外・拡張 A）を出さない
+    expect(
+      names.where(
+        (n) => n.runes.any((r) => r > 0xffff || (r >= 0x3400 && r <= 0x4dbf)),
+      ),
+      isEmpty,
+    );
+  });
+
   group('言語ごとの駅名（英語・中国語の画面に日本語を出さない。Issue #35）', () {
     const both = Station(
       name: '東京',

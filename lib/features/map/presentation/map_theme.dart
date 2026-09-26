@@ -30,7 +30,8 @@ const mapTileSource = 'protomaps';
 /// ## 地名の言語
 ///
 /// 日本語は `name:ja`（無ければ `name`）、英語は `name:en`、中国語は
-/// `name:zh-Hans`（簡体字）。
+/// `name:zh-Hans`（簡体字。OpenStreetMap の値には繁体字・日本の字体が混ざって
+/// いるので、地図を作る時に揃えてある。`tool/build_map_names.py`）。
 ///
 /// **英語・中国語は `name` に落とさない。訳の無い地名は描かない。**
 /// `name` は現地の表記（日本では日本語）なので、落とすと英語・中国語の画面に
