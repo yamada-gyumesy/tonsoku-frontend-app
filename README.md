@@ -288,7 +288,7 @@ dart run flutter_native_splash:create
 | [docs/secrets.md](docs/secrets.md) | 認証情報・署名鍵の置き場と同期（`scripts/sync-secrets.sh`） |
 | [docs/deep-links.md](docs/deep-links.md) | ユニバーサルリンク / App Links（名乗る面・web に置くファイルの中身） |
 
-ストアの掲載情報は `ios/fastlane/metadata/` と `android/fastlane/metadata/`（日本語のみ）。**名前に「松のや」を入れない**（gyumesy は「松屋」で App Store の 4.1(a) を 2 回受けた）。サブタイトル・説明文の冒頭には入れて出し、指摘されたら外す（`docs/release.md` の「提出前の確認」）。非公式であることは説明文に書く。
+ストアの掲載情報は `ios/fastlane/metadata/` と `android/fastlane/metadata/`（日本語のみ）。**名前に「松のや」を入れない**（gyumesy は「松屋」で App Store の 4.1(a) を 2 回受けた）。説明文の冒頭には入れて出し、指摘されたら外す（`docs/release.md` の「提出前の確認」）。非公式であることは説明文に書く。
 
 ### ストアの画像
 
