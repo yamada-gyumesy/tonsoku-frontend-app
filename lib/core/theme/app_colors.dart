@@ -476,6 +476,55 @@ class MapPalette {
   static MapPalette of(AppColors colors) => colors.isDark ? dark : light;
 }
 
+/// 通知の見本（通知設定・オンボーディングの `NotificationSample`）の色。
+///
+/// **とん速の配色ではなく、OS の通知の見え方**。web の見本の組版
+/// （`tonsoku-frontend-web/scripts/notification-samples/{light,dark}1.html`。
+/// gyumesy の組版の実測値）の色をそのまま写した。web の
+/// `docs/notification-samples.md` が「`main.css` のトークンに置き換えないこと」と
+/// 決めている ―― 生成りや茶に寄せると、端末に実際に出る通知と別物に見える。
+///
+/// **ライト / ダークで別の組**（web の見本も 2 枚ずつ焼いている）。ダークの
+/// 地は黒の半透明で、下の面が透ける（OS の通知と同じ）。
+@immutable
+class NotificationSamplePalette {
+  const NotificationSamplePalette({
+    required this.card,
+    required this.appName,
+    required this.title,
+    required this.body,
+  });
+
+  /// 通知の地（web の `.toast` の `background`）。
+  final Color card;
+
+  /// 名乗りと時刻（`.app`）。
+  final Color appName;
+
+  /// 題（`.toast` の `color`）。
+  final Color title;
+
+  /// 本文（`.txt`）。
+  final Color body;
+
+  static const light = NotificationSamplePalette(
+    card: Color(0xFFECECEE),
+    appName: Color(0xFF8A8A8E),
+    title: Color(0xFF1A1A1A),
+    body: Color(0xFF3A3A3C),
+  );
+
+  static const dark = NotificationSamplePalette(
+    card: Color(0x8C000000), // rgba(0,0,0,.55)
+    appName: Color(0xFF9AA6B2),
+    title: Color(0xFFF7F9F9),
+    body: Color(0xFFC7D0D8),
+  );
+
+  static NotificationSamplePalette of(Brightness brightness) =>
+      brightness == Brightness.dark ? dark : light;
+}
+
 extension AppColorsX on BuildContext {
   AppColors get colors => Theme.of(this).extension<AppColors>()!;
 }

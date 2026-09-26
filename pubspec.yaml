@@ -156,10 +156,9 @@ flutter:
     # 作り方は tool/build_map.sh（README の「マップの背景地図」）
     - assets/map/japan.pmtiles
     - assets/map/stations.json
-    # 通知設定の見本（ライト / ダーク × 5）。web がとん速のぶんを焼いたもの
-    # （`tonsoku-frontend-web/public/images/notifications/`。作り方は web の
-    # `docs/notification-samples.md`）。**gyumesy の絵を流用しない**（中身が松屋側）
-    - assets/notifications/
+    # **通知の見本は画像で持たない**（`NotificationSample` がウィジェットで描く）。
+    # web の見本の絵（`public/images/notifications/`）は字が日本語で焼き込まれて
+    # いて、英語・中国語の画面にも日本語が出ていた
     # オンボーディング（初回起動の 2 枚）の絵。**とん速の web の OGP 画像を縮めたもの**
     # （`tonsoku-frontend-web/public/ogp-*.png`。ロケールごとに 1 枚ずつ）。
     # gyumesy はアプリの実スクリーンショットを端末の枠に入れているが、とん速は

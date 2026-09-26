@@ -15,6 +15,9 @@ String _times(double v) =>
 /// **キーの追加は日本語から。** Web も `ja.ts` を `Messages` 型の元にしており、
 /// 訳が用意できていないキーが型で止まるようにしてある（コンストラクタの
 /// `required` がその役を持つ）。
+/// 通知の見本 1 枚ぶんの文言（[AppMessages.notificationsSamples]）。
+typedef NotificationSampleText = ({String title, String body});
+
 class AppMessages {
   const AppMessages({
     required this.appName,
@@ -75,7 +78,8 @@ class AppMessages {
     required this.notificationsIntro2,
     required this.notificationsLocaleNotice,
     required this.notificationsSampleLabel,
-    required this.notificationsSampleAlt,
+    required this.notificationsSampleSeparator,
+    required this.notificationsSamples,
     required this.notificationsTopicsHeading,
     required this.notificationsMasterLabel,
     required this.notificationsMasterHintOs,
@@ -354,7 +358,21 @@ class AppMessages {
   /// **日本語では空文字**（自明なので出さない）。
   final String notificationsLocaleNotice;
   final String notificationsSampleLabel;
-  final String Function(int n) notificationsSampleAlt;
+
+  /// 通知の見本の名乗りと時刻の間（「とん速 ・たった今」）。**日本語の `・`
+  /// （全角の中黒）は英語・中国語に出さない**ので、言語ごとに持つ。
+  final String notificationsSampleSeparator;
+
+  /// 通知の見本（通知設定・オンボーディング）の題と本文。**web の見本の画像
+  /// （`scripts/notification-samples/light{1..5}.html`）と同じ題材を、同じ順で。**
+  ///
+  /// - **題は配信の `categories.json` のそのロケールのラベルと同じ語**（web の
+  ///   `docs/notification-samples.md`。購読はカテゴリ単位なので、見本の題が
+  ///   下のトグルと食い違うと「どれを ON にすると何が来るのか」が伝わらない）
+  /// - **本文は 1 行に収まる長さまで**（見本は 1 行で切る。英語は字が多いので
+  ///   短く言い換えてある。収まるかは `notification_sample_test.dart` が測る）
+  /// - 時刻は並びで決まる（`NotificationSample.ages`）。数を変える時は 3 言語とも
+  final List<NotificationSampleText> notificationsSamples;
 
   /// **ここから下の 3 つは web に無い**（web は許可ボタンと保存ボタンの作り）。
   /// アプリは「マスター 1 行 ＋ カテゴリ行・保存ボタン無し」なので、gyumesy-frontend-app
@@ -657,7 +675,14 @@ class AppMessages {
     notificationsIntro2: '興味のあるトピックをONにしてください。',
     notificationsLocaleNotice: '',
     notificationsSampleLabel: '通知サンプル',
-    notificationsSampleAlt: (n) => '通知サンプル $n',
+    notificationsSampleSeparator: ' ・',
+    notificationsSamples: [
+      (title: 'メニュー', body: '松のや、合い盛りタレかつ丼を掲載'),
+      (title: '公式', body: '松のや公式X、期間限定の提供開始を告知'),
+      (title: '店舗', body: '松のや34店の営業時間掲示が更新'),
+      (title: 'キャンペーン', body: '松弁ネットの新規ユーザー施策が開始'),
+      (title: 'メニュー', body: 'タルタルチキン南蛮定食の取扱店が増加'),
+    ],
     notificationsTopicsHeading: 'トピック別設定',
     notificationsMasterLabel: '通知を受け取る',
     notificationsMasterHintOs: '端末の通知設定と連動します',
@@ -873,7 +898,14 @@ class AppMessages {
     notificationsLocaleNotice:
         'Push notifications are delivered in Japanese only.',
     notificationsSampleLabel: 'Sample notifications',
-    notificationsSampleAlt: (n) => 'Sample notification $n',
+    notificationsSampleSeparator: ' · ',
+    notificationsSamples: [
+      (title: 'Menu', body: 'Matsunoya adds Combo Tare Katsudon'),
+      (title: 'Official', body: 'Matsunoya X announces a limited item'),
+      (title: 'Stores', body: 'Hours updated at 34 Matsunoya stores'),
+      (title: 'Campaigns', body: 'Matsuben Net starts a new-user offer'),
+      (title: 'Menu', body: 'Tartar Chicken Nanban at more stores'),
+    ],
     notificationsTopicsHeading: 'Per-topic settings',
     notificationsMasterLabel: 'Receive notifications',
     notificationsMasterHintOs: 'Follows your device notification settings',
@@ -1095,7 +1127,14 @@ class AppMessages {
     notificationsIntro2: '请打开你感兴趣的主题。',
     notificationsLocaleNotice: '推送通知的内容仅提供日语版本。',
     notificationsSampleLabel: '通知示例',
-    notificationsSampleAlt: (n) => '通知示例 $n',
+    notificationsSampleSeparator: ' · ',
+    notificationsSamples: [
+      (title: '菜单', body: '松乃家刊载双拼酱汁炸猪排盖饭'),
+      (title: '官方', body: '松乃家官方X预告期间限定商品开售'),
+      (title: '门店', body: '松乃家34家店的营业时间标示更新'),
+      (title: '活动', body: '松弁网推出新用户优惠活动'),
+      (title: '菜单', body: '塔塔酱南蛮炸鸡套餐的供应店增加'),
+    ],
     notificationsTopicsHeading: '按主题设置',
     notificationsMasterLabel: '接收通知',
     notificationsMasterHintOs: '与设备的通知设置联动',

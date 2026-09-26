@@ -3,7 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 /// 一定間隔で送る横並びのスライダー。web の `CmAutoSlider`
-/// （gyumesy-frontend-app の `AutoSlider` をそのまま写した。色を持たない）。
+/// （gyumesy-frontend-app の `AutoSlider` を写した。色を持たない）。
+///
+/// **gyumesy と違い、画像ではなくウィジェットを並べる。** 唯一の使い手の
+/// 通知の見本を、字を焼き込んだ絵からウィジェットに替えたため
+/// （`NotificationSample`。英語・中国語の画面に日本語の絵が出ていた）。
+/// 角の丸めと読み上げは並べるもの自身が持つ。
 ///
 /// **端で止まらず巡回する。** web はクローンを前後に足して実現しているが、
 /// ここは `PageView` の index を余りで畳んで同じ見え方にする。
@@ -13,8 +18,7 @@ import 'package:flutter/material.dart';
 /// 同じ見え方になる。
 class AutoSlider extends StatefulWidget {
   const AutoSlider({
-    required this.images,
-    required this.alt,
+    required this.items,
     required this.aspectRatio,
     this.visibleCount = 1,
     double? visibleCountSp,
@@ -23,13 +27,10 @@ class AutoSlider extends StatefulWidget {
     super.key,
   }) : visibleCountSp = visibleCountSp ?? visibleCount;
 
-  /// アセットのパス。
-  final List<String> images;
+  /// 並べるもの。
+  final List<Widget> items;
 
-  /// 読み上げ用の代替テキスト。**1 始まりの通し番号**を受け取る（web と同じ）。
-  final String Function(int index) alt;
-
-  /// 画像 1 枚の縦横比。**呼び出し側が実寸から渡す。**
+  /// 1 枚の縦横比。**呼び出し側が渡す。**
   /// web は `w-full` の `img` なので画像自身が高さを決めるが、こちらは
   /// 先に高さを決めないと `PageView` が縦に潰れる。
   final double aspectRatio;
@@ -72,7 +73,7 @@ class _AutoSliderState extends State<AutoSlider> {
 
   void _restartTimer() {
     _timer?.cancel();
-    if (widget.images.length <= 1) return;
+    if (widget.items.length <= 1) return;
     _timer = Timer.periodic(widget.interval, (_) async {
       final controller = _controller;
       if (controller == null || !controller.hasClients) return;
@@ -129,7 +130,7 @@ class _AutoSliderState extends State<AutoSlider> {
 
         return SizedBox(
           // **1 枚ぶんの幅から高さを決める。** 並ぶ枚数と隙間で見え方の幅は
-          // 変わるが、画像そのものの比率は変わらない
+          // 変わるが、1 枚そのものの比率は変わらない
           height: itemWidth / widget.aspectRatio,
           child: PageView.builder(
             controller: _controller,
@@ -138,19 +139,12 @@ class _AutoSliderState extends State<AutoSlider> {
               if (!reduceMotion && !_advancing) _restartTimer();
             },
             itemBuilder: (context, index) {
-              final i = index % widget.images.length;
+              final i = index % widget.items.length;
               return Padding(
                 // **右にだけ空ける。** 先頭を左端に揃えたいので
                 // 左右均等にしない（web の `gap` と同じ位置関係）
                 padding: EdgeInsets.only(right: widget.gap),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    widget.images[i],
-                    semanticLabel: widget.alt(i + 1),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                child: widget.items[i],
               );
             },
           ),

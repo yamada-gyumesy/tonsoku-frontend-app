@@ -44,10 +44,13 @@ String dateInJst(DateTime dateTime) {
 ///   dayjs の「35 時間までは 1 日」「45 日までは 1ヶ月」のような丸めは無い
 /// - 1 分未満は「たった今」。**未来の日時もここに入る**（配信の時計がずれた時に
 ///   「-3時間前」を出しても読む人が困るだけ、という web の判断）
-String formatRelativeDate(DateTime dateTime, AppLocale locale) {
-  final elapsed =
-      clock.now().toUtc().difference(dateTime.toUtc()).inMicroseconds /
-      Duration.microsecondsPerSecond;
+String formatRelativeDate(DateTime dateTime, AppLocale locale) =>
+    formatElapsed(clock.now().toUtc().difference(dateTime.toUtc()), locale);
+
+/// 経過時間を相対表記にする（[formatRelativeDate] の中身）。**日時を持たない
+/// 見本**（通知設定の「5分前」）はこちらを呼ぶ ―― 記事と同じ言い回しになる。
+String formatElapsed(Duration duration, AppLocale locale) {
+  final elapsed = duration.inMicroseconds / Duration.microsecondsPerSecond;
   if (elapsed < 60) return _just(locale);
   for (final (limit, perUnit, unit) in _divisions) {
     if (elapsed < limit) return _ago((elapsed / perUnit).floor(), unit, locale);

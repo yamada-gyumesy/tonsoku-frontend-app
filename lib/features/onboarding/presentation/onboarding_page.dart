@@ -12,6 +12,7 @@ import 'package:tonsoku/core/i18n/app_messages.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/features/home/data/article_providers.dart';
 import 'package:tonsoku/features/notifications/presentation/notification_settings_controller.dart';
+import 'package:tonsoku/features/notifications/presentation/widgets/notification_sample.dart';
 import 'package:tonsoku/features/onboarding/presentation/widgets/onboarding_stage.dart';
 import 'package:tonsoku/shared/models/category.dart';
 
@@ -65,17 +66,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final _controller = PageController();
   int _page = 0;
   bool _busy = false;
-
-  /// 通知のサンプル。**通知設定の画面と同じもの**（web がとん速のぶんを焼いた絵）。
-  ///
-  /// **1 枚だけ出す。** 横に流すと位置が定まらず、何が届くのかを読む前に
-  /// 次へ行ってしまう（gyumesy と同じ）。中身は記事の通知として一番よくある
-  /// 「メニュー」のもの。
-  ///
-  /// **ライト版で固定する。** 重ねる先は明るい端末の画面なので、ダーク版
-  /// （黒の半透明カード）を載せると灰色の染みになって字が読めない。
-  /// 通知設定の画面と違い、ここは地がテーマで変わらない
-  static const _sample = 'assets/notifications/notification-sample-1.webp';
 
   /// **戻る操作は、ルーターの戻るの受け口で先に取る**（[_onBack]）。
   ///
@@ -256,7 +246,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     onPageChanged: (i) => setState(() => _page = i),
                     children: [
                       _Intro(t: t, locale: locale),
-                      _Notify(t: t, sample: _sample),
+                      _Notify(t: t, locale: locale),
                     ],
                   ),
                 ),
@@ -385,13 +375,10 @@ class _Intro extends StatelessWidget {
 }
 
 class _Notify extends StatelessWidget {
-  const _Notify({required this.t, required this.sample});
+  const _Notify({required this.t, required this.locale});
 
   final AppMessages t;
-
-  /// 通知サンプル。**位置がずれないよう、端末の上に
-  /// 実寸で重ねる**（横スライドで流さない）。
-  final String sample;
+  final AppLocale locale;
 
   @override
   Widget build(BuildContext context) => OnboardingStage(
@@ -430,13 +417,22 @@ class _Notify extends StatelessWidget {
           top: 250,
           child: Center(child: DeviceMock(screen: _LockScreen(), width: 300)),
         ),
-        // **通知は端末より少しだけ広く、左右にはみ出す**（実物の通知と同じ出方。
-        // gyumesy と同じ）
+        // 通知の見本。**通知設定の画面と同じもの**（[NotificationSample]。
+        // 表示言語で描く）。
+        //
+        // - **1 枚だけ出す。** 横に流すと位置が定まらず、何が届くのかを読む前に
+        //   次へ行ってしまう（gyumesy と同じ）。中身は記事の通知として一番よくある
+        //   「メニュー」のもの（先頭）
+        // - **ライトで固定する。** 重ねる先は明るい端末の画面なので、ダーク
+        //   （黒の半透明のカード）を載せると灰色の染みになって字が読めない。
+        //   通知設定の画面と違い、ここは地がテーマで変わらない
+        // - **通知は端末より少しだけ広く、左右にはみ出す**（実物の通知と同じ出方。
+        //   gyumesy と同じ）
         Positioned(
           left: 34,
           right: 34,
           top: 336,
-          child: Image.asset(sample, fit: BoxFit.fitWidth),
+          child: NotificationSample.all(t, locale, Brightness.light).first,
         ),
       ],
     ),
