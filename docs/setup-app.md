@@ -32,8 +32,10 @@
 | アプリ内課金の有効化（販売開始） | iOS: 審査を通ると売られる / Android ❌ **Play Console**（lane に入れない） |
 | 有料 App 契約・お支払いプロファイル・ライセンステスター | ❌ **UI のみ** |
 
-**lane を叩くのは、認証情報を持っている人（ユーザー）だけ。** 認証情報の置き場は
-`docs/secrets.md`。
+**lane と API は Claude が叩く**（gyumesy と同じ。Bundle ID・アプリ枠・審査連絡先・
+TestFlight のグループ・アップロード鍵は、あちらでも Claude が作った）。認証情報は
+`~/.config/gyumesy/` にあり（`docs/secrets.md`）、**中身を表示・送信しない**。
+**ユーザーの手が要るのは、上の表で ❌（UI のみ）のものと、契約・支払いに同意するものだけ。**
 
 ---
 
@@ -82,7 +84,7 @@ cd ios && mise exec -- bundle exec fastlane ios create_app
 - `primary_locale` は `ja`
 
 **作ったら App Store ID（数字の `id`）を tonsoku-infra-terraform のセッションに伝える**
-（Firebase の iOS アプリ登録に入れる。`docs/release-state.md` の「待ち」）。
+（Firebase の iOS アプリ登録に入れる。`docs/release-state.md` の「残りの手順」の 4）。
 
 ### 審査連絡先（`appStoreReviewDetail`）
 
@@ -90,11 +92,12 @@ cd ios && mise exec -- bundle exec fastlane ios create_app
 掲載情報を入れるだけの時でも必ず `fetch_app_store_review_detail` を通るので、
 審査に出す前から必要になる（`deliver/upload_metadata.rb:752`）。
 
-作られるのは**版ごとではなくアプリの最初の版に 1 回**。ASC の
-「App Review Information」を UI で埋める。
+作られるのは**版ごとではなくアプリの最初の版に 1 回**。**API で作る**
+（`POST /v1/appStoreReviewDetails` に `appStoreVersion` を紐づける。gyumesy と同じ）。
 
 - `contactFirstName` / `contactLastName` / `contactPhone` / `contactEmail` は**個人の連絡先**。
-  **リポジトリに置かない**。ASC 側に置いたままにする（ファイルが無い項目は `deliver` が送らない）
+  **牛めしレーダー・gyumesy の審査連絡先（ASC にある）と同じ値を API で写す**。
+  **リポジトリに置かない**（ファイルが無い項目は `deliver` が送らない）
 - `demoAccountRequired` は `false`（ログインが無いアプリなので）
 - `notes` は `ios/fastlane/metadata/review_information/notes.txt` が持つ（`deliver` が送る）
 
@@ -106,7 +109,8 @@ gyumesy の申告を写さない。**広告の実装（Issue #5）が入って�
 
 - 位置情報: マップの「現在地」で使うが**端末の外へ送らない**（地図を寄せるだけ）
 - 通知: FCM のトークン（デバイス ID 相当）
-- 計測: GA4 はまだ入っていない（入れた時に足す）
+- 計測: GA4（Firebase Analytics。#29 で入れた）
+- 購入: 広告を外す課金（#43）の記録は端末とストアの間だけで、こちらへは送らない
 
 ### TestFlight の配信先（ベータグループ）
 
@@ -137,13 +141,13 @@ bash scripts/sync-secrets.sh status   # repo/tonsoku-frontend-app/ に鍵があ�
 bash scripts/sync-secrets.sh download # あれば取ってくる
 ```
 
-**本当に無い時だけ**作る（**ユーザーの手で**。パスワードを決めるのも保管するのも本人）:
+**本当に無い時だけ**作る（gyumesy と同じく Claude が作る。パスワードは乱数で作って
+`key.properties` にだけ書き、**画面に出さない**）:
 
 ```bash
 keytool -genkeypair -keystore android/keystore/upload.jks -storetype PKCS12 \
   -keyalg RSA -keysize 2048 -validity 10000 -alias upload \
-  -dname "CN=..., C=JP"
-# パスワードは対話で入れる（コマンド行に書くとシェルの履歴に残る）
+  -storepass "$PW" -keypass "$PW" -dname "CN=Tonsoku, C=JP"
 ```
 
 - **PKCS12 で作る。** JKS は旧形式で、ビルドのたびに移行を促す警告が出る
@@ -169,9 +173,18 @@ keytool -list -v -keystore android/keystore/upload.jks -alias upload | grep -E "
 - **web の `assetlinks.json` へ**（App Links。`docs/deep-links.md`）
 
 **Play App Signing を使うと、配布される APK は Google が持つ「アプリ署名鍵」で
-署名し直される。** そちらの指紋は Play Console でアプリを作った後に
-「アプリの完全性」に出る。**`assetlinks.json` には両方要る**（ストアから入れた端末は
+署名し直される。** そちらの指紋は**最初の AAB を上げた後**（アプリを作っただけでは
+出ない。上げた時に Play App Signing へ自動で登録される）に、Play Console の
+「アプリの完全性」か API（`generatedapks`）で取れる。**`assetlinks.json` には両方要る**（ストアから入れた端末は
 アプリ署名鍵、手元で入れた端末はアップロード鍵で署名されている）。
+
+### 済んだもの（とん速）
+
+| | 値 |
+|---|---|
+| アップロード鍵 | `android/keystore/upload.jks`（PKCS12・10000 日。2026-09-26 作成、Drive に退避済み） |
+| SHA-1 | `20:C7:2F:99:BA:A5:0F:46:EB:34:16:21:04:94:47:18:2B:1A:42:4B` |
+| SHA-256 | `28:0E:8A:4D:50:7B:8C:B6:0C:89:A1:5E:92:84:B9:87:74:E6:60:9D:65:57:B4:3D:A9:D3:68:2F:CB:98:2B:7A` |
 
 ### Play のアプリ
 
@@ -186,8 +199,10 @@ UI でしか入れられない申告（gyumesy と違うところだけ）:
 
 - **広告: 「含まれている」**（AdMob）。**`AD_ID` 権限を消さない**（gyumesy は広告を持たないので
   消しているが、AdMob は広告 ID を使う。消すと広告の配信が制限される）
-- データ セーフティ: 位置情報（端末内のみ）・デバイス ID（FCM）・広告 SDK が集めるもの
 - 対象年齢・コンテンツレーティング（IARC）
+
+**データ セーフティは API で入れる**（`dataSafety`。three と同じ。上の表）。中身は位置情報（端末内のみ）・
+デバイス ID（FCM）・広告 SDK が集めるもの・計測（GA4）
 
 ---
 
@@ -209,7 +224,7 @@ Play: `inappproducts` の管理対象アイテム）。dev / prod の分けは�
 - ASC の参照名は `Remove Ads`（ASC の中で見分けるだけで、ストアには出ない）
 - **ファミリー共有は切ってある**（一度入れると戻せない。入れるならユーザーが決めて Web UI で）
 
-### lane でやること（Claude は叩かない。認証情報を使うので、叩くのはユーザー）
+### lane でやること（Claude が叩く。dry-run の結果をユーザーに見せてから apply）
 
 ```bash
 cd ios     && mise exec -- bundle exec fastlane ios register_iap              # dry-run（既定）
@@ -283,7 +298,7 @@ cd android && mise exec -- bundle exec fastlane android register_iap apply:true 
 ## AdMob
 
 **アプリの登録と広告ユニットの作成はユーザーの手で**（AdMob のコンソール）。作った ID の
-差し替え先は `docs/release-state.md` の 8（アプリ ID 2 つ・ユニット ID 6 つ）と README の「広告」。
+差し替え先は README の「広告」（アプリ ID 2 つ・ユニット ID 6 つ。入れてある）。
 
 - iOS / Android それぞれにアプリを登録する（ストアに出る前は「未公開」で登録できる。
   公開後にストアと紐づける）

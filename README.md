@@ -284,7 +284,7 @@ dart run flutter_native_splash:create
 |---|---|
 | [docs/release.md](docs/release.md) | 毎リリースやること（lane・ブランチ・提出前の確認） |
 | [docs/setup-app.md](docs/setup-app.md) | アプリに 1 回だけのこと（Bundle ID・ASC の枠・署名鍵・Play のアプリ・AdMob） |
-| [docs/release-state.md](docs/release-state.md) | **いま何が済んでいて、何が誰待ちか**（ユーザーの手作業の一覧） |
+| [docs/release-state.md](docs/release-state.md) | **いま何が済んでいて、何が誰待ちか**（残りの手順と、Claude・ユーザーのどちらがやるか） |
 | [docs/secrets.md](docs/secrets.md) | 認証情報・署名鍵の置き場と同期（`scripts/sync-secrets.sh`） |
 | [docs/deep-links.md](docs/deep-links.md) | ユニバーサルリンク / App Links（名乗る面・web に置くファイルの中身） |
 
