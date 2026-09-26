@@ -23,10 +23,16 @@ abstract class Shop with _$Shop {
     required String code,
 
     /// 「松のや 西新宿店」のように**ブランド名から始まる**正式名。
-    required String name,
+    ///
+    /// **英語・中国語の面（`i18n/{en,zh}/app/shop.json`）では訳が無ければ null**
+    /// （日本語に落とさない。tonsoku-backend-batch#286）。日本語の面は必ず入る。
+    /// 画面に出す名前は `shopLabel`（`lib/features/map/domain/map_format.dart`）
+    String? name,
 
-    /// 店名のローマ字（`NISHISHINJUKU`）。**大文字だけで読みにくい**ので画面には
-    /// 出さない（牛めしレーダーは検索の照合に使っている）
+    /// 店名のローマ字（`NISHISHINJUKU`）。**大文字だけで読みにくい**ので、
+    /// [name] がある時は画面に出さない（牛めしレーダーは検索の照合に使っている）。
+    /// **[name] が null の時の代わり**にだけ使う（配信側のスキーマが
+    /// 「name_roman に落とせる」としている。`shopLabel`）
     @JsonKey(name: 'name_roman') String? nameRoman,
     required double lat,
     required double lon,
@@ -43,11 +49,12 @@ abstract class Shop with _$Shop {
     /// `lib/features/map/domain/shop_filter.dart` の [ShopBrand] に載っているものだけ
     @Default(<String>[]) List<String> brands,
 
-    /// 住所（Navitime）。
+    /// 住所（Navitime）。**英語・中国語の面では訳が無ければ null**（行を出さない）
     String? address,
 
     /// 営業時間。**Navitime の表記そのまま**（「月から土：5時から翌2時、…」）で、
-    /// 形が決まっていないので**組み替えずにそのまま出す**。
+    /// 形が決まっていないので**組み替えずにそのまま出す**。**英語・中国語の面では
+    /// 訳が無ければ null**（行を出さない）
     @JsonKey(name: 'business_hours') String? businessHours,
     String? phone,
 

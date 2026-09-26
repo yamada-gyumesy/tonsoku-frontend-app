@@ -385,16 +385,19 @@ class _Item extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                item.name,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colors.text,
-                  decoration: slug == null ? null : TextDecoration.underline,
-                  decorationColor: colors.text,
+              // **英語・中国語で訳の無い品は名前を描かない**（日本語を出さない。
+              // 絵と値段は出す。web の `CoCouponBest` と同じ）
+              if (item.name case final name?)
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: colors.text,
+                    decoration: slug == null ? null : TextDecoration.underline,
+                    decorationColor: colors.text,
+                  ),
                 ),
-              ),
               // 値段は**値引き反映後の実効価格**（配信が計算したもの）
               if (price != null)
                 Text(

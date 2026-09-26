@@ -16,9 +16,20 @@ import 'package:tonsoku/shared/models/shop.dart';
 /// 住所を足すと住所の検索として扱われ、店ではなく番地にピンが立つことがあるので
 /// 足さない。
 ///
+/// **英語・中国語では訳した店名で引く**（`Matsunoya Nishi-Shinjuku`。Google は
+/// 英語・中国語の名前でも店に当たる）。**訳が無い店**（`name` が null）は
+/// `Matsunoya` とローマ字名で引く（日本語の店名は英語・中国語の面に無い。
+/// 英語の屋号は web の CLAUDE.md「松のやと松屋を混ぜない」の `Matsunoya`）。
+/// ローマ字名も無い店だけ座標で開く（上の理由で最後の手段）。
+///
 /// Google マップのアプリが入っていれば、この URL はアプリで開く（iOS の
 /// ユニバーサルリンク・Android のアプリリンク）。
 Uri googleMapsUri(Shop shop) => Uri.https('www.google.com', '/maps/search/', {
   'api': '1',
-  'query': shop.name,
+  'query':
+      shop.name ??
+      switch (shop.nameRoman) {
+        final roman? => 'Matsunoya $roman',
+        null => '${shop.lat},${shop.lon}',
+      },
 });

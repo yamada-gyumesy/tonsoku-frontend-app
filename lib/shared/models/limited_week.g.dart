@@ -40,7 +40,7 @@ Map<String, dynamic> _$LimitedWeekToJson(_LimitedWeek instance) =>
 _LimitedWeekItem _$LimitedWeekItemFromJson(Map<String, dynamic> json) =>
     _LimitedWeekItem(
       cmsId: json['cms_id'] as String,
-      name: json['name'] as String,
+      name: json['name'] as String?,
       imageUrl: json['image_url'] as String? ?? '',
       articleSlug: json['article_slug'] as String?,
       shopCount: (json['shop_count'] as num?)?.toInt() ?? 0,

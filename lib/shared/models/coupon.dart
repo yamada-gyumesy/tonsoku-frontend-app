@@ -12,6 +12,10 @@ part 'coupon.g.dart';
 /// 配列は `@Default([])`、任意の値は null 許容にする。
 ///
 /// **`combos` は読まない**（web も画面に出していない）。
+///
+/// **施策の `basis`（実効率の根拠の品と値段）も読まない。** web も描いていない
+/// （英語・中国語の面では `basis.menu_name` が null になりうるが、読まないので
+/// 解析には関わらない）。
 @freezed
 abstract class Coupon with _$Coupon {
   const factory Coupon({
@@ -187,7 +191,10 @@ abstract class CouponPattern with _$CouponPattern {
 @freezed
 abstract class CouponPatternItem with _$CouponPatternItem {
   const factory CouponPatternItem({
-    required String name,
+    /// メニュー名。**英語・中国語の面では訳が無ければ null**（日本語に落とさない。
+    /// tonsoku-backend-batch#286）。その時は名前を描かず、記事へのリンクも付けない
+    /// （`coupon_best_card.dart` の `_Item`。web の `CoCouponBest` と同じ）
+    String? name,
     @JsonKey(name: 'price_yen') int? priceYen,
     @JsonKey(name: 'article_slug') String? articleSlug,
     @Default('') String thumbnail,

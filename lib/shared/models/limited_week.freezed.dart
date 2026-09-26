@@ -566,8 +566,10 @@ as List<LimitedWeekItem>,
 /// @nodoc
 mixin _$LimitedWeekItem {
 
-@JsonKey(name: 'cms_id') String get cmsId;/// 品名。ロケール別の面では公式訳（無ければ日本語）
- String get name;@JsonKey(name: 'image_url') String get imageUrl;/// 配信済みの記事だけ。無ければ null
+@JsonKey(name: 'cms_id') String get cmsId;/// 品名。英語・中国語の面では公式訳か訳語辞書の訳で、**どちらも無ければ null**
+/// （日本語に落とさない。tonsoku-backend-batch#286）。日本語の面は必ず入る。
+/// null の時はカードの品名を空のまま描く（`limitedCards`。web と同じ）
+ String? get name;@JsonKey(name: 'image_url') String get imageUrl;/// 配信済みの記事だけ。無ければ null
 @JsonKey(name: 'article_slug') String? get articleSlug;/// 取扱店を確定した時点の数。**常に `shops_live + shops_ended`**
 @JsonKey(name: 'shop_count') int get shopCount;/// いま売っている店の数。**全店で終売した品（`ended_at` あり）は 0**
 @JsonKey(name: 'shops_live') int get shopsLive;/// 売り終わった店の数
@@ -605,7 +607,7 @@ abstract mixin class $LimitedWeekItemCopyWith<$Res>  {
   factory $LimitedWeekItemCopyWith(LimitedWeekItem value, $Res Function(LimitedWeekItem) _then) = _$LimitedWeekItemCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'cms_id') String cmsId, String name,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'shop_count') int shopCount,@JsonKey(name: 'shops_live') int shopsLive,@JsonKey(name: 'shops_ended') int shopsEnded,@JsonKey(name: 'ended_at') String? endedAt
+@JsonKey(name: 'cms_id') String cmsId, String? name,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'shop_count') int shopCount,@JsonKey(name: 'shops_live') int shopsLive,@JsonKey(name: 'shops_ended') int shopsEnded,@JsonKey(name: 'ended_at') String? endedAt
 });
 
 
@@ -622,11 +624,11 @@ class _$LimitedWeekItemCopyWithImpl<$Res>
 
 /// Create a copy of LimitedWeekItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? cmsId = null,Object? name = null,Object? imageUrl = null,Object? articleSlug = freezed,Object? shopCount = null,Object? shopsLive = null,Object? shopsEnded = null,Object? endedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? cmsId = null,Object? name = freezed,Object? imageUrl = null,Object? articleSlug = freezed,Object? shopCount = null,Object? shopsLive = null,Object? shopsEnded = null,Object? endedAt = freezed,}) {
   return _then(_self.copyWith(
 cmsId: null == cmsId ? _self.cmsId : cmsId // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug // ignore: cast_nullable_to_non_nullable
 as String?,shopCount: null == shopCount ? _self.shopCount : shopCount // ignore: cast_nullable_to_non_nullable
 as int,shopsLive: null == shopsLive ? _self.shopsLive : shopsLive // ignore: cast_nullable_to_non_nullable
@@ -717,7 +719,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'cms_id')  String cmsId,  String name, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'shop_count')  int shopCount, @JsonKey(name: 'shops_live')  int shopsLive, @JsonKey(name: 'shops_ended')  int shopsEnded, @JsonKey(name: 'ended_at')  String? endedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'cms_id')  String cmsId,  String? name, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'shop_count')  int shopCount, @JsonKey(name: 'shops_live')  int shopsLive, @JsonKey(name: 'shops_ended')  int shopsEnded, @JsonKey(name: 'ended_at')  String? endedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LimitedWeekItem() when $default != null:
 return $default(_that.cmsId,_that.name,_that.imageUrl,_that.articleSlug,_that.shopCount,_that.shopsLive,_that.shopsEnded,_that.endedAt);case _:
@@ -738,7 +740,7 @@ return $default(_that.cmsId,_that.name,_that.imageUrl,_that.articleSlug,_that.sh
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'cms_id')  String cmsId,  String name, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'shop_count')  int shopCount, @JsonKey(name: 'shops_live')  int shopsLive, @JsonKey(name: 'shops_ended')  int shopsEnded, @JsonKey(name: 'ended_at')  String? endedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'cms_id')  String cmsId,  String? name, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'shop_count')  int shopCount, @JsonKey(name: 'shops_live')  int shopsLive, @JsonKey(name: 'shops_ended')  int shopsEnded, @JsonKey(name: 'ended_at')  String? endedAt)  $default,) {final _that = this;
 switch (_that) {
 case _LimitedWeekItem():
 return $default(_that.cmsId,_that.name,_that.imageUrl,_that.articleSlug,_that.shopCount,_that.shopsLive,_that.shopsEnded,_that.endedAt);case _:
@@ -758,7 +760,7 @@ return $default(_that.cmsId,_that.name,_that.imageUrl,_that.articleSlug,_that.sh
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'cms_id')  String cmsId,  String name, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'shop_count')  int shopCount, @JsonKey(name: 'shops_live')  int shopsLive, @JsonKey(name: 'shops_ended')  int shopsEnded, @JsonKey(name: 'ended_at')  String? endedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'cms_id')  String cmsId,  String? name, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'shop_count')  int shopCount, @JsonKey(name: 'shops_live')  int shopsLive, @JsonKey(name: 'shops_ended')  int shopsEnded, @JsonKey(name: 'ended_at')  String? endedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _LimitedWeekItem() when $default != null:
 return $default(_that.cmsId,_that.name,_that.imageUrl,_that.articleSlug,_that.shopCount,_that.shopsLive,_that.shopsEnded,_that.endedAt);case _:
@@ -773,12 +775,14 @@ return $default(_that.cmsId,_that.name,_that.imageUrl,_that.articleSlug,_that.sh
 @JsonSerializable()
 
 class _LimitedWeekItem extends LimitedWeekItem {
-  const _LimitedWeekItem({@JsonKey(name: 'cms_id') required this.cmsId, required this.name, @JsonKey(name: 'image_url') this.imageUrl = '', @JsonKey(name: 'article_slug') this.articleSlug, @JsonKey(name: 'shop_count') this.shopCount = 0, @JsonKey(name: 'shops_live') this.shopsLive = 0, @JsonKey(name: 'shops_ended') this.shopsEnded = 0, @JsonKey(name: 'ended_at') this.endedAt}): super._();
+  const _LimitedWeekItem({@JsonKey(name: 'cms_id') required this.cmsId, this.name, @JsonKey(name: 'image_url') this.imageUrl = '', @JsonKey(name: 'article_slug') this.articleSlug, @JsonKey(name: 'shop_count') this.shopCount = 0, @JsonKey(name: 'shops_live') this.shopsLive = 0, @JsonKey(name: 'shops_ended') this.shopsEnded = 0, @JsonKey(name: 'ended_at') this.endedAt}): super._();
   factory _LimitedWeekItem.fromJson(Map<String, dynamic> json) => _$LimitedWeekItemFromJson(json);
 
 @override@JsonKey(name: 'cms_id') final  String cmsId;
-/// 品名。ロケール別の面では公式訳（無ければ日本語）
-@override final  String name;
+/// 品名。英語・中国語の面では公式訳か訳語辞書の訳で、**どちらも無ければ null**
+/// （日本語に落とさない。tonsoku-backend-batch#286）。日本語の面は必ず入る。
+/// null の時はカードの品名を空のまま描く（`limitedCards`。web と同じ）
+@override final  String? name;
 @override@JsonKey(name: 'image_url') final  String imageUrl;
 /// 配信済みの記事だけ。無ければ null
 @override@JsonKey(name: 'article_slug') final  String? articleSlug;
@@ -824,7 +828,7 @@ abstract mixin class _$LimitedWeekItemCopyWith<$Res> implements $LimitedWeekItem
   factory _$LimitedWeekItemCopyWith(_LimitedWeekItem value, $Res Function(_LimitedWeekItem) _then) = __$LimitedWeekItemCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'cms_id') String cmsId, String name,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'shop_count') int shopCount,@JsonKey(name: 'shops_live') int shopsLive,@JsonKey(name: 'shops_ended') int shopsEnded,@JsonKey(name: 'ended_at') String? endedAt
+@JsonKey(name: 'cms_id') String cmsId, String? name,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'shop_count') int shopCount,@JsonKey(name: 'shops_live') int shopsLive,@JsonKey(name: 'shops_ended') int shopsEnded,@JsonKey(name: 'ended_at') String? endedAt
 });
 
 
@@ -841,11 +845,11 @@ class __$LimitedWeekItemCopyWithImpl<$Res>
 
 /// Create a copy of LimitedWeekItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? cmsId = null,Object? name = null,Object? imageUrl = null,Object? articleSlug = freezed,Object? shopCount = null,Object? shopsLive = null,Object? shopsEnded = null,Object? endedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? cmsId = null,Object? name = freezed,Object? imageUrl = null,Object? articleSlug = freezed,Object? shopCount = null,Object? shopsLive = null,Object? shopsEnded = null,Object? endedAt = freezed,}) {
   return _then(_LimitedWeekItem(
 cmsId: null == cmsId ? _self.cmsId : cmsId // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug // ignore: cast_nullable_to_non_nullable
 as String?,shopCount: null == shopCount ? _self.shopCount : shopCount // ignore: cast_nullable_to_non_nullable
 as int,shopsLive: null == shopsLive ? _self.shopsLive : shopsLive // ignore: cast_nullable_to_non_nullable

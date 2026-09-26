@@ -407,6 +407,7 @@ class _MapPageState extends ConsumerState<MapPage> {
       if (await container.read(mapRepositoryProvider).refreshIfChanged()) {
         container
           ..invalidate(shopsProvider)
+          ..invalidate(singleMenuIdsProvider)
           ..invalidate(limitedMenusProvider);
       }
     } on Object {

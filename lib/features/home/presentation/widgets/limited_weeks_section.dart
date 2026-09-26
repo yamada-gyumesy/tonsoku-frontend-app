@@ -124,7 +124,9 @@ class LimitedItemCard extends LimitedCard {
     required this.ended,
   });
 
-  final String name;
+  /// **英語・中国語で訳の無い品は null**（日本語に落とさない）。行は空のまま
+  /// 2 行ぶんの高さを取る（web の `CoLimitedWeeks` と同じ）。
+  final String? name;
   final String image;
   final String? slug;
   final String shops;
@@ -297,7 +299,8 @@ class _ItemCard extends StatelessWidget {
                       SizedBox(
                         height: 13 * 1.375 * 2,
                         child: Text(
-                          card.name,
+                          // null（訳が無い）は空のまま高さだけ取る
+                          card.name ?? '',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

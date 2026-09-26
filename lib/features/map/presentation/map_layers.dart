@@ -8,7 +8,9 @@ import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 import 'package:tonsoku/features/map/domain/limited_status.dart';
+import 'package:tonsoku/features/map/domain/map_format.dart';
 import 'package:tonsoku/features/map/domain/shop_state.dart';
+import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
 import 'package:tonsoku/shared/models/shop.dart';
 
@@ -74,7 +76,8 @@ class ShopsLayer extends StatelessWidget {
             height: ShopMarker.hitSize,
             child: Semantics(
               button: true,
-              label: e.shop.name,
+              // 名前が無い店（`shopLabel`）は店舗番号で読み上げる
+              label: shopLabel(e.shop) ?? displayCode(e.shop),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onTap(e),

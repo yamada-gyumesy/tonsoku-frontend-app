@@ -118,9 +118,11 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 | `ranking.json` | ランキング |
 | `recommended-menu.json` | おすすめメニュー |
 | `limited/weeks.json` | 店舗限定の週ごとの状態 |
-| `app/shop.json` / `app/limited.json` / `app/version.json` | マップ向け（店舗と店舗限定の取扱店） |
+| `app/shop.json` / `app/limited.json` / `app/version.json` | マップ向け（店舗と店舗限定の取扱店）。**英語・中国語も `i18n/{locale}/app/` に出る**（面が無い間の扱いは `MapRepository`） |
 
 **形は gyumesy とほぼ同じ**だが、記事本体の置き場（gyumesy は `articles/{slug}/index.md`）と、`null` を出す鍵がある点が違う（`lib/shared/models/article_meta.dart`）。
+
+**英語・中国語の面は、訳が無い値を日本語に落とさず `null` で出す**（店名・住所・営業時間・品名。tonsoku-backend-batch#286）。英語・中国語の画面に日本語を出さないのはユーザーの決定で、アプリも日本語に落とさない（描き方は各モデルの doc）。
 
 **配信データの形は CDN の実物を見る**（`curl -s https://cdn.ton-soku.com/articles/feed.json | head`）。`tonsoku-backend-batch/output/` は R2 配信が始まる前の古い形なので見ないこと（web の CLAUDE.md と同じ注意）。
 

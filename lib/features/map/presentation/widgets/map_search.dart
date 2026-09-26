@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
+import 'package:tonsoku/features/map/domain/map_format.dart';
 import 'package:tonsoku/features/map/domain/shop_state.dart';
 import 'package:tonsoku/shared/models/shop.dart';
 
@@ -224,7 +225,8 @@ class _MapSearchState extends ConsumerState<MapSearch> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                shop.name,
+                                // 名前が無い店は番号だけ（`shopLabel`）
+                                shopLabel(shop) ?? '',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(fontSize: 14, color: ink),
@@ -258,7 +260,9 @@ String displayCode(Shop shop) {
 /// [query] に合う店（牛めしレーダーの `searchResultsProvider` と同じ規則）。
 ///
 /// 1. 数（0〜9999。全角の数字も読む）として読めれば、店舗番号（下 4 桁）が一致する店
-/// 2. 店名の部分一致、またはローマ字名の部分一致（大文字・小文字を区別しない）
+/// 2. 店名の部分一致、またはローマ字名の部分一致（大文字・小文字を区別しない。
+///    **店名も区別しない** ―― 英語の面の店名は `Matsunoya Nishi-Shinjuku` で、
+///    小文字で打つと当たらなかった。店名が null の店（訳がまだ無い）はローマ字名だけで引く）
 ///
 /// 同じ店は 1 回だけ。[MapSearch.maxResults] 件まで。
 List<Shop> searchShops(String query, List<Shop> shops) {
@@ -285,7 +289,7 @@ List<Shop> searchShops(String query, List<Shop> shops) {
   final lower = q.toLowerCase();
   for (final shop in shops) {
     if (added.contains(shop.code)) continue;
-    if (shop.name.contains(q) ||
+    if ((shop.name?.toLowerCase().contains(lower) ?? false) ||
         (shop.nameRoman?.toLowerCase().contains(lower) ?? false)) {
       added.add(shop.code);
       results.add(shop);
