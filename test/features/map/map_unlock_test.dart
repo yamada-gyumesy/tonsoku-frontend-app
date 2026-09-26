@@ -27,6 +27,7 @@ import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_filter_band.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
+import 'package:tonsoku/features/shell/presentation/menu_screen_request.dart';
 
 import '../../core/ads/fake_ad_gateway.dart';
 import '../../core/purchase/fake_purchase_gateway.dart';
@@ -261,7 +262,16 @@ void main() {
     /// 店舗限定に関わる表示（印・品のチップ）が出ているか。
     void expectLimitedShown(bool shown) {
       expect(find.byType(MenuChip), shown ? findsWidgets : findsNothing);
-      expect(find.byType(LimitedMark), shown ? findsWidgets : findsNothing);
+      // **案内の赤星は数えない**（動画の案内の記号も店舗限定の印と同じ絵）
+      expect(
+        find
+            .byWidgetPredicate((w) => w is LimitedMark)
+            .evaluate()
+            .where(
+              (e) => e.findAncestorWidgetOfExactType<MapUnlockNotice>() == null,
+            ),
+        shown ? isNotEmpty : isEmpty,
+      );
       // 普通の店の地図としては常に使える
       expect(find.text('681店舗'), findsOneWidget);
       expect(find.text('© OpenStreetMap'), findsOneWidget);
@@ -378,9 +388,9 @@ void main() {
     });
 
     group('広告を外す課金（Issue #42）', () {
-      const removeAds = '広告なしでいつでも表示';
+      const removeAds = '広告を非表示';
 
-      testWidgets('動画の案内の下に、表示価格つきで添える', (tester) async {
+      testWidgets('動画の案内の下に小さく置き、ここでは価格を出さない', (tester) async {
         final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
         await pumpMap(tester, gateway);
         expect(find.text(_notice), findsOneWidget);
@@ -391,42 +401,53 @@ void main() {
         );
         expect(
           find.descendant(of: notice, matching: find.text('¥550')),
-          findsOneWidget,
+          findsNothing,
+        );
+        // 動画の案内の下に置く
+        expect(
+          tester.getTopLeft(find.text(removeAds)).dy,
+          greaterThan(tester.getBottomLeft(find.text(_notice)).dy),
+        );
+      });
+
+      testWidgets('押すとメニューの購入の画面を開く要求を出し、動画も購入も始めない', (tester) async {
+        final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
+        final purchase = FakePurchaseGateway();
+        await pumpMap(tester, gateway, purchase: purchase);
+        final before = removeAdsSheetRequest.value;
+        final videos = gateway.calls
+            .where((c) => c.startsWith('rewarded:'))
+            .length;
+
+        await tester.tap(find.text(removeAds));
+        await tester.pump();
+
+        expect(removeAdsSheetRequest.value, before + 1);
+        expect(purchase.calls.where((c) => c == 'buy'), isEmpty);
+        expect(
+          gateway.calls.where((c) => c.startsWith('rewarded:')),
+          hasLength(videos),
         );
       });
 
       testWidgets('買ったらその場で店舗限定を出し、案内を消す', (tester) async {
         final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
         final purchase = FakePurchaseGateway();
-        await pumpMap(tester, gateway, purchase: purchase);
+        final container = await pumpMap(tester, gateway, purchase: purchase);
         expectLimitedShown(false);
 
-        await tester.tap(find.text(removeAds));
+        // 買うのはメニューの購入の画面（ここでは状態だけを動かす）
+        await container.read(removeAdsProvider.notifier).buy();
         await tester.pump();
         await tester.pump();
 
         expectLimitedShown(true);
         expect(find.text(_notice), findsNothing);
-        expect(purchase.calls.where((c) => c == 'buy'), hasLength(1));
         // 動画は開いた時の 1 回だけ（買った後に出し直さない）
         expect(
           gateway.calls.where((c) => c.startsWith('rewarded:')),
           hasLength(1),
         );
-      });
-
-      testWidgets('買えなかったら閉じたまま、下に知らせる', (tester) async {
-        final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
-        await pumpMap(
-          tester,
-          gateway,
-          purchase: FakePurchaseGateway(buyStart: BuyStart.unavailable),
-        );
-        await tester.tap(find.text(removeAds));
-        await tester.pump();
-        await tester.pump();
-        expectLimitedShown(false);
-        expect(find.text('ストアに接続できませんでした'), findsOneWidget);
       });
 
       testWidgets('買ってある端末は開いてすぐ出し、動画は出さない', (tester) async {

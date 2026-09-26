@@ -132,10 +132,11 @@ class MapFilters extends ConsumerWidget {
 /// 店舗限定の表示を閉じている時に、品のチップの場所に置く案内（ユーザーの指定）。
 /// **押すとリワード動画を出す**（見終えると 6 時間開放。`MapUnlockController`）。
 ///
-/// **その下に、動画の代わりに広告を外す課金を添える**（[onRemoveAds]。買えば
-/// 店舗限定を常に出す。Issue #42。ユーザーの決定）。動画と同じ板の 2 行目に
-/// 置く ―― 何が開くのかが、同じ場所で分かる。**導線はこことメニューの 2 か所
-/// だけ**（下の広告バナーの近くには置かない。ユーザーの判断）。
+/// **その下の右に、小さな「広告を非表示」を添える**（[onRemoveAds]。Issue #42）。
+/// 押すとメニューの購入の画面を開く ―― **ここでは買わせない**（ユーザーの指定。
+/// 購入の行を案内の 2 行目に並べたら目立ちすぎ、案内の中の右端に置いたら動画の
+/// 行と紛れた）。導線はこことメニューの 2 か所だけ（下の広告バナーの近くには
+/// 置かない。ユーザーの判断）。
 ///
 /// 見た目は品のチップ（[MenuChip]）と同じ角丸の板。文言は状態だけ（開放の長さは
 /// 書かない。ユーザーの指定）。読み込み中は記号の代わりに回る印を出し、押せなくする。
@@ -144,70 +145,84 @@ class MapUnlockNotice extends ConsumerWidget {
     required this.busy,
     required this.onTap,
     this.onRemoveAds,
-    this.removeAdsBusy = false,
-    this.price,
     super.key,
   });
 
-  /// 1 行の目安の高さ（地図の画面外の吹き出しの余白の見積もりに使う）。
+  /// 案内の板の目安の高さ。
   static const rowHeight = 42.0;
+
+  /// 下に添える「広告を非表示」を含めた目安の高さ（地図の画面外の吹き出しの
+  /// 余白の見積もりに使う）。板 42・間 6・ボタン 26。
+  static const height = rowHeight + 6 + 26;
 
   final bool busy;
   final VoidCallback onTap;
 
-  /// 広告を外す課金を買う。**null なら 2 行目を出さない。**
+  /// 購入の画面を開く。**null なら下のボタンを出さない。**
   final VoidCallback? onRemoveAds;
-
-  /// 購入の途中（ストアのシートを出している）。
-  final bool removeAdsBusy;
-
-  /// ストアの表示価格。取れるまでは null（出さない）。
-  final String? price;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final t = ref.watch(messagesProvider);
     final onRemoveAds = this.onRemoveAds;
-    final price = this.price;
-    return Material(
-      color: MapPalette.of(colors).panel,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: MapPalette.of(colors).panelBorder),
-      ),
-      elevation: 2,
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _NoticeRow(
-            icon: Icons.movie_outlined,
+    final panel = MapPalette.of(colors);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Material(
+          color: panel.panel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: panel.panelBorder),
+          ),
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
+          child: _NoticeRow(
+            // **店舗限定の赤星**（ユーザーの指定。地図の印と同じ絵で、何が開くのかが
+            // 分かる）
+            leading: const LimitedMark(
+              availability: LimitedAvailability.selling,
+              size: 20,
+            ),
             label: t.mapUnlockLimited,
             busy: busy,
             onTap: onTap,
           ),
-          if (onRemoveAds != null) ...[
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: MapPalette.of(colors).panelBorder,
+        ),
+        if (onRemoveAds != null) ...[
+          const SizedBox(height: 6),
+          // **板と同じ地で、小さく**（地図の上に浮かせるので、地の色が無いと
+          // 地図の線と重なって読めない）
+          Material(
+            color: panel.panel,
+            shape: StadiumBorder(side: BorderSide(color: panel.panelBorder)),
+            elevation: 1,
+            clipBehavior: Clip.antiAlias,
+            child: Semantics(
+              button: true,
+              child: InkWell(
+                onTap: onRemoveAds,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.block, size: 14, color: colors.textSub),
+                      const SizedBox(width: 4),
+                      Text(
+                        t.mapRemoveAds,
+                        style: TextStyle(fontSize: 11, color: colors.textSub),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            _NoticeRow(
-              icon: Icons.block,
-              label: t.mapRemoveAds,
-              busy: removeAdsBusy,
-              onTap: onRemoveAds,
-              trailing: price == null
-                  ? null
-                  : Text(
-                      price,
-                      style: TextStyle(fontSize: 13, color: colors.textSub),
-                    ),
-            ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -215,18 +230,16 @@ class MapUnlockNotice extends ConsumerWidget {
 /// [MapUnlockNotice] の 1 行。
 class _NoticeRow extends StatelessWidget {
   const _NoticeRow({
-    required this.icon,
+    required this.leading,
     required this.label,
     required this.busy,
     required this.onTap,
-    this.trailing,
   });
 
-  final IconData icon;
+  final Widget leading;
   final String label;
   final bool busy;
   final VoidCallback onTap;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +259,7 @@ class _NoticeRow extends StatelessWidget {
                         padding: EdgeInsets.all(2),
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Icon(icon, size: 20, color: colors.textSub),
+                    : leading,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -259,7 +272,6 @@ class _NoticeRow extends StatelessWidget {
                   ),
                 ),
               ),
-              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
             ],
           ),
         ),

@@ -44,3 +44,12 @@ void _request(MenuScreenTarget? target) =>
       seq: (menuScreenRequest.value?.seq ?? 0) + 1,
       target: target,
     );
+
+/// メニューのシートを「広告を外す課金」の画面で開いてもらう（Issue #42）。
+///
+/// **マップの動画の案内の「広告を非表示」から呼ぶ**（ユーザーの指定。案内の中では
+/// 買わせず、説明のある購入の画面へ連れてくる）。受けるのは `AppShell`（シートの
+/// 開閉を持っているのはあちら）。**回数で見る**（[menuScreenRequest] と同じ理由）。
+final removeAdsSheetRequest = ValueNotifier<int>(0);
+
+void requestOpenRemoveAds() => removeAdsSheetRequest.value++;

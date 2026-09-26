@@ -40,6 +40,9 @@ class _AppShellState extends ConsumerState<AppShell> {
   final _sheetKey = GlobalKey<MenuSheetState>();
   bool _sheetOpen = false;
 
+  /// 次にシートを開く時に見せるビュー（[MenuSheet.initialView]）。
+  int _sheetView = MenuSheet.rootView;
+
   StatefulNavigationShell get navigationShell => widget.navigationShell;
 
   @override
@@ -61,6 +64,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     // 別の面へ移った時は畳む。行き先ではなく要求で受けている理由は
     // [menuScreenRequest]
     menuScreenRequest.addListener(_consumeScreenRequest);
+    removeAdsSheetRequest.addListener(_openRemoveAds);
     // **購読より前に積まれた要求も拾う。** 終了状態から通知で起動すると、
     // 画面が組み上がるより先に要求だけが置かれていることがある
     // （`pushedLink` を `TonsokuApp` が同じ形で拾っているのと同じ理由）
@@ -70,6 +74,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void dispose() {
     menuScreenRequest.removeListener(_consumeScreenRequest);
+    removeAdsSheetRequest.removeListener(_openRemoveAds);
     super.dispose();
   }
 
@@ -120,6 +125,20 @@ class _AppShellState extends ConsumerState<AppShell> {
     // **見たら消す。** 残すと次に普通に起動した時にも開く
     store.writeReturning(value: false);
     _openFromMenu(const MenuScreenTarget(MenuScreen.notifications).location);
+  }
+
+  /// シートを「広告を外す課金」の画面で開く（[removeAdsSheetRequest]）。
+  /// 開いている時は、その場で送る。
+  void _openRemoveAds() {
+    if (!mounted) return;
+    if (_sheetOpen) {
+      _sheetKey.currentState?.showView(MenuSheet.removeAdsView);
+      return;
+    }
+    setState(() {
+      _sheetView = MenuSheet.removeAdsView;
+      _sheetOpen = true;
+    });
   }
 
   void _toggleSheet() {
@@ -215,7 +234,11 @@ class _AppShellState extends ConsumerState<AppShell> {
           if (_sheetOpen)
             MenuSheet(
               key: _sheetKey,
-              onClose: () => setState(() => _sheetOpen = false),
+              initialView: _sheetView,
+              onClose: () => setState(() {
+                _sheetOpen = false;
+                _sheetView = MenuSheet.rootView;
+              }),
               onOpenCalendar: () => _openFromMenu(AppRoutes.calendar),
               onOpenRanking: () => _openFromMenu(AppRoutes.ranking),
               onOpenNotifications: () => _openFromMenu(AppRoutes.notifications),
@@ -230,6 +253,8 @@ class _AppShellState extends ConsumerState<AppShell> {
       // `bottomNavigationBar` の中に入れるので、本文は広告の上で終わり、
       // 覆われない
       bottomNavigationBar: WithAnchoredAd(
+        // **メニューを開いている間は広告を隠す**（ユーザーの指定。押し間違える）
+        hidden: _sheetOpen,
         nav: Semantics(
           container: true,
           label: t.navLabel,

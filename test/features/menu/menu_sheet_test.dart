@@ -554,41 +554,112 @@ void main() {
     Finder row(String label) =>
         find.ancestor(of: find.text(label), matching: find.byType(MenuListRow));
 
-    testWidgets('2 行を常に置き、価格はストアの表示価格を出す', (tester) async {
+    /// 購入の画面のボタン（メニューの行の形にしていない）。
+    Finder buyButton() => find.byType(FilledButton);
+    Finder restoreButton() => find.byType(OutlinedButton);
+    String buyLabel(WidgetTester tester) => tester
+        .widget<Text>(
+          find.descendant(of: buyButton(), matching: find.byType(Text)),
+        )
+        .data!;
+
+    /// メニューの一番上の入口から、購入の画面へ送る。
+    Future<void> openRemoveAds(
+      WidgetTester tester, [
+      String label = '広告を非表示にする',
+    ]) async {
+      await tester.tap(row(label).first);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('入口はメニューの一番上に置き、押すと購入の画面へ送る', (tester) async {
       await pumpSheet(tester, started: true);
 
-      expect(row('広告を非表示にする'), findsOneWidget);
-      expect(row('購入を復元'), findsOneWidget);
+      // 一番上（見出しのすぐ下）の行
+      final rows = tester
+          .widgetList<MenuListRow>(find.byType(MenuListRow))
+          .toList();
+      expect(rows.first.label, '広告を非表示にする');
+      // 入口では買わせない（入口の行に価格を出さない）
       expect(
         find.descendant(of: row('広告を非表示にする'), matching: find.text('¥550')),
+        findsNothing,
+      );
+
+      await openRemoveAds(tester);
+      expect(find.textContaining('永続的に適用'), findsOneWidget);
+      expect(buyLabel(tester), '購入する（¥550）');
+      expect(
+        find.textContaining('iPhone と Android の間では引き継げません'),
         findsOneWidget,
       );
+      expect(
+        find.descendant(of: restoreButton(), matching: find.text('購入を復元')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('マップから購入の画面で直に開ける', (tester) async {
+      tester.view.physicalSize = const Size(1206, 2622);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues({'app_locale': 'ja'});
+      final prefsStore = await SharedPreferences.getInstance();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefsStore),
+            purchaseGatewayProvider.overrideWithValue(FakePurchaseGateway()),
+            rankingWindowsProvider.overrideWithValue(
+              const AsyncValue.loading(),
+            ),
+            calendarEventsProvider.overrideWithValue(
+              const AsyncValue.loading(),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(AppLocale.ja),
+            home: Scaffold(
+              body: MenuSheet(
+                initialView: MenuSheet.removeAdsView,
+                onOpenCalendar: () {},
+                onOpenRanking: () {},
+                onOpenNotifications: () {},
+                onClose: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('永続的に適用'), findsOneWidget);
+      expect(buyButton(), findsOneWidget);
     });
 
     testWidgets('買ったら知らせ、「購入済み」にして押せなくする', (tester) async {
       final store = FakePurchaseGateway();
       await pumpSheet(tester, store: store, started: true);
+      await openRemoveAds(tester);
 
-      await tester.tap(find.text('広告を非表示にする'));
+      await tester.tap(buyButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('広告を非表示にしました'), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 4));
 
+      expect(buyLabel(tester), '購入済み');
+      expect(tester.widget<FilledButton>(buyButton()).onPressed, isNull);
+      // 復元は買ってあっても置く
+      expect(restoreButton(), findsOneWidget);
+      expect(store.calls.where((c) => c == 'buy'), hasLength(1));
+    });
+
+    testWidgets('買ってある端末は、入口にも「購入済み」を出す', (tester) async {
+      await pumpSheet(tester, prefs: {RemoveAdsController.prefsKey: true});
       expect(
         find.descendant(of: row('広告を非表示にする'), matching: find.text('購入済み')),
         findsOneWidget,
       );
-      expect(find.text('¥550'), findsNothing);
-      expect(tester.widget<MenuListRow>(row('広告を非表示にする')).onTap, isNull);
-      // 復元は買ってあっても置く
-      expect(row('購入を復元'), findsOneWidget);
-      expect(store.calls.where((c) => c == 'buy'), hasLength(1));
-    });
-
-    testWidgets('買ってある端末は最初から「購入済み」', (tester) async {
-      await pumpSheet(tester, prefs: {RemoveAdsController.prefsKey: true});
-      expect(find.text('購入済み'), findsOneWidget);
     });
 
     testWidgets('シートを閉じた時は何も知らせない', (tester) async {
@@ -597,7 +668,8 @@ void main() {
         store: FakePurchaseGateway(buyResult: PurchaseUpdate.canceled),
         started: true,
       );
-      await tester.tap(find.text('広告を非表示にする'));
+      await openRemoveAds(tester);
+      await tester.tap(buyButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('購入できませんでした'), findsNothing);
@@ -609,14 +681,15 @@ void main() {
     testWidgets('買えなかった・ストアに繋がらない時は知らせる', (tester) async {
       final store = FakePurchaseGateway(buyResult: PurchaseUpdate.failed);
       await pumpSheet(tester, store: store, started: true);
-      await tester.tap(find.text('広告を非表示にする'));
+      await openRemoveAds(tester);
+      await tester.tap(buyButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('購入できませんでした'), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 4));
 
       store.buyStart = BuyStart.unavailable;
-      await tester.tap(find.text('広告を非表示にする'));
+      await tester.tap(buyButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('ストアに接続できませんでした'), findsOneWidget);
@@ -629,43 +702,48 @@ void main() {
         store: FakePurchaseGateway(buyResult: PurchaseUpdate.pending),
         started: true,
       );
-      await tester.tap(find.text('広告を非表示にする'));
+      await openRemoveAds(tester);
+      await tester.tap(buyButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('支払いが済むと広告が非表示になります'), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 4));
 
-      expect(find.text('保留中'), findsOneWidget);
-      expect(tester.widget<MenuListRow>(row('広告を非表示にする')).onTap, isNull);
+      expect(buyLabel(tester), '保留中');
+      expect(tester.widget<FilledButton>(buyButton()).onPressed, isNull);
     });
 
     testWidgets('復元: 見つかった・見つからない', (tester) async {
       final store = FakePurchaseGateway(ownership: Ownership.notOwned);
       await pumpSheet(tester, store: store, started: true);
+      await openRemoveAds(tester);
 
-      await tester.tap(find.text('購入を復元'));
+      await tester.tap(restoreButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('復元できる購入はありません'), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 4));
 
       store.ownership = Ownership.owned;
-      await tester.tap(find.text('購入を復元'));
+      await tester.tap(restoreButton());
       await tester.pump();
       await tester.pump();
       expect(find.text('購入を復元しました'), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 4));
-      expect(find.text('購入済み'), findsOneWidget);
+      expect(buyLabel(tester), '購入済み');
     });
 
     for (final locale in [AppLocale.en, AppLocale.zh]) {
-      testWidgets('${locale.name}: 課金の行に仮名が出ない', (tester) async {
+      testWidgets('${locale.name}: 課金の行と説明に仮名が出ない', (tester) async {
         // **英語・中国語の画面に日本語を出さない**（ユーザーの決定）
         await pumpSheet(tester, locale: locale, started: true);
         final kana = RegExp('[\u3040-\u30ff]');
         final t = locale == AppLocale.en ? AppMessages.en : AppMessages.zh;
         for (final text in [
           t.removeAds,
+          t.removeAdsLead,
+          t.removeAdsBuy,
+          t.removeAdsRestoreNote,
           t.restorePurchase,
           t.removeAdsPurchased,
           t.removeAdsPending,
@@ -680,8 +758,9 @@ void main() {
         ]) {
           expect(kana.hasMatch(text), isFalse, reason: text);
         }
-        expect(row(t.removeAds), findsOneWidget);
-        expect(row(t.restorePurchase), findsOneWidget);
+        await openRemoveAds(tester, t.removeAds);
+        expect(buyButton(), findsOneWidget);
+        expect(restoreButton(), findsOneWidget);
         final shown = tester
             .widgetList<Text>(find.byType(Text))
             .map((w) => w.data ?? '')
