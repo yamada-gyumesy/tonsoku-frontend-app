@@ -50,11 +50,12 @@ body.solo .stage{width:2048px}
 
 /* 通知バナー（3 枚目）。端末より広く、左右にはみ出す */
 .toast[hidden]{display:none}
-/* **通知だけは比で写さない。** iPad の通知は画面幅いっぱいにならない。
-   ただし**文字は canvas に合わせて拡げる** —— iPhone 判の絶対値のままだと
-   広い canvas では読めない大きさになる（gyumesy が実機で指摘された）。
-   幅は端末の 70%。文字は横の比（×1.5876）で拡げる */
-.toast{position:absolute;left:50%;margin-left:-556px;top:880px;width:1112px;
+/* **幅は iPhone 判と同じ比にする**（canvas の 84%。iPhone 判は 1090 / 1290）。
+   以前は「iPad の通知は画面幅いっぱいにならない」として端末の 70% にしていたが、
+   横長の canvas では細く見えた（ユーザーの指摘）。
+   **文字は canvas に合わせて拡げる** —— iPhone 判の絶対値のままだと広い canvas では
+   読めない大きさになる（gyumesy が実機で指摘された）。文字は横の比（×1.5876）で拡げる */
+.toast{position:absolute;left:50%;margin-left:-860px;top:880px;width:1720px;
   display:flex;align-items:flex-start;gap:38px;
   padding:48px 54px;border-radius:48px;
   background:rgba(232,232,232,.82);
@@ -113,9 +114,9 @@ function place(el, w, x, y, op, color) {
 if (n === '1' || n === '2') {
   // 1・2 枚目は同じ世界。#b で右半分へ送る
   if (n === '2') document.body.classList.add('b');
-  document.querySelector('.catch.a').textContent = '店舗限定メニューを\n扱う店が、';
+  document.querySelector('.catch.a').textContent = '店舗限定の\n裏メニューが、';
   document.querySelector('.catch.b').innerHTML =
-    '地図でわかる<span class="hang">。</span>';
+    '地図で見つかる<span class="hang">。</span>';
   document.querySelectorAll('.device img')[0].src = '../source/map_ipad.png';
   document.querySelectorAll('.device img')[1].src = '../source/shop_ipad.png';
   place(blobs[0], 1778, -413, -156, .10, 'red');
@@ -128,14 +129,14 @@ if (n === '1' || n === '2') {
   var a = document.querySelector('.catch.a');
   var img = document.querySelector('.device img');
   if (n === '3') {
-    a.textContent = '新メニューの速報が\n通知で届く。';
+    a.textContent = '新メニュー情報を\n爆速でお届け。';
     img.src = '../source/home_ipad.png';
     document.querySelector('.toast').hidden = false;
     place(blobs[0], 1429, -953, 1739, .10, 'brown');
     place(blobs[1], 1207, 730, -78, .08, 'red');
     place(blobs[2], 1651, 1651, 1856, .10, 'brown');
   } else {
-    a.textContent = '今、クーポンの\n一番おトクがわかる。';
+    a.textContent = '㊙クーポンも\nすぐに使える。';
     img.src = '../source/coupon_ipad.png';
     place(blobs[0], 1207, -1318, -78, .08, 'red');
     place(blobs[1], 1651, -397, 1856, .10, 'brown');

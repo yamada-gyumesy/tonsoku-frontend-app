@@ -1,0 +1,92 @@
+[
+ {
+  "slug": "a4ek4g",
+  "title": "松のや みよし店、営業を休む夜の掲示が9日分から1日分に",
+  "description": "愛知県みよし市の松のや みよし店で、夜間に営業を休む日の掲示が9日分から9月28日の1日分だけに書き換わった。24時間営業の表記そのものは変わっていない。",
+  "thumbnail": "https://cdn.ton-soku.com/articles/a4ek4g/thumbnail.webp",
+  "thumbnail_sm": "https://cdn.ton-soku.com/articles/a4ek4g/thumbnail-sm.webp",
+  "ogp_image": "https://cdn.ton-soku.com/articles/a4ek4g/ogp.png",
+  "thumbnail_source": null,
+  "categories": [
+   "store"
+  ],
+  "tags": [
+   "update"
+  ],
+  "trigger_type": "shop-other-update",
+  "created_at": "2026-09-26T09:48:34.539620+00:00",
+  "updated_at": "2026-09-26T09:52:00.405568+00:00",
+  "editor_comment": "翌1時、翌5時、翌8時と夜ごとに終わりが違う。覚えきれない掲示が、一行に片付いた。",
+  "expression": "normal",
+  "source_url": "https://pkg.navitime.co.jp/matsuyafoods/spot/detail?code=0000012212",
+  "related_articles": [
+   "d3kbx1",
+   "w13li4",
+   "2trhv5"
+  ],
+  "series_key": "matsunoya-temporary-closure-hours-shops",
+  "successor_slug": null,
+  "published": true
+ },
+ {
+  "slug": "5723kr",
+  "title": "松のや、宇治弐番店と八代店が10月に開店",
+  "description": "松のやの店舗一覧に、京都府宇治市の宇治弐番店と熊本県八代市の八代店が新たに掲載された。開店は10月10日10時と10月15日10時。宇治市では2店目、熊本県では5店目で、どちらも松屋併設。",
+  "thumbnail": null,
+  "thumbnail_sm": null,
+  "ogp_image": "https://cdn.ton-soku.com/articles/5723kr/ogp.png",
+  "thumbnail_source": null,
+  "categories": [
+   "store"
+  ],
+  "tags": [
+   "added",
+   "new-store"
+  ],
+  "trigger_type": "shop-opening",
+  "created_at": "2026-09-25T05:34:07.831354+00:00",
+  "updated_at": "2026-09-25T05:36:47.813400+00:00",
+  "editor_comment": "ふむ。「弐番」は住所の地名か。市内2店目と数が揃うのは偶然だな。",
+  "expression": "smile",
+  "source_url": "https://pkg.navitime.co.jp/matsuyafoods/spot/detail?code=0000012328",
+  "related_articles": [
+   "gbx2ie",
+   "4yfic0",
+   "vioup0"
+  ],
+  "series_key": null,
+  "successor_slug": null,
+  "published": true
+ },
+ {
+  "slug": "kyo53t",
+  "title": "松のや、背脂生姜タレのポークフライドステーキ定食3品を9月30日発売",
+  "description": "松のやは2026年9月30日（水）15時から「背脂生姜タレの“リブ”ロースポークフライドステーキ定食」など3品を発売する。いずれも1,090円（税込）で、2025年10月に発売された同シリーズの990円から100円高い。",
+  "thumbnail": "https://cdn.ton-soku.com/articles/kyo53t/thumbnail.webp",
+  "thumbnail_sm": "https://cdn.ton-soku.com/articles/kyo53t/thumbnail-sm.webp",
+  "ogp_image": "https://cdn.ton-soku.com/articles/kyo53t/ogp.png",
+  "thumbnail_source": null,
+  "categories": [
+   "official"
+  ],
+  "tags": [
+   "announcement",
+   "revival",
+   "term-limited"
+  ],
+  "trigger_type": "news-menu",
+  "created_at": "2026-09-25T01:12:53.761409+00:00",
+  "updated_at": "2026-09-25T01:15:43.017252+00:00",
+  "editor_comment": "かつを足しても1,090円。足さないほうを選ぶ理由が見当たらない。",
+  "expression": "confused",
+  "source_url": "https://www.matsuyafoods.co.jp/matsunoya/whatsnew/menu/178230.html",
+  "related_articles": [
+   "98ob7i",
+   "vvrc6u",
+   "z7uell"
+  ],
+  "series_key": null,
+  "successor_slug": null,
+  "published": true
+ }
+]

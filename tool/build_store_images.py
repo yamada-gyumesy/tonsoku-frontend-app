@@ -109,7 +109,7 @@ SCREENS: list[Screen] = [
         ("map", "screens/map.html", ""),
         ("shop", "screens/map.html", "v=shop"),
         ("home", "screens/home.html", ""),
-        ("coupon", "screens/coupon.html", ""),
+        ("coupon", "screens/home.html", "v=coupon"),
     )
 ]
 

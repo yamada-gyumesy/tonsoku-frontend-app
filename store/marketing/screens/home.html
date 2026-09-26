@@ -2,8 +2,11 @@
 <html lang="ja"><head><meta charset="utf-8">
 <link rel="stylesheet" href="_screen.css">
 <style>
-/* ホームの上部（`home_page.dart`）: 店舗限定（`LimitedWeeksSection`）と
- * お得なクーポン（`DealCouponSection`）。寸法はアプリの画面（iPhone 17 Pro）を実測したもの。
+/* ホーム（`home_page.dart`）。寸法はアプリの画面（iPhone 17 Pro）を実測したもの。
+ *
+ * - 既定: 上部。店舗限定（`LimitedWeeksSection`）とお得なクーポン（`DealCouponSection`）
+ * - `?v=coupon`: お得なクーポンまで送ったところ。**ロゴのバーは畳まれている**（アプリは
+ *   下へ送るとロゴのバーが上へ退く。`header_hide_controller.dart`）。下に最新記事が続く
  *
  * **広告の枠は描かない。** アプリは下タブの上に AdMob のアンカーバナーを出すが、
  * ストア画像に出すのはテスト用の広告か他社の広告になる（どちらも見せるものではない）。 */
@@ -45,6 +48,26 @@
 .deal .qr { display: flex; align-items: center; justify-content: center; gap: 6px; height: 33px;
   border-top: 1px solid var(--border); font-size: 12.5px; letter-spacing: .1em; }
 .deal .qr i { width: 16px; height: 16px; }
+
+/* 最新記事（`ArticleCard`） */
+.arts { padding-top: 10px; }
+.art { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.art img { width: 128px; height: 95px; object-fit: cover; border-radius: 4px; flex: none;
+  border: 1px solid var(--border); }
+.art .b { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.art .t { font-size: 15.5px; line-height: 1.55; letter-spacing: .1em; -webkit-text-stroke: .02em currentColor;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.art .m { margin-top: auto; display: flex; align-items: center; gap: 6px; font-size: 11.5px;
+  color: var(--sub); letter-spacing: .08em; }
+.chip { padding: 3px 7px; border-radius: 4px; background: #F3F2F2; color: var(--sub); font-size: 10.5px; }
+.chip.store { background: #EBF2F0; color: var(--green); }
+.chip.official { background: #F1F0EF; color: #4A403A; }
+
+/* お得なクーポンまで送ったところ */
+body.v-coupon .status { border-bottom: 1px solid var(--border); }
+body.v-coupon .head, body.v-coupon .limited { display: none; }
+body:not(.v-coupon) .latest { display: none; }
+body.v-coupon .deals-sec { padding-top: 26px !important; }
 </style>
 </head>
 <body data-d="phone" data-nav="home">
@@ -54,7 +77,7 @@
 
   <!-- 中身は配信の写し（`store/fixtures/limited/weeks.json` / `coupon.json`。2026-09-26） -->
   <div class="body">
-    <div class="sec">
+    <div class="sec limited">
       <div class="sec-h"><h2>店舗限定</h2><span class="lead">ごく一部の店舗に出現する裏メニュー</span></div>
       <div class="weeks">
         <div class="week"><div class="wk">9/23週</div><div class="card">
@@ -68,7 +91,7 @@
       </div>
     </div>
 
-    <div class="sec" style="padding-top:36px">
+    <div class="sec deals-sec" style="padding-top:36px">
       <div class="sec-h"><h2>お得なクーポン</h2>
         <span class="more"><i data-i="coupon"></i><u>クーポン一覧</u><span class="chev">›</span></span></div>
       <div class="deals">
@@ -80,9 +103,26 @@
           <div class="qr"><i data-i="qr"></i>QRコード</div></div>
       </div>
     </div>
+
+    <!-- 最新記事（`store/fixtures/articles/feed.json` の先頭 3 件。経過時間は 9/26 21 時ごろの表記） -->
+    <div class="sec latest" style="padding-top:36px">
+      <div class="sec-h"><h2>最新記事</h2></div>
+      <div class="arts">
+        <div class="art"><img src="../../fixtures/img/art-a4ek4g.webp" alt=""><div class="b">
+          <div class="t">松のや みよし店、営業を休む夜の掲示が9日分から1日分に</div>
+          <div class="m">1時間前<span class="chip store">店舗</span><span class="chip">更新</span></div></div></div>
+        <div class="art"><img src="../../fixtures/img/art-default.webp" alt=""><div class="b">
+          <div class="t">松のや、宇治弐番店と八代店が10月に開店</div>
+          <div class="m">1日前<span class="chip store">店舗</span><span class="chip">追加</span><span class="chip">新店</span></div></div></div>
+        <div class="art"><img src="../../fixtures/img/art-kyo53t.webp" alt=""><div class="b">
+          <div class="t">松のや、背脂生姜タレのポークフライドステーキ定食3品を9月30日発売</div>
+          <div class="m">1日前<span class="chip official">公式</span><span class="chip">予告</span><span class="chip">復活</span><span class="chip">期間限定</span></div></div></div>
+      </div>
+    </div>
   </div>
 
   <div class="nav"></div>
 </div>
+<script>if (/[?&]v=coupon/.test(location.search)) document.body.classList.add('v-coupon');</script>
 <script src="_common.js"></script>
 </body></html>
