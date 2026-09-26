@@ -173,12 +173,13 @@ AdMob。置き場と方針は [CLAUDE.md](CLAUDE.md) の「広告」。
 
 | 何を | どこに | いまの値 |
 |---|---|---|
-| 広告ユニット ID（枠ごと・OS ごと。アンカー / 記事 / マップのリワード） | `lib/core/config/ad_config.dart` の `productionIos` / `productionAndroid` | **空**（枠を出さない） |
-| AdMob のアプリ ID（iOS） | `ios/Runner/Info.plist` の `GADApplicationIdentifier` | Google のテスト用 |
-| AdMob のアプリ ID（Android） | `android/app/src/main/AndroidManifest.xml` の `com.google.android.gms.ads.APPLICATION_ID` | Google のテスト用 |
+| 広告ユニット ID（枠ごと・OS ごと。アンカー / 記事 / マップのリワード） | `lib/core/config/ad_config.dart` の `productionIos` / `productionAndroid` | 本番（発行者 `pub-7838125849960397`） |
+| AdMob のアプリ ID（iOS） | `ios/Runner/Info.plist` の `GADApplicationIdentifier` | 本番 |
+| AdMob のアプリ ID（Android） | `android/app/src/main/AndroidManifest.xml` の `com.google.android.gms.ads.APPLICATION_ID` | 本番 |
 
 - **release 以外（`flutter run`）は枠の ID に関係なく Google のテスト用 ID で出る**（テスト用の広告は数えられない）
-- **リリース前にアプリ ID を 2 つとも差し替える。** ユニット ID だけ入れてアプリ ID がテスト用のままだと広告が配信されない
+- **アプリ ID とユニット ID は同じ AdMob のアプリのものをそろえる。** 片方だけ差し替えると広告が配信されない
+- **同意（UMP）のメッセージは AdMob の「プライバシーとメッセージ」で公開しておく**（公開していないと同意の画面が出ない）
 - 起動の順は **同意（UMP）→ ATT → SDK の初期化**（`lib/core/ads/ads_controller.dart`。呼ぶのは `main.dart` の 1 か所）。**初回起動はオンボーディングを閉じてから始める**（ATT を通知の許可やオンボーディングに重ねない。`lib/features/onboarding/data/ads_after_onboarding.dart`）
 
 ## 書体

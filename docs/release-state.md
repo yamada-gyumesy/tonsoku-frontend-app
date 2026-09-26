@@ -47,16 +47,11 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
    SHA-256（Play でアプリを作った後に出る）を
    - tonsoku-infra-terraform のセッションへ（Firebase の Android アプリ。**Console で入れない**）
    - tonsoku-frontend-web のセッションへ（`assetlinks.json`。`docs/deep-links.md`）
-8. **AdMob にアプリを登録し、広告ユニットを作り、ID を差し替える**（iOS / Android。枠ごと）。
-   **いまのリポジトリは本番の ID が全部空で、release ビルドは広告を 1 つも出さない**（Issue #5）。
-   **このまま出すと、広告の出ない版を「広告あり」で申告することになる**ので、審査に出す前に必ず:
-   - アプリ ID 2 つ: `ios/Runner/Info.plist` の `GADApplicationIdentifier` と
-     `android/app/src/main/AndroidManifest.xml` の `com.google.android.gms.ads.APPLICATION_ID`
-     （いまは Google のテスト用）
-   - 広告ユニット ID 6 つ（アンカー / 記事 / マップのリワード × iOS / Android）:
-     `lib/core/config/ad_config.dart` の `productionIos` / `productionAndroid`（いまは空）
-   - **アプリ ID だけ・ユニット ID だけでは配信されない**（両方そろえる）
+8. **AdMob**: アプリ 2 つ・広告ユニット 6 つは作成済みで、ID もリポジトリに入っている
+   （発行者 `pub-7838125849960397`。README の「広告」）。審査に出す前に残るもの:
+   - 同意（UMP）の GDPR メッセージを AdMob の「プライバシーとメッセージ」で公開する（ユーザー）
    - 発行者 ID を web の `app-ads.txt` に載せる（web の作業）
+   - ストアに公開した後、AdMob の各アプリを「ストアに追加」で紐づける（ユーザー）
 9. **初回のテスト配信**: `release-1.0.0` を切って
    `cd android && mise exec -- bundle exec fastlane android alpha draft:true`（**初回だけ draft**）→
    `cd ios && mise exec -- bundle exec fastlane ios beta`

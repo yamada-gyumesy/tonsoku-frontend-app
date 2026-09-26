@@ -168,7 +168,7 @@ class MapUnlockNotice extends ConsumerWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Icon(
-                          Icons.lock_outline,
+                          Icons.movie_outlined,
                           size: 20,
                           color: colors.textSub,
                         ),

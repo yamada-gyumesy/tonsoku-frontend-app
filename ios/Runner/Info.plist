@@ -63,13 +63,12 @@
 	     Android の AndroidManifest.xml と対。gyumesy と同じ） -->
 	<key>FirebaseAutomaticScreenReportingEnabled</key>
 	<false/>
-	<!-- AdMob のアプリ ID。**いまは Google 公式のテスト用の値**
-	     （https://developers.google.com/admob/ios/test-ads ）。**リリース前に
-	     AdMob で作った iOS アプリの ID（ca-app-pub-…~…）に差し替える。**
-	     無いと SDK が起動時に落ちるので、広告の枠が全部空の間も置いておく。
-	     広告ユニット ID は lib/core/config/ad_config.dart -->
+	<!-- AdMob のアプリ ID（AdMob で作った iOS アプリ「とん速」）。秘密ではない。
+	     無いと SDK が起動時に落ちる。debug でもこの値のままでよい（手元で本番の広告を
+	     出さないのは、広告ユニット ID をテスト用にする側で守っている。
+	     lib/core/config/ad_config.dart） -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-7838125849960397~4707186672</string>
 	<!-- 広告の効果計測（SKAdNetwork）。Google と、Google 経由で入札する広告主の
 	     一覧（AdMob の iOS のクイックスタートに載っているものをそのまま写した。
 	     2026-09-26 時点 50 件）。一覧が更新されたら写し直す -->

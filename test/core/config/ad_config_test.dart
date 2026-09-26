@@ -5,15 +5,33 @@ import 'package:tonsoku/core/config/ad_config.dart';
 
 void main() {
   group('本番（release）', () {
-    for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
-      test('ID が空の枠は出さず、全部空なら SDK に触れない（$platform）', () {
+    for (final (platform, expected) in [
+      (TargetPlatform.iOS, AdConfig.productionIos),
+      (TargetPlatform.android, AdConfig.productionAndroid),
+    ]) {
+      test('本番の ID を枠ごとに使い、テスト用の ID を混ぜない（$platform）', () {
         final config = AdConfig.resolve(release: true, platform: platform);
         for (final slot in AdSlot.values) {
-          expect(config.unitId(slot), isNull, reason: '$slot');
+          expect(config.unitId(slot), expected[slot], reason: '$slot');
+          expect(
+            config.unitId(slot),
+            startsWith('ca-app-pub-7838125849960397/'),
+            reason: '$slot',
+          );
         }
-        expect(config.enabled, isFalse);
+        // 枠ごとに別のユニット（使い回すと位置ごとの成績が分けて見られない）
+        expect(expected.values.toSet(), hasLength(AdSlot.values.length));
+        expect(config.enabled, isTrue);
       });
     }
+
+    test('ID が全部空なら SDK に触れない', () {
+      const config = AdConfig(units: {});
+      for (final slot in AdSlot.values) {
+        expect(config.unitId(slot), isNull, reason: '$slot');
+      }
+      expect(config.enabled, isFalse);
+    });
 
     test('ID を入れた枠だけ出す', () {
       const config = AdConfig(

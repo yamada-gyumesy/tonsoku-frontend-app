@@ -205,14 +205,13 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="tonsoku_default" />
-        <!-- AdMob のアプリ ID。**いまは Google 公式のテスト用の値**
-             （https://developers.google.com/admob/android/test-ads ）。**リリース前に
-             AdMob で作った Android アプリの ID（ca-app-pub-…~…）に差し替える。**
-             無いと SDK が起動時に落ちるので、広告の枠が全部空の間も置いておく。
-             広告ユニット ID は lib/core/config/ad_config.dart -->
+        <!-- AdMob のアプリ ID（AdMob で作った Android アプリ「とん速」）。秘密ではない。
+             無いと SDK が起動時に落ちる。debug でもこの値のままでよい（手元で本番の広告を
+             出さないのは、広告ユニット ID をテスト用にする側で守っている。
+             lib/core/config/ad_config.dart） -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-7838125849960397~6020268347"/>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

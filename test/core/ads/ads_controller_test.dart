@@ -21,7 +21,7 @@ void main() {
 
   test('出す枠が無ければ同意も ATT も初期化もしない', () async {
     final gateway = FakeAdGateway();
-    final container = containerFor(AdConfig.resolve(release: true), gateway);
+    final container = containerFor(const AdConfig(units: {}), gateway);
     expect(container.read(adsControllerProvider), AdsStatus.off);
     await container.read(adsControllerProvider.notifier).start();
     expect(container.read(adsControllerProvider), AdsStatus.off);

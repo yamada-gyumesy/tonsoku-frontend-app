@@ -55,7 +55,7 @@ void main() {
       final gateway = FakeAdGateway();
       await pump(
         tester,
-        config: AdConfig.resolve(release: true),
+        config: const AdConfig(units: {}),
         gateway: gateway,
       );
       expect(find.byKey(FakeBanner.viewKey), findsNothing);
@@ -202,11 +202,7 @@ void main() {
 
     testWidgets('本番の ID が空なら枠も取らない', (tester) async {
       final gateway = FakeAdGateway();
-      await pumpInline(
-        tester,
-        gateway,
-        config: AdConfig.resolve(release: true),
-      );
+      await pumpInline(tester, gateway, config: const AdConfig(units: {}));
       expect(find.byKey(FakeBanner.viewKey), findsNothing);
       expect(tester.getTopLeft(find.byKey(_navKey)).dy, 0);
       expect(gateway.calls, isEmpty);
