@@ -111,5 +111,50 @@ void main() {
       final places = tile.layers.firstWhere((l) => l.name == 'places');
       expect(places.keys, containsAll(['name:en', 'name:zh-Hans']));
     });
+
+    // **中国語の地名は地図を作る時に簡体字へ揃えてある**（ユーザーの決定。
+    // OpenStreetMap の `name:zh-Hans` には繁体字・日本の字体が混ざっている。
+    // `tool/build_map_names.py`）。揃え忘れた地図を作り直すと、所澤市・長野市が
+    // そのまま中国語の画面に出る
+    test('同梱の地図の中国語の地名は簡体字に揃っていて、仮名が無い', () {
+      final archive = PmTiles(
+        File(BundledTileProvider.asset).readAsBytesSync(),
+      );
+      final names = <String>{};
+      // z10 まで（z11 だけに出る地名は無い。日本の範囲だけを見る）
+      for (var z = 0; z <= 10; z++) {
+        final n = 1 << z;
+        int tx(double lon) => ((lon + 180) / 360 * n).floor();
+        int ty(double lat) {
+          final r = lat * math.pi / 180;
+          return ((1 - math.log(math.tan(r) + 1 / math.cos(r)) / math.pi) /
+                  2 *
+                  n)
+              .floor();
+        }
+
+        for (var x = tx(122); x <= tx(154); x++) {
+          for (var y = ty(46); y <= ty(20); y++) {
+            final data = archive.tile(z, x, y);
+            if (data == null) continue;
+            final tile = VectorTileReader().read(data);
+            for (final l in tile.layers.where((l) => l.name == 'places')) {
+              for (final f in l.features) {
+                final zh = f.decodeProperties()['name:zh-Hans']?.stringValue;
+                if (zh != null) names.add(zh);
+              }
+            }
+          }
+        }
+      }
+      expect(names, containsAll(['所泽市', '会津若松市', '长野市', '东京都', '涩谷区']));
+      expect(names, isNot(anyOf(contains('所澤市'), contains('長野市'))));
+      expect(
+        names.where(RegExp(r'[\u3040-\u30ff\uff65-\uff9f]').hasMatch),
+        isEmpty,
+      );
+      // 日本の字体・繁体字で、簡体字の形がはっきり違う字
+      expect(names.where(RegExp('[澤沢區國縣県會長東鐵鉄關関島廣広渋澁條々]').hasMatch), isEmpty);
+    });
   });
 }

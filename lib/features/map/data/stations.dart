@@ -21,8 +21,9 @@ class Station {
   /// 無い）。
   final String nameEn;
 
-  /// 中国語名（簡体字）。**無い駅は空文字**（`name:zh-Hans` も、仮名を含まない
-  /// `name:zh` も無い。`tool/build_map.sh`）。
+  /// 中国語名（簡体字）。OpenStreetMap の中国語名、無ければ日本語名（仮名を
+  /// 含まないもの）を簡体字にしたもの、それも無ければ英語名（地図を作る時に
+  /// 決める。`tool/build_map_names.py`）。**どれも無い駅は空文字**。
   final String nameZh;
 
   /// [locale] の画面に出す名前。**訳が無ければ null**（その駅を描かない）。
@@ -119,7 +120,7 @@ String _firstNonEmpty(Iterable<String> names) =>
 /// [mergeSameName] で同じ駅とみなす距離（度）。
 const mergeWithin = 0.01;
 
-/// 駅の一覧。**マップを初めて開いた時に 1 回だけ読む**（420KB・8,600 駅）。
+/// 駅の一覧。**マップを初めて開いた時に 1 回だけ読む**（490KB・8,600 駅）。
 final stationsProvider = FutureProvider<List<Station>>((ref) async {
   final body = await rootBundle.loadString('assets/map/stations.json');
   return decodeStations(body);
