@@ -31,8 +31,11 @@
 
 | | 状態 |
 |---|---|
-| iOS の Bundle ID `com.gyumesy.tonsoku` | **まだ無い** |
-| App Store Connect のアプリ枠 | **まだ無い** |
+| iOS の Bundle ID `com.gyumesy.tonsoku` | **登録済み**（2026-09-26。id=`2QM97U5BM5`。Push・Associated Domains 有効） |
+| App Store Connect のアプリ枠 | **まだ無い**（API では作れない。下の 3） |
+| 開発用プロファイル | `iOS Team Provisioning Profile: com.gyumesy.tonsoku`（アーカイブで作られた。署名つきのアーカイブは通る） |
+| 配布用の署名 | **この Mac で ipa を書き出せない**（Xcode にアカウントが無く、配布用の証明書も無い。下の 3b） |
+| Android のリリース署名 | `flutter build appbundle --release` の AAB がアップロード鍵で署名されていることを確かめた（SHA-256 一致） |
 | Play のアプリ `com.gyumesy.tonsoku` | **取れない**（`Invalid request`。アプリが無いか、サービスアカウントに権限が無い。API では区別できない） |
 
 ## 残りの手順（上から順に。誰がやるかを書く）
@@ -44,9 +47,10 @@
 
 | # | やること | 誰が | 手段 |
 |---|---|---|---|
-| 1 | fastlane の gem を入れる | Claude | `mise exec -- bundle install`（`vendor/bundle`） |
-| 2 | iOS の Bundle ID（Push・Associated Domains 込み） | Claude | `ios register_app_id` |
-| 3 | App Store Connect のアプリ枠 | Claude | `ios create_app`（名前「とん速」が取られていたらユーザーが決める） |
+| 1 | ~~fastlane の gem を入れる~~ **済み** | Claude | `bundle install` は `io-console` のビルドが Command Line Tools の SDK で落ちたので、Gemfile.lock が同じ gyumesy の `vendor/bundle` を写した |
+| 2 | ~~iOS の Bundle ID（Push・Associated Domains 込み）~~ **済み** | Claude | `ios register_app_id` |
+| 3 | **App Store Connect のアプリ枠**（名前「とん速」・Bundle ID `com.gyumesy.tonsoku`・SKU `com.gyumesy.tonsoku`・主言語 日本語） | **ユーザー** | **ASC の UI のみ**。`ios create_app` は `The resource 'apps' does not allow 'CREATE'` で弾かれた（2026-09-26 実測。gyumesy の「API で作れる見込み」は確かめられていなかった。gyumesy も枠は手で作っている） |
+| 3b | **Xcode に `gyumesy@icloud.com` でサインイン**（Xcode → Settings → Accounts） | **ユーザー** | 配布の署名（クラウド署名）に要る。無いと `ios beta` の ipa の書き出しが `No Accounts` / `No signing certificate "iOS Distribution"` で落ちる（2026-09-26 実測）。API 鍵でのクラウド署名は `Cloud signing permission error`（鍵の権限が足りない） |
 | 4 | App Store ID を infra へ | Claude | tonsoku-infra-terraform のセッションへ連絡 |
 | 5 | 審査連絡先 | Claude | API（`appStoreReviewDetails`。連絡先は **gyumesy の審査連絡先を ASC から写す**） |
 | 6 | TestFlight の内部グループ（全ビルド自動） | Claude | API（`betaGroups` / `betaTesters`。gyumesy #39 と同じ） |
@@ -57,7 +61,7 @@
 | 11 | **Play の「アプリのコンテンツ」**（広告あり・広告 ID は使う・対象年齢・コンテンツレーティング（IARC）・プライバシーポリシー URL）と、**トラックの販売国** | **ユーザー** | Play Console の UI のみ（販売国はアプリのコンテンツではなく各トラックの設定） |
 | 12 | Play のデータ セーフティ | Claude | API（`dataSafety`。three と同じ） |
 | 13 | **Play のお支払いプロファイルの連携** | **ユーザー** | Play Console の UI のみ（管理者） |
-| 14 | **アップロード鍵**の指紋を infra（Firebase）と web（`assetlinks.json`）へ | Claude | 各セッションへ連絡（指紋は `docs/setup-app.md` の「済んだもの（とん速）」。今すぐ渡せる） |
+| 14 | ~~**アップロード鍵**の指紋を infra（Firebase）と web（`assetlinks.json`）へ~~ **済み** | Claude | infra #34（Firebase に登録済み）・web #162（`assetlinks.json` を main に入れた。本番はデプロイ待ち） |
 | 15 | **AdMob の同意メッセージ（UMP）を公開** | **ユーザー** | AdMob の UI のみ |
 | 16 | 初回のテスト配信: `release-1.0.0` → `android alpha draft:true`（初回だけ draft）→ `ios beta` | Claude | lane |
 | 16b | **アプリ署名鍵**の指紋を infra と web へ | Claude | **最初の AAB を上げた後**（16 の後）に Play App Signing へ自動で登録されて出る。Play Console の「アプリの完全性」か API（`generatedapks`）で取り、各セッションへ連絡。**これが入らないと、ストアから入れた端末で App Links が通らない** |
@@ -69,5 +73,5 @@
 
 | 相手 | 頼むこと | いつ |
 |---|---|---|
-| tonsoku-infra-terraform | App Store ID（上の 4）・Android の指紋（上の 14・16b） | 3 の後・今すぐ（アップロード鍵）・16 の後（アプリ署名鍵） |
-| tonsoku-frontend-web | `/.well-known/assetlinks.json`（上の 14・16b。**両方の指紋が要る**） | 今すぐ（アップロード鍵）・16 の後（アプリ署名鍵） |
+| tonsoku-infra-terraform | App Store ID（上の 4）・Play のアプリ署名鍵の指紋（上の 16b）。アップロード鍵のぶんは済み（infra #34） | 3 の後・16 の後 |
+| tonsoku-frontend-web | `assetlinks.json` に Play のアプリ署名鍵の指紋を足す（上の 16b）。アップロード鍵のぶんは済み（web #162） | 16 の後 |

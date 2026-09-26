@@ -21,7 +21,7 @@
 |---|---|
 | **iOS の Bundle ID** | ✅ **API**（`fastlane ios register_app_id`） |
 | iOS の Push / Associated Domains capability | ✅ **API**（同 lane がまとめて有効化） |
-| App Store Connect のアプリ枠 | ✅ **API**（`fastlane ios create_app`） |
+| App Store Connect のアプリ枠 | ❌ **UI のみ**（`ios create_app` は `apps` の CREATE を弾かれた。2026-09-26 実測） |
 | Play のアプリ作成 | ❌ UI のみ。**package name は初回確定で変更不可** |
 | 価格・販売地域 | iOS ✅ API / Android ❌ UI |
 | 年齢・コンテンツレーティング | iOS ✅（`ios/fastlane/rating_config.json`） / Android ❌ UI のみ（IARC） |
@@ -69,19 +69,28 @@ cd ios && mise exec -- bundle exec fastlane ios register_app_id
 
 ### App Store Connect のアプリ枠
 
-```bash
-cd ios && mise exec -- bundle exec fastlane ios create_app
-```
-
-**手で作らない**（gyumesy は手で作ってしまった。API で作っても同じ枠ができる）。
+**ASC の UI で作る**（マイ App → ＋ → 新規 App。プラットフォーム iOS・名前「とん速」・
+主言語 日本語・バンドル ID `com.gyumesy.tonsoku`・SKU `com.gyumesy.tonsoku`・ユーザーアクセス 制限なし）。
+**API では作れない**: `ios create_app`（`Spaceship::ConnectAPI::App.create`）は
+`The resource 'apps' does not allow 'CREATE'. Allowed operations are: GET_COLLECTION, GET_INSTANCE, UPDATE`
+で弾かれた（2026-09-26 実測）。gyumesy の「API で作れる見込み」は確かめられていなかった
+（gyumesy も枠は手で作っている）。lane は既にあるかどうかを見るだけに使う。
 
 - **Bundle ID が先。** 枠は Bundle ID に紐づくので、無いと作れない
-- **SKU は後から変えられない。** bundle id と同じにしておくと迷わない（lane がそうする）
+- **SKU は後から変えられない。** bundle id と同じにしておくと迷わない
 - **名前は「とん速」**（`ios/fastlane/Fastfile` の `APP_NAME`）。**「松のや」を入れない**
   （gyumesy は「松屋」の語で 4.1(a) を 2 回受けた）。**名前は App Store 全体で一意**なので、
-  取られていたら lane が落ちる。その時は**ユーザーが決める**（勝手に語を足さない）
-- `version_string` が最初のバージョン。作った枠は `PREPARE_FOR_SUBMISSION` で始まる
-- `primary_locale` は `ja`
+  取られていたら作れない。その時は**ユーザーが決める**（勝手に語を足さない）
+- 最初のバージョンは 1.0。作った枠は `PREPARE_FOR_SUBMISSION` で始まる
+
+### 配布の署名（クラウド署名）
+
+`ExportOptions.plist` は `signingStyle: automatic` で、**配布用の証明書は Xcode にサインインした
+アカウントのクラウド署名で作られる**（gyumesy と同じ設定）。この Mac に配布用の証明書は無いので、
+**Xcode → Settings → Accounts に `gyumesy@icloud.com` が入っていないと ipa を書き出せない**
+（`No Accounts` / `No signing certificate "iOS Distribution"`。2026-09-26 実測）。
+**サインインはユーザー**（Apple ID のパスワードを使う）。API 鍵でのクラウド署名は
+`Cloud signing permission error` で通らなかった（鍵の権限が足りない）。
 
 **作ったら App Store ID（数字の `id`）を tonsoku-infra-terraform のセッションに伝える**
 （Firebase の iOS アプリ登録に入れる。`docs/release-state.md` の「残りの手順」の 4）。
