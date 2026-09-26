@@ -196,6 +196,33 @@ void main() {
     );
   });
 
+  test('日本語の面が取れなくても、英語の画面の品は待たずに届く', () async {
+    notFound('app/limited.json');
+    serves(
+      'i18n/en/app/limited.json',
+      jsonEncode([menu('1', 'Extra-Thick Pork Shoulder Set Meal')]),
+    );
+    SharedPreferences.setMockInitialValues({'app_locale': 'en'});
+    final store = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(store),
+        cdnClientProvider.overrideWithValue(client),
+        jsonCacheProvider.overrideWithValue(cache),
+      ],
+    );
+    addTearDown(container.dispose);
+    final sub = container.listen(limitedMenusProvider, (_, _) {});
+    addTearDown(sub.close);
+
+    // Riverpod の再試行を待つと数十秒かかる。すぐ届くこと
+    final menus = await container
+        .read(limitedMenusProvider.future)
+        .timeout(const Duration(seconds: 2));
+    expect(menus.map((m) => m.name), ['Extra-Thick Pork Shoulder Set Meal']);
+    expect(container.read(singleMenuIdsProvider).value, isEmpty);
+  });
+
   test('英語の画面の品は、訳の無い品と「単品◯◯」を落として届く', () async {
     serves(
       'app/limited.json',

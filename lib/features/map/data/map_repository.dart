@@ -61,9 +61,25 @@ class MapRepository {
   /// 日本語の面（数 KB）で見分けて ID で落とす。
   ///
   /// 日本語の面が取れない時は空（品が 2 つずつ並ぶだけで、地図は使える）。
-  Stream<Set<String>> watchSingleMenuIds() => _locale.isDefault
-      ? Stream.value(const <String>{})
-      : _cdn.watch(const CdnPaths(AppLocale.ja).appLimited, _singleIds);
+  /// **失敗をここで空に変えて、流れに失敗を出さない。** 失敗を流すと Riverpod 3 が
+  /// provider を既定で再試行し、その間 `singleMenuIdsProvider.future` が待ち続けて
+  /// 品が数十秒出ない（`limitedMenusProvider` の catch には届かない）。
+  Stream<Set<String>> watchSingleMenuIds() async* {
+    if (_locale.isDefault) {
+      yield const <String>{};
+      return;
+    }
+    try {
+      await for (final ids in _cdn.watch(
+        const CdnPaths(AppLocale.ja).appLimited,
+        _singleIds,
+      )) {
+        yield ids;
+      }
+    } on Object {
+      yield const <String>{};
+    }
+  }
 
   /// 取り直して、**どちらかが変わった時だけ true**（アクティブ復帰用）。
   ///
