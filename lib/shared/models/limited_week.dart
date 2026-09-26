@@ -50,8 +50,10 @@ abstract class LimitedWeekItem with _$LimitedWeekItem {
   const factory LimitedWeekItem({
     @JsonKey(name: 'cms_id') required String cmsId,
 
-    /// 品名。ロケール別の面では公式訳（無ければ日本語）
-    required String name,
+    /// 品名。英語・中国語の面では公式訳か訳語辞書の訳で、**どちらも無ければ null**
+    /// （日本語に落とさない。tonsoku-backend-batch#286）。日本語の面は必ず入る。
+    /// null の時はカードの品名を空のまま描く（`limitedCards`。web と同じ）
+    String? name,
     @JsonKey(name: 'image_url') @Default('') String imageUrl,
 
     /// 配信済みの記事だけ。無ければ null

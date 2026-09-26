@@ -29,4 +29,24 @@ void main() {
     final names = {for (final s in shops) s.name};
     expect(names, hasLength(shops.length));
   });
+
+  group('英語・中国語で店名の訳が無い（null）', () {
+    test('屋号とローマ字名で引く', () {
+      const shop = Shop(
+        code: '1',
+        nameRoman: 'NISHISHINJUKU',
+        lat: 35.6942853,
+        lon: 139.6990776,
+      );
+      expect(
+        googleMapsUri(shop).queryParameters['query'],
+        'Matsunoya NISHISHINJUKU',
+      );
+    });
+
+    test('ローマ字名も無ければ座標', () {
+      const shop = Shop(code: '1', lat: 35.69, lon: 139.69);
+      expect(googleMapsUri(shop).queryParameters['query'], '35.69,139.69');
+    });
+  });
 }

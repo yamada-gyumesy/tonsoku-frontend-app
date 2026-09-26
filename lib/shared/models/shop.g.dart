@@ -8,7 +8,7 @@ part of 'shop.dart';
 
 _Shop _$ShopFromJson(Map<String, dynamic> json) => _Shop(
   code: json['code'] as String,
-  name: json['name'] as String,
+  name: json['name'] as String?,
   nameRoman: json['name_roman'] as String?,
   lat: (json['lat'] as num).toDouble(),
   lon: (json['lon'] as num).toDouble(),

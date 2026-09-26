@@ -1,5 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/app_messages.dart';
+import 'package:tonsoku/core/storage/preferences_provider.dart';
+import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/features/home/presentation/widgets/limited_weeks_section.dart';
 import 'package:tonsoku/shared/models/limited_week.dart';
 
@@ -101,5 +107,62 @@ void main() {
     expect(ended.ended, isTrue);
     // 全店で売っている
     expect(card(item.copyWith(shopsLive: 15, shopsEnded: 0)).shops, '15店舗');
+  });
+
+  /// 英語・中国語で訳の無い品は `name` が null（tonsoku-backend-batch#286）。
+  /// **品名の行は空のまま高さを取り、カードは記事へ開ける**（web の
+  /// `CoLimitedWeeks` と同じ）。
+  group('品名が null（英語・中国語で訳が無い）', () {
+    final week = LimitedWeek(
+      weekStart: '2026-09-23',
+      weekEnd: '2026-09-29',
+      status: 'items',
+      items: [
+        item.copyWith(cmsId: '1', name: 'Thick-Cut Pork Loin Set Meal'),
+        item.copyWith(cmsId: '2', name: null, articleSlug: 'untranslated'),
+      ],
+    );
+
+    test('カードの品名は null のまま', () {
+      final cards = limitedCards([week], AppMessages.en, today: '2026-09-25');
+      expect((cards.last as LimitedItemCard).name, isNull);
+    });
+
+    testWidgets('行は空のまま同じ高さを取り、記事へ開ける', (tester) async {
+      SharedPreferences.setMockInitialValues({'app_locale': 'en'});
+      final store = await SharedPreferences.getInstance();
+      String? opened;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(store)],
+          child: MaterialApp(
+            theme: AppTheme.light(AppLocale.en),
+            home: Scaffold(
+              body: LimitedWeeksSection(
+                weeks: [week],
+                onOpenArticle: (slug) => opened = slug,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final named = find.text('Thick-Cut Pork Loin Set Meal');
+      expect(named, findsOneWidget);
+      // 品名の欄（2 行ぶんの高さの箱）は 2 枚とも同じ高さ
+      final boxes = find.ancestor(
+        of: find.byType(Text),
+        matching: find.byWidgetPredicate(
+          (w) => w is SizedBox && w.height == 13 * 1.375 * 2,
+        ),
+      );
+      expect(boxes, findsNWidgets(2));
+      // 日本語の品名に落とさない
+      expect(find.textContaining('極厚'), findsNothing);
+
+      await tester.tap(find.byType(InkWell).last);
+      expect(opened, 'untranslated');
+    });
   });
 }

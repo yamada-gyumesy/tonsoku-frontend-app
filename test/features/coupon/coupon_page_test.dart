@@ -12,6 +12,8 @@ import 'package:tonsoku/core/i18n/app_messages.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/features/coupon/data/coupon_repository.dart';
+import 'package:tonsoku/features/coupon/domain/coupon_best_deal.dart';
+import 'package:tonsoku/features/coupon/domain/coupon_format.dart';
 import 'package:tonsoku/features/coupon/presentation/coupon_page.dart';
 import 'package:tonsoku/features/coupon/presentation/widgets/coupon_best_card.dart';
 import 'package:tonsoku/features/coupon/presentation/widgets/coupon_list.dart';
@@ -222,6 +224,51 @@ void main() {
         find.textContaining('${t.couponBackLabel} ', findRichText: true),
         findsNWidgets(withBack),
       );
+    });
+  });
+
+  /// 英語・中国語で訳の無い品は `name` が null（tonsoku-backend-batch#286）。
+  /// **名前を描かず、記事へのリンクも付けない。絵と値段は出す**（web の
+  /// `CoCouponBest` と同じ）。
+  group('注文例の品名が null（英語・中国語で訳が無い）', () {
+    Coupon untranslated() {
+      final deal = synthetic.bestDeal!;
+      final first = deal.patterns.first;
+      return synthetic.copyWith(
+        bestDeal: deal.copyWith(
+          patterns: [
+            first.copyWith(items: [first.items.first.copyWith(name: null)]),
+            ...deal.patterns.skip(1),
+          ],
+        ),
+      );
+    }
+
+    test('記事があってもリンクを付けない', () {
+      final item = synthetic.bestDeal!.patterns.first.items.first;
+      expect(item.articleSlug, isNotNull, reason: '前提');
+      final view = bestDealView(
+        coupon: untranslated(),
+        t: t,
+        tagLabels: const {},
+        slugs: {item.articleSlug!},
+      )!;
+      final shown = view.patterns.first.items.first;
+      expect(shown.name, isNull);
+      expect(shown.articleSlug, isNull);
+      expect(shown.priceYen, item.priceYen);
+    });
+
+    testWidgets('名前は描かず、値段は出す', (tester) async {
+      final item = synthetic.bestDeal!.patterns.first.items.first;
+      await atGeneratedAt(synthetic, () async {
+        await pump(tester, untranslated());
+        expect(find.text(item.name!), findsNothing);
+        expect(
+          find.text(t.couponYen(formatNumber(item.priceYen!))),
+          findsWidgets,
+        );
+      });
     });
   });
 

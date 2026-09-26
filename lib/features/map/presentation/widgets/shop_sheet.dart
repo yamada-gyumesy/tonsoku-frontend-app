@@ -63,15 +63,17 @@ class ShopSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              shop.name,
-              style: TextStyle(
-                fontSize: 18,
-                height: 1.4,
-                fontWeight: FontWeight.bold,
-                color: colors.text,
+            // 名前が無い店（英語・中国語で訳もローマ字名も無い）は欄ごと描かない
+            if (shopLabel(shop) case final name?)
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 18,
+                  height: 1.4,
+                  fontWeight: FontWeight.bold,
+                  color: colors.text,
+                ),
               ),
-            ),
             if (brands.isNotEmpty) ...[
               const SizedBox(height: 6),
               Wrap(
@@ -241,7 +243,8 @@ class _LimitedRow extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.menu.name,
+                    // 品名が null の品は届かない（`MapRepository.isShown`）
+                    item.menu.name ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

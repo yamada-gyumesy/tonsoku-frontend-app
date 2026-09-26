@@ -29,6 +29,7 @@ void main() {
 
   Future<void> pump(
     WidgetTester tester, {
+    Shop? target,
     ShopState state = const ShopOpen(),
     List<ShopLimited> limited = const [],
     ValueChanged<String>? onOpenArticle,
@@ -42,7 +43,7 @@ void main() {
           theme: AppTheme.light(AppLocale.ja),
           home: Scaffold(
             body: ShopSheet(
-              shop: shop,
+              shop: target ?? shop,
               state: state,
               limited: limited,
               onOpenArticle: onOpenArticle ?? (_) {},
@@ -61,6 +62,8 @@ void main() {
     expect(find.text('マイカリー食堂併設'), findsOneWidget);
     expect(find.textContaining('松のや併設'), findsNothing);
     expect(find.text('千葉県習志野市谷津7-9-16'), findsOneWidget);
+    expect(find.text('住所'), findsOneWidget);
+    expect(find.text('営業時間'), findsOneWidget);
     expect(find.text('5時から翌2時、ラストオーダー30分前'), findsOneWidget);
     expect(find.text('080-5928-1179'), findsOneWidget);
     expect(find.bySemanticsLabel('080-5928-1179 に電話をかける'), findsOneWidget);
@@ -116,5 +119,33 @@ void main() {
 
     await tester.tap(find.text('“極厚”肩ロース定食'));
     expect(opened, '2cjtbt');
+  });
+
+  /// 英語・中国語の面は訳の無い店名・住所・営業時間が null
+  /// （tonsoku-backend-batch#286）。**日本語に落とさない。**
+  testWidgets('店名が null ならローマ字名、住所・営業時間が null なら行を出さない', (tester) async {
+    await pump(
+      tester,
+      target: const Shop(
+        code: '0000001203',
+        nameRoman: 'TSUDANUMAMINAMIGUCHI',
+        lat: 35.69,
+        lon: 140.01,
+        phone: '080-5928-1179',
+      ),
+    );
+    expect(find.text('TSUDANUMAMINAMIGUCHI'), findsOneWidget);
+    expect(find.text('住所'), findsNothing);
+    expect(find.text('営業時間'), findsNothing);
+    expect(find.text('080-5928-1179'), findsOneWidget);
+  });
+
+  testWidgets('店名もローマ字名も無ければ名前の欄を描かない', (tester) async {
+    await pump(
+      tester,
+      target: const Shop(code: '0000001203', lat: 35.69, lon: 140.01),
+    );
+    expect(find.text('Google マップで開く'), findsOneWidget);
+    expect(find.text('null'), findsNothing);
   });
 }

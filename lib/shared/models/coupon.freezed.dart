@@ -2387,7 +2387,10 @@ as int?,
 /// @nodoc
 mixin _$CouponPatternItem {
 
- String get name;@JsonKey(name: 'price_yen') int? get priceYen;@JsonKey(name: 'article_slug') String? get articleSlug; String get thumbnail;
+/// メニュー名。**英語・中国語の面では訳が無ければ null**（日本語に落とさない。
+/// tonsoku-backend-batch#286）。その時は名前を描かず、記事へのリンクも付けない
+/// （`coupon_best_card.dart` の `_Item`。web の `CoCouponBest` と同じ）
+ String? get name;@JsonKey(name: 'price_yen') int? get priceYen;@JsonKey(name: 'article_slug') String? get articleSlug; String get thumbnail;
 /// Create a copy of CouponPatternItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2420,7 +2423,7 @@ abstract mixin class $CouponPatternItemCopyWith<$Res>  {
   factory $CouponPatternItemCopyWith(CouponPatternItem value, $Res Function(CouponPatternItem) _then) = _$CouponPatternItemCopyWithImpl;
 @useResult
 $Res call({
- String name,@JsonKey(name: 'price_yen') int? priceYen,@JsonKey(name: 'article_slug') String? articleSlug, String thumbnail
+ String? name,@JsonKey(name: 'price_yen') int? priceYen,@JsonKey(name: 'article_slug') String? articleSlug, String thumbnail
 });
 
 
@@ -2437,10 +2440,10 @@ class _$CouponPatternItemCopyWithImpl<$Res>
 
 /// Create a copy of CouponPatternItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? priceYen = freezed,Object? articleSlug = freezed,Object? thumbnail = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = freezed,Object? priceYen = freezed,Object? articleSlug = freezed,Object? thumbnail = null,}) {
   return _then(_self.copyWith(
-name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,priceYen: freezed == priceYen ? _self.priceYen : priceYen // ignore: cast_nullable_to_non_nullable
+name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,priceYen: freezed == priceYen ? _self.priceYen : priceYen // ignore: cast_nullable_to_non_nullable
 as int?,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug // ignore: cast_nullable_to_non_nullable
 as String?,thumbnail: null == thumbnail ? _self.thumbnail : thumbnail // ignore: cast_nullable_to_non_nullable
 as String,
@@ -2528,7 +2531,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CouponPatternItem() when $default != null:
 return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);case _:
@@ -2549,7 +2552,7 @@ return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)  $default,) {final _that = this;
 switch (_that) {
 case _CouponPatternItem():
 return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);case _:
@@ -2569,7 +2572,7 @@ return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? name, @JsonKey(name: 'price_yen')  int? priceYen, @JsonKey(name: 'article_slug')  String? articleSlug,  String thumbnail)?  $default,) {final _that = this;
 switch (_that) {
 case _CouponPatternItem() when $default != null:
 return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);case _:
@@ -2584,10 +2587,13 @@ return $default(_that.name,_that.priceYen,_that.articleSlug,_that.thumbnail);cas
 @JsonSerializable()
 
 class _CouponPatternItem implements CouponPatternItem {
-  const _CouponPatternItem({required this.name, @JsonKey(name: 'price_yen') this.priceYen, @JsonKey(name: 'article_slug') this.articleSlug, this.thumbnail = ''});
+  const _CouponPatternItem({this.name, @JsonKey(name: 'price_yen') this.priceYen, @JsonKey(name: 'article_slug') this.articleSlug, this.thumbnail = ''});
   factory _CouponPatternItem.fromJson(Map<String, dynamic> json) => _$CouponPatternItemFromJson(json);
 
-@override final  String name;
+/// メニュー名。**英語・中国語の面では訳が無ければ null**（日本語に落とさない。
+/// tonsoku-backend-batch#286）。その時は名前を描かず、記事へのリンクも付けない
+/// （`coupon_best_card.dart` の `_Item`。web の `CoCouponBest` と同じ）
+@override final  String? name;
 @override@JsonKey(name: 'price_yen') final  int? priceYen;
 @override@JsonKey(name: 'article_slug') final  String? articleSlug;
 @override@JsonKey() final  String thumbnail;
@@ -2625,7 +2631,7 @@ abstract mixin class _$CouponPatternItemCopyWith<$Res> implements $CouponPattern
   factory _$CouponPatternItemCopyWith(_CouponPatternItem value, $Res Function(_CouponPatternItem) _then) = __$CouponPatternItemCopyWithImpl;
 @override @useResult
 $Res call({
- String name,@JsonKey(name: 'price_yen') int? priceYen,@JsonKey(name: 'article_slug') String? articleSlug, String thumbnail
+ String? name,@JsonKey(name: 'price_yen') int? priceYen,@JsonKey(name: 'article_slug') String? articleSlug, String thumbnail
 });
 
 
@@ -2642,10 +2648,10 @@ class __$CouponPatternItemCopyWithImpl<$Res>
 
 /// Create a copy of CouponPatternItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? priceYen = freezed,Object? articleSlug = freezed,Object? thumbnail = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = freezed,Object? priceYen = freezed,Object? articleSlug = freezed,Object? thumbnail = null,}) {
   return _then(_CouponPatternItem(
-name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,priceYen: freezed == priceYen ? _self.priceYen : priceYen // ignore: cast_nullable_to_non_nullable
+name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,priceYen: freezed == priceYen ? _self.priceYen : priceYen // ignore: cast_nullable_to_non_nullable
 as int?,articleSlug: freezed == articleSlug ? _self.articleSlug : articleSlug // ignore: cast_nullable_to_non_nullable
 as String?,thumbnail: null == thumbnail ? _self.thumbnail : thumbnail // ignore: cast_nullable_to_non_nullable
 as String,

@@ -373,7 +373,8 @@ class MenuChip extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          menu.name,
+                          // 品名が null の品は届かない（`MapRepository.isShown`）
+                          menu.name ?? '',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

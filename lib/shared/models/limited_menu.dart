@@ -22,7 +22,12 @@ abstract class LimitedMenu with _$LimitedMenu {
     /// 識別子。**昼の品の `cms_id`**（深夜料金版は配信側で 1 つにまとめてある）。
     /// とん速にキャンペーンという単位は無いが、鍵の名前は牛めしレーダーに揃えてある
     @JsonKey(name: 'campaign_id') required String campaignId,
-    required String name,
+
+    /// 品名。**英語・中国語の面（`i18n/{en,zh}/app/limited.json`）では公式訳か
+    /// 訳語辞書の訳で、どちらも無ければ null**（日本語に落とさない。
+    /// tonsoku-backend-batch#286）。**null の品は地図に出さない**
+    /// （`MapRepository.isShown`）
+    String? name,
 
     /// 発売の時刻（JST `YYYY-MM-DD HH:mm`）。
     @JsonKey(name: 'start_date') String? startDate,

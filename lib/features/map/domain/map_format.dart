@@ -3,6 +3,7 @@ import 'package:tonsoku/features/map/domain/jst.dart';
 import 'package:tonsoku/features/map/domain/limited_status.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
 import 'package:tonsoku/features/map/domain/shop_state.dart';
+import 'package:tonsoku/shared/models/shop.dart';
 
 /// 瞬間を JST の「月/日 時」で出す。**年は出さない**（扱うのは前後 2 週間ほどの
 /// 出来事だけ。記事の取扱店の表と同じ）。
@@ -23,6 +24,15 @@ String formatDay(String date, AppMessages t) {
   if (m == null || d == null) return date;
   return t.mapDate(m, d);
 }
+
+/// 画面に出す店名。**[Shop.name] が null（英語・中国語で訳がまだ無い）なら
+/// ローマ字名（`NISHISHINJUKU`）で代える**（日本語に落とさない。配信側のスキーマが
+/// 「name_roman に落とせる」としている。tonsoku-backend-batch#286）。
+///
+/// ローマ字名は大文字のまま出す（組み替えない。語の切れ目が分からないので、
+/// 頭だけ大文字にすると `Nishishinjuku` のような存在しない綴りになる）。
+/// **どちらも無ければ null**（名前の欄を描かない）。
+String? shopLabel(Shop shop) => shop.name ?? shop.nameRoman;
 
 String brandLabel(ShopBrand brand, AppMessages t) => switch (brand) {
   ShopBrand.matsuya => t.mapBrandMatsuya,

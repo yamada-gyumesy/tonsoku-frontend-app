@@ -17,7 +17,11 @@ mixin _$LimitedMenu {
 
 /// 識別子。**昼の品の `cms_id`**（深夜料金版は配信側で 1 つにまとめてある）。
 /// とん速にキャンペーンという単位は無いが、鍵の名前は牛めしレーダーに揃えてある
-@JsonKey(name: 'campaign_id') String get campaignId; String get name;/// 発売の時刻（JST `YYYY-MM-DD HH:mm`）。
+@JsonKey(name: 'campaign_id') String get campaignId;/// 品名。**英語・中国語の面（`i18n/{en,zh}/app/limited.json`）では公式訳か
+/// 訳語辞書の訳で、どちらも無ければ null**（日本語に落とさない。
+/// tonsoku-backend-batch#286）。**null の品は地図に出さない**
+/// （`MapRepository.isShown`）
+ String? get name;/// 発売の時刻（JST `YYYY-MM-DD HH:mm`）。
 @JsonKey(name: 'start_date') String? get startDate;/// **いま掲載がある店**（売り切れ中の店も含む）。
  List<String> get shops;/// [shops] のうち、**いま売り切れの店**（15 分ごとの巡回で更新される）。
 @JsonKey(name: 'sold_out_shops') List<String> get soldOutShops;/// 扱っていたが掲載が外れた店と、その時刻。**記事の取扱店の表の
@@ -60,7 +64,7 @@ abstract mixin class $LimitedMenuCopyWith<$Res>  {
   factory $LimitedMenuCopyWith(LimitedMenu value, $Res Function(LimitedMenu) _then) = _$LimitedMenuCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'campaign_id') String campaignId, String name,@JsonKey(name: 'start_date') String? startDate, List<String> shops,@JsonKey(name: 'sold_out_shops') List<String> soldOutShops,@JsonKey(name: 'ended_shops') List<EndedShop> endedShops,@JsonKey(name: 'ended_at') String? endedAt,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'image_url') String? imageUrl
+@JsonKey(name: 'campaign_id') String campaignId, String? name,@JsonKey(name: 'start_date') String? startDate, List<String> shops,@JsonKey(name: 'sold_out_shops') List<String> soldOutShops,@JsonKey(name: 'ended_shops') List<EndedShop> endedShops,@JsonKey(name: 'ended_at') String? endedAt,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'image_url') String? imageUrl
 });
 
 
@@ -77,11 +81,11 @@ class _$LimitedMenuCopyWithImpl<$Res>
 
 /// Create a copy of LimitedMenu
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? campaignId = null,Object? name = null,Object? startDate = freezed,Object? shops = null,Object? soldOutShops = null,Object? endedShops = null,Object? endedAt = freezed,Object? articleSlug = freezed,Object? thumbnailUrl = freezed,Object? imageUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? campaignId = null,Object? name = freezed,Object? startDate = freezed,Object? shops = null,Object? soldOutShops = null,Object? endedShops = null,Object? endedAt = freezed,Object? articleSlug = freezed,Object? thumbnailUrl = freezed,Object? imageUrl = freezed,}) {
   return _then(_self.copyWith(
 campaignId: null == campaignId ? _self.campaignId : campaignId // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,startDate: freezed == startDate ? _self.startDate : startDate // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,startDate: freezed == startDate ? _self.startDate : startDate // ignore: cast_nullable_to_non_nullable
 as String?,shops: null == shops ? _self.shops : shops // ignore: cast_nullable_to_non_nullable
 as List<String>,soldOutShops: null == soldOutShops ? _self.soldOutShops : soldOutShops // ignore: cast_nullable_to_non_nullable
 as List<String>,endedShops: null == endedShops ? _self.endedShops : endedShops // ignore: cast_nullable_to_non_nullable
@@ -174,7 +178,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'campaign_id')  String campaignId,  String name, @JsonKey(name: 'start_date')  String? startDate,  List<String> shops, @JsonKey(name: 'sold_out_shops')  List<String> soldOutShops, @JsonKey(name: 'ended_shops')  List<EndedShop> endedShops, @JsonKey(name: 'ended_at')  String? endedAt, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'image_url')  String? imageUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'campaign_id')  String campaignId,  String? name, @JsonKey(name: 'start_date')  String? startDate,  List<String> shops, @JsonKey(name: 'sold_out_shops')  List<String> soldOutShops, @JsonKey(name: 'ended_shops')  List<EndedShop> endedShops, @JsonKey(name: 'ended_at')  String? endedAt, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'image_url')  String? imageUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LimitedMenu() when $default != null:
 return $default(_that.campaignId,_that.name,_that.startDate,_that.shops,_that.soldOutShops,_that.endedShops,_that.endedAt,_that.articleSlug,_that.thumbnailUrl,_that.imageUrl);case _:
@@ -195,7 +199,7 @@ return $default(_that.campaignId,_that.name,_that.startDate,_that.shops,_that.so
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'campaign_id')  String campaignId,  String name, @JsonKey(name: 'start_date')  String? startDate,  List<String> shops, @JsonKey(name: 'sold_out_shops')  List<String> soldOutShops, @JsonKey(name: 'ended_shops')  List<EndedShop> endedShops, @JsonKey(name: 'ended_at')  String? endedAt, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'image_url')  String? imageUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'campaign_id')  String campaignId,  String? name, @JsonKey(name: 'start_date')  String? startDate,  List<String> shops, @JsonKey(name: 'sold_out_shops')  List<String> soldOutShops, @JsonKey(name: 'ended_shops')  List<EndedShop> endedShops, @JsonKey(name: 'ended_at')  String? endedAt, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'image_url')  String? imageUrl)  $default,) {final _that = this;
 switch (_that) {
 case _LimitedMenu():
 return $default(_that.campaignId,_that.name,_that.startDate,_that.shops,_that.soldOutShops,_that.endedShops,_that.endedAt,_that.articleSlug,_that.thumbnailUrl,_that.imageUrl);case _:
@@ -215,7 +219,7 @@ return $default(_that.campaignId,_that.name,_that.startDate,_that.shops,_that.so
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'campaign_id')  String campaignId,  String name, @JsonKey(name: 'start_date')  String? startDate,  List<String> shops, @JsonKey(name: 'sold_out_shops')  List<String> soldOutShops, @JsonKey(name: 'ended_shops')  List<EndedShop> endedShops, @JsonKey(name: 'ended_at')  String? endedAt, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'image_url')  String? imageUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'campaign_id')  String campaignId,  String? name, @JsonKey(name: 'start_date')  String? startDate,  List<String> shops, @JsonKey(name: 'sold_out_shops')  List<String> soldOutShops, @JsonKey(name: 'ended_shops')  List<EndedShop> endedShops, @JsonKey(name: 'ended_at')  String? endedAt, @JsonKey(name: 'article_slug')  String? articleSlug, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'image_url')  String? imageUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _LimitedMenu() when $default != null:
 return $default(_that.campaignId,_that.name,_that.startDate,_that.shops,_that.soldOutShops,_that.endedShops,_that.endedAt,_that.articleSlug,_that.thumbnailUrl,_that.imageUrl);case _:
@@ -230,13 +234,17 @@ return $default(_that.campaignId,_that.name,_that.startDate,_that.shops,_that.so
 @JsonSerializable()
 
 class _LimitedMenu implements LimitedMenu {
-  const _LimitedMenu({@JsonKey(name: 'campaign_id') required this.campaignId, required this.name, @JsonKey(name: 'start_date') this.startDate, final  List<String> shops = const <String>[], @JsonKey(name: 'sold_out_shops') final  List<String> soldOutShops = const <String>[], @JsonKey(name: 'ended_shops') final  List<EndedShop> endedShops = const <EndedShop>[], @JsonKey(name: 'ended_at') this.endedAt, @JsonKey(name: 'article_slug') this.articleSlug, @JsonKey(name: 'thumbnail_url') this.thumbnailUrl, @JsonKey(name: 'image_url') this.imageUrl}): _shops = shops,_soldOutShops = soldOutShops,_endedShops = endedShops;
+  const _LimitedMenu({@JsonKey(name: 'campaign_id') required this.campaignId, this.name, @JsonKey(name: 'start_date') this.startDate, final  List<String> shops = const <String>[], @JsonKey(name: 'sold_out_shops') final  List<String> soldOutShops = const <String>[], @JsonKey(name: 'ended_shops') final  List<EndedShop> endedShops = const <EndedShop>[], @JsonKey(name: 'ended_at') this.endedAt, @JsonKey(name: 'article_slug') this.articleSlug, @JsonKey(name: 'thumbnail_url') this.thumbnailUrl, @JsonKey(name: 'image_url') this.imageUrl}): _shops = shops,_soldOutShops = soldOutShops,_endedShops = endedShops;
   factory _LimitedMenu.fromJson(Map<String, dynamic> json) => _$LimitedMenuFromJson(json);
 
 /// 識別子。**昼の品の `cms_id`**（深夜料金版は配信側で 1 つにまとめてある）。
 /// とん速にキャンペーンという単位は無いが、鍵の名前は牛めしレーダーに揃えてある
 @override@JsonKey(name: 'campaign_id') final  String campaignId;
-@override final  String name;
+/// 品名。**英語・中国語の面（`i18n/{en,zh}/app/limited.json`）では公式訳か
+/// 訳語辞書の訳で、どちらも無ければ null**（日本語に落とさない。
+/// tonsoku-backend-batch#286）。**null の品は地図に出さない**
+/// （`MapRepository.isShown`）
+@override final  String? name;
 /// 発売の時刻（JST `YYYY-MM-DD HH:mm`）。
 @override@JsonKey(name: 'start_date') final  String? startDate;
 /// **いま掲載がある店**（売り切れ中の店も含む）。
@@ -311,7 +319,7 @@ abstract mixin class _$LimitedMenuCopyWith<$Res> implements $LimitedMenuCopyWith
   factory _$LimitedMenuCopyWith(_LimitedMenu value, $Res Function(_LimitedMenu) _then) = __$LimitedMenuCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'campaign_id') String campaignId, String name,@JsonKey(name: 'start_date') String? startDate, List<String> shops,@JsonKey(name: 'sold_out_shops') List<String> soldOutShops,@JsonKey(name: 'ended_shops') List<EndedShop> endedShops,@JsonKey(name: 'ended_at') String? endedAt,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'image_url') String? imageUrl
+@JsonKey(name: 'campaign_id') String campaignId, String? name,@JsonKey(name: 'start_date') String? startDate, List<String> shops,@JsonKey(name: 'sold_out_shops') List<String> soldOutShops,@JsonKey(name: 'ended_shops') List<EndedShop> endedShops,@JsonKey(name: 'ended_at') String? endedAt,@JsonKey(name: 'article_slug') String? articleSlug,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'image_url') String? imageUrl
 });
 
 
@@ -328,11 +336,11 @@ class __$LimitedMenuCopyWithImpl<$Res>
 
 /// Create a copy of LimitedMenu
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? campaignId = null,Object? name = null,Object? startDate = freezed,Object? shops = null,Object? soldOutShops = null,Object? endedShops = null,Object? endedAt = freezed,Object? articleSlug = freezed,Object? thumbnailUrl = freezed,Object? imageUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? campaignId = null,Object? name = freezed,Object? startDate = freezed,Object? shops = null,Object? soldOutShops = null,Object? endedShops = null,Object? endedAt = freezed,Object? articleSlug = freezed,Object? thumbnailUrl = freezed,Object? imageUrl = freezed,}) {
   return _then(_LimitedMenu(
 campaignId: null == campaignId ? _self.campaignId : campaignId // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,startDate: freezed == startDate ? _self.startDate : startDate // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,startDate: freezed == startDate ? _self.startDate : startDate // ignore: cast_nullable_to_non_nullable
 as String?,shops: null == shops ? _self._shops : shops // ignore: cast_nullable_to_non_nullable
 as List<String>,soldOutShops: null == soldOutShops ? _self._soldOutShops : soldOutShops // ignore: cast_nullable_to_non_nullable
 as List<String>,endedShops: null == endedShops ? _self._endedShops : endedShops // ignore: cast_nullable_to_non_nullable

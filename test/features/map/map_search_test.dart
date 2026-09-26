@@ -34,4 +34,17 @@ void main() {
     final many = [for (var i = 0; i < 30; i++) shop('${1000 + i}', '松のや $i店')];
     expect(searchShops('松のや', many), hasLength(MapSearch.maxResults));
   });
+
+  /// 英語・中国語の面は店名が訳（`Matsunoya Nishi-Shinjuku`）か、訳が無ければ
+  /// null（tonsoku-backend-batch#286）。
+  test('英語の店名は小文字でも引け、店名が null の店はローマ字名で引ける', () {
+    final translated = [
+      shop('0000001202', 'Matsunoya Nishi-Shinjuku', 'NISHISHINJUKU'),
+      const Shop(code: '0000001232', nameRoman: 'FUNABASHI', lat: 35, lon: 139),
+    ];
+    expect(searchShops('nishi-shinjuku', translated).single.code, '0000001202');
+    expect(searchShops('funa', translated).single.code, '0000001232');
+    // 店名が null でも落ちない
+    expect(searchShops('松のや', translated), isEmpty);
+  });
 }

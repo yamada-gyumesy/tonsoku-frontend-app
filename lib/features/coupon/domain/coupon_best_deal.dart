@@ -39,10 +39,14 @@ class BestDealItemView {
     required this.thumbnail,
   });
 
-  final String name;
+  /// **英語・中国語で訳が無い品は null**（日本語に落とさない）。その時は名前を
+  /// 描かない（web の `CouponBestItemView.name`）。
+  final String? name;
   final int? priceYen;
 
-  /// **一覧に居る slug だけ**（品は施策より寿命が短い）。
+  /// **一覧に居る slug だけ**（品は施策より寿命が短い）。**名前が null の品は
+  /// 付けない** ―― 文字の無いリンクは、読み上げで名前の無い行き先になる
+  /// （web の `CoCouponBest` と同じ）。
   final String? articleSlug;
   final String thumbnail;
 }
@@ -182,7 +186,9 @@ BestDealView? bestDealView({
                 name: item.name,
                 priceYen: item.priceYen,
                 articleSlug:
-                    item.articleSlug != null && slugs.contains(item.articleSlug)
+                    item.name != null &&
+                        item.articleSlug != null &&
+                        slugs.contains(item.articleSlug)
                     ? item.articleSlug
                     : null,
                 thumbnail: item.thumbnail,

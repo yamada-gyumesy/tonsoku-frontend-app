@@ -218,7 +218,7 @@ Map<String, dynamic> _$CouponPatternToJson(_CouponPattern instance) =>
 
 _CouponPatternItem _$CouponPatternItemFromJson(Map<String, dynamic> json) =>
     _CouponPatternItem(
-      name: json['name'] as String,
+      name: json['name'] as String?,
       priceYen: (json['price_yen'] as num?)?.toInt(),
       articleSlug: json['article_slug'] as String?,
       thumbnail: json['thumbnail'] as String? ?? '',

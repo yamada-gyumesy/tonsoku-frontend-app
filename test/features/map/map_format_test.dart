@@ -5,6 +5,7 @@ import 'package:tonsoku/features/map/domain/limited_status.dart';
 import 'package:tonsoku/features/map/domain/map_format.dart';
 import 'package:tonsoku/features/map/domain/shop_state.dart';
 import 'package:tonsoku/shared/models/limited_menu.dart';
+import 'package:tonsoku/shared/models/shop.dart';
 
 void main() {
   final ja = AppMessages.ja;
@@ -113,5 +114,29 @@ void main() {
       '9/30 22時 閉店',
     );
     expect(shopNotice(const ShopClosed(), ja), '閉店');
+  });
+
+  group('shopLabel', () {
+    test('店名があれば店名', () {
+      const shop = Shop(
+        code: '1',
+        name: 'Matsunoya Nishi-Shinjuku',
+        nameRoman: 'NISHISHINJUKU',
+        lat: 35,
+        lon: 139,
+      );
+      expect(shopLabel(shop), 'Matsunoya Nishi-Shinjuku');
+    });
+
+    test('店名が null（訳が無い）ならローマ字名、それも無ければ null', () {
+      const roman = Shop(
+        code: '1',
+        nameRoman: 'NISHISHINJUKU',
+        lat: 35,
+        lon: 139,
+      );
+      expect(shopLabel(roman), 'NISHISHINJUKU');
+      expect(shopLabel(const Shop(code: '1', lat: 35, lon: 139)), isNull);
+    });
   });
 }

@@ -8,7 +8,7 @@ part of 'limited_menu.dart';
 
 _LimitedMenu _$LimitedMenuFromJson(Map<String, dynamic> json) => _LimitedMenu(
   campaignId: json['campaign_id'] as String,
-  name: json['name'] as String,
+  name: json['name'] as String?,
   startDate: json['start_date'] as String?,
   shops:
       (json['shops'] as List<dynamic>?)?.map((e) => e as String).toList() ??

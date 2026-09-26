@@ -16,17 +16,24 @@ T _$identity<T>(T value) => value;
 mixin _$Shop {
 
  String get code;/// 「松のや 西新宿店」のように**ブランド名から始まる**正式名。
- String get name;/// 店名のローマ字（`NISHISHINJUKU`）。**大文字だけで読みにくい**ので画面には
-/// 出さない（牛めしレーダーは検索の照合に使っている）
+///
+/// **英語・中国語の面（`i18n/{en,zh}/app/shop.json`）では訳が無ければ null**
+/// （日本語に落とさない。tonsoku-backend-batch#286）。日本語の面は必ず入る。
+/// 画面に出す名前は `shopLabel`（`lib/features/map/domain/map_format.dart`）
+ String? get name;/// 店名のローマ字（`NISHISHINJUKU`）。**大文字だけで読みにくい**ので、
+/// [name] がある時は画面に出さない（牛めしレーダーは検索の照合に使っている）。
+/// **[name] が null の時の代わり**にだけ使う（配信側のスキーマが
+/// 「name_roman に落とせる」としている。`shopLabel`）
 @JsonKey(name: 'name_roman') String? get nameRoman; double get lat; double get lon;/// 閉店する（した）時刻。**意味は [openingDate] との前後で変わる**
 /// （`lib/features/map/domain/shop_state.dart`）
 @JsonKey(name: 'closing_date') String? get closingDate;/// 開店する（した）時刻。
 @JsonKey(name: 'opening_date') String? get openingDate;/// 併設しているブランド（`matsuya` / `mycurry`）。**松のや自身
 /// （`matsunoya`）が入ることもある**ので、併設として数えるのは
 /// `lib/features/map/domain/shop_filter.dart` の [ShopBrand] に載っているものだけ
- List<String> get brands;/// 住所（Navitime）。
+ List<String> get brands;/// 住所（Navitime）。**英語・中国語の面では訳が無ければ null**（行を出さない）
  String? get address;/// 営業時間。**Navitime の表記そのまま**（「月から土：5時から翌2時、…」）で、
-/// 形が決まっていないので**組み替えずにそのまま出す**。
+/// 形が決まっていないので**組み替えずにそのまま出す**。**英語・中国語の面では
+/// 訳が無ければ null**（行を出さない）
 @JsonKey(name: 'business_hours') String? get businessHours; String? get phone;/// 一時閉店中、またはこれから一時閉店する期間。**カレンダーの「一時閉店」と
 /// 同じ答え**。無ければ null
 @JsonKey(name: 'temp_closed') TempClosed? get tempClosed;
@@ -62,7 +69,7 @@ abstract mixin class $ShopCopyWith<$Res>  {
   factory $ShopCopyWith(Shop value, $Res Function(Shop) _then) = _$ShopCopyWithImpl;
 @useResult
 $Res call({
- String code, String name,@JsonKey(name: 'name_roman') String? nameRoman, double lat, double lon,@JsonKey(name: 'closing_date') String? closingDate,@JsonKey(name: 'opening_date') String? openingDate, List<String> brands, String? address,@JsonKey(name: 'business_hours') String? businessHours, String? phone,@JsonKey(name: 'temp_closed') TempClosed? tempClosed
+ String code, String? name,@JsonKey(name: 'name_roman') String? nameRoman, double lat, double lon,@JsonKey(name: 'closing_date') String? closingDate,@JsonKey(name: 'opening_date') String? openingDate, List<String> brands, String? address,@JsonKey(name: 'business_hours') String? businessHours, String? phone,@JsonKey(name: 'temp_closed') TempClosed? tempClosed
 });
 
 
@@ -79,11 +86,11 @@ class _$ShopCopyWithImpl<$Res>
 
 /// Create a copy of Shop
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? name = null,Object? nameRoman = freezed,Object? lat = null,Object? lon = null,Object? closingDate = freezed,Object? openingDate = freezed,Object? brands = null,Object? address = freezed,Object? businessHours = freezed,Object? phone = freezed,Object? tempClosed = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? name = freezed,Object? nameRoman = freezed,Object? lat = null,Object? lon = null,Object? closingDate = freezed,Object? openingDate = freezed,Object? brands = null,Object? address = freezed,Object? businessHours = freezed,Object? phone = freezed,Object? tempClosed = freezed,}) {
   return _then(_self.copyWith(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,nameRoman: freezed == nameRoman ? _self.nameRoman : nameRoman // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,nameRoman: freezed == nameRoman ? _self.nameRoman : nameRoman // ignore: cast_nullable_to_non_nullable
 as String?,lat: null == lat ? _self.lat : lat // ignore: cast_nullable_to_non_nullable
 as double,lon: null == lon ? _self.lon : lon // ignore: cast_nullable_to_non_nullable
 as double,closingDate: freezed == closingDate ? _self.closingDate : closingDate // ignore: cast_nullable_to_non_nullable
@@ -190,7 +197,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String name, @JsonKey(name: 'name_roman')  String? nameRoman,  double lat,  double lon, @JsonKey(name: 'closing_date')  String? closingDate, @JsonKey(name: 'opening_date')  String? openingDate,  List<String> brands,  String? address, @JsonKey(name: 'business_hours')  String? businessHours,  String? phone, @JsonKey(name: 'temp_closed')  TempClosed? tempClosed)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String? name, @JsonKey(name: 'name_roman')  String? nameRoman,  double lat,  double lon, @JsonKey(name: 'closing_date')  String? closingDate, @JsonKey(name: 'opening_date')  String? openingDate,  List<String> brands,  String? address, @JsonKey(name: 'business_hours')  String? businessHours,  String? phone, @JsonKey(name: 'temp_closed')  TempClosed? tempClosed)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Shop() when $default != null:
 return $default(_that.code,_that.name,_that.nameRoman,_that.lat,_that.lon,_that.closingDate,_that.openingDate,_that.brands,_that.address,_that.businessHours,_that.phone,_that.tempClosed);case _:
@@ -211,7 +218,7 @@ return $default(_that.code,_that.name,_that.nameRoman,_that.lat,_that.lon,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String name, @JsonKey(name: 'name_roman')  String? nameRoman,  double lat,  double lon, @JsonKey(name: 'closing_date')  String? closingDate, @JsonKey(name: 'opening_date')  String? openingDate,  List<String> brands,  String? address, @JsonKey(name: 'business_hours')  String? businessHours,  String? phone, @JsonKey(name: 'temp_closed')  TempClosed? tempClosed)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String? name, @JsonKey(name: 'name_roman')  String? nameRoman,  double lat,  double lon, @JsonKey(name: 'closing_date')  String? closingDate, @JsonKey(name: 'opening_date')  String? openingDate,  List<String> brands,  String? address, @JsonKey(name: 'business_hours')  String? businessHours,  String? phone, @JsonKey(name: 'temp_closed')  TempClosed? tempClosed)  $default,) {final _that = this;
 switch (_that) {
 case _Shop():
 return $default(_that.code,_that.name,_that.nameRoman,_that.lat,_that.lon,_that.closingDate,_that.openingDate,_that.brands,_that.address,_that.businessHours,_that.phone,_that.tempClosed);case _:
@@ -231,7 +238,7 @@ return $default(_that.code,_that.name,_that.nameRoman,_that.lat,_that.lon,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String name, @JsonKey(name: 'name_roman')  String? nameRoman,  double lat,  double lon, @JsonKey(name: 'closing_date')  String? closingDate, @JsonKey(name: 'opening_date')  String? openingDate,  List<String> brands,  String? address, @JsonKey(name: 'business_hours')  String? businessHours,  String? phone, @JsonKey(name: 'temp_closed')  TempClosed? tempClosed)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String? name, @JsonKey(name: 'name_roman')  String? nameRoman,  double lat,  double lon, @JsonKey(name: 'closing_date')  String? closingDate, @JsonKey(name: 'opening_date')  String? openingDate,  List<String> brands,  String? address, @JsonKey(name: 'business_hours')  String? businessHours,  String? phone, @JsonKey(name: 'temp_closed')  TempClosed? tempClosed)?  $default,) {final _that = this;
 switch (_that) {
 case _Shop() when $default != null:
 return $default(_that.code,_that.name,_that.nameRoman,_that.lat,_that.lon,_that.closingDate,_that.openingDate,_that.brands,_that.address,_that.businessHours,_that.phone,_that.tempClosed);case _:
@@ -246,14 +253,20 @@ return $default(_that.code,_that.name,_that.nameRoman,_that.lat,_that.lon,_that.
 @JsonSerializable()
 
 class _Shop implements Shop {
-  const _Shop({required this.code, required this.name, @JsonKey(name: 'name_roman') this.nameRoman, required this.lat, required this.lon, @JsonKey(name: 'closing_date') this.closingDate, @JsonKey(name: 'opening_date') this.openingDate, final  List<String> brands = const <String>[], this.address, @JsonKey(name: 'business_hours') this.businessHours, this.phone, @JsonKey(name: 'temp_closed') this.tempClosed}): _brands = brands;
+  const _Shop({required this.code, this.name, @JsonKey(name: 'name_roman') this.nameRoman, required this.lat, required this.lon, @JsonKey(name: 'closing_date') this.closingDate, @JsonKey(name: 'opening_date') this.openingDate, final  List<String> brands = const <String>[], this.address, @JsonKey(name: 'business_hours') this.businessHours, this.phone, @JsonKey(name: 'temp_closed') this.tempClosed}): _brands = brands;
   factory _Shop.fromJson(Map<String, dynamic> json) => _$ShopFromJson(json);
 
 @override final  String code;
 /// 「松のや 西新宿店」のように**ブランド名から始まる**正式名。
-@override final  String name;
-/// 店名のローマ字（`NISHISHINJUKU`）。**大文字だけで読みにくい**ので画面には
-/// 出さない（牛めしレーダーは検索の照合に使っている）
+///
+/// **英語・中国語の面（`i18n/{en,zh}/app/shop.json`）では訳が無ければ null**
+/// （日本語に落とさない。tonsoku-backend-batch#286）。日本語の面は必ず入る。
+/// 画面に出す名前は `shopLabel`（`lib/features/map/domain/map_format.dart`）
+@override final  String? name;
+/// 店名のローマ字（`NISHISHINJUKU`）。**大文字だけで読みにくい**ので、
+/// [name] がある時は画面に出さない（牛めしレーダーは検索の照合に使っている）。
+/// **[name] が null の時の代わり**にだけ使う（配信側のスキーマが
+/// 「name_roman に落とせる」としている。`shopLabel`）
 @override@JsonKey(name: 'name_roman') final  String? nameRoman;
 @override final  double lat;
 @override final  double lon;
@@ -275,10 +288,11 @@ class _Shop implements Shop {
   return EqualUnmodifiableListView(_brands);
 }
 
-/// 住所（Navitime）。
+/// 住所（Navitime）。**英語・中国語の面では訳が無ければ null**（行を出さない）
 @override final  String? address;
 /// 営業時間。**Navitime の表記そのまま**（「月から土：5時から翌2時、…」）で、
-/// 形が決まっていないので**組み替えずにそのまま出す**。
+/// 形が決まっていないので**組み替えずにそのまま出す**。**英語・中国語の面では
+/// 訳が無ければ null**（行を出さない）
 @override@JsonKey(name: 'business_hours') final  String? businessHours;
 @override final  String? phone;
 /// 一時閉店中、またはこれから一時閉店する期間。**カレンダーの「一時閉店」と
@@ -318,7 +332,7 @@ abstract mixin class _$ShopCopyWith<$Res> implements $ShopCopyWith<$Res> {
   factory _$ShopCopyWith(_Shop value, $Res Function(_Shop) _then) = __$ShopCopyWithImpl;
 @override @useResult
 $Res call({
- String code, String name,@JsonKey(name: 'name_roman') String? nameRoman, double lat, double lon,@JsonKey(name: 'closing_date') String? closingDate,@JsonKey(name: 'opening_date') String? openingDate, List<String> brands, String? address,@JsonKey(name: 'business_hours') String? businessHours, String? phone,@JsonKey(name: 'temp_closed') TempClosed? tempClosed
+ String code, String? name,@JsonKey(name: 'name_roman') String? nameRoman, double lat, double lon,@JsonKey(name: 'closing_date') String? closingDate,@JsonKey(name: 'opening_date') String? openingDate, List<String> brands, String? address,@JsonKey(name: 'business_hours') String? businessHours, String? phone,@JsonKey(name: 'temp_closed') TempClosed? tempClosed
 });
 
 
@@ -335,11 +349,11 @@ class __$ShopCopyWithImpl<$Res>
 
 /// Create a copy of Shop
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? name = null,Object? nameRoman = freezed,Object? lat = null,Object? lon = null,Object? closingDate = freezed,Object? openingDate = freezed,Object? brands = null,Object? address = freezed,Object? businessHours = freezed,Object? phone = freezed,Object? tempClosed = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? name = freezed,Object? nameRoman = freezed,Object? lat = null,Object? lon = null,Object? closingDate = freezed,Object? openingDate = freezed,Object? brands = null,Object? address = freezed,Object? businessHours = freezed,Object? phone = freezed,Object? tempClosed = freezed,}) {
   return _then(_Shop(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,nameRoman: freezed == nameRoman ? _self.nameRoman : nameRoman // ignore: cast_nullable_to_non_nullable
+as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,nameRoman: freezed == nameRoman ? _self.nameRoman : nameRoman // ignore: cast_nullable_to_non_nullable
 as String?,lat: null == lat ? _self.lat : lat // ignore: cast_nullable_to_non_nullable
 as double,lon: null == lon ? _self.lon : lon // ignore: cast_nullable_to_non_nullable
 as double,closingDate: freezed == closingDate ? _self.closingDate : closingDate // ignore: cast_nullable_to_non_nullable
