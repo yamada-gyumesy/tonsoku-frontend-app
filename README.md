@@ -151,7 +151,7 @@ CDN（`cdn.ton-soku.com`）から取得する。**日本語はルート、追加
 | クーポン | `/coupon/` | `松のやのクーポン \| とん速` |
 | ランキング | `/ranking/` | `ランキング \| とん速` |
 | 通知設定 | `/notifications/` | `通知設定 \| とん速` |
-| マップ（web に無い） | `map` | `map` |
+| マップ（web は誘導の LP） | `/map/` | `マップ \| とん速` |
 | ライセンス（web に無い） | `licenses` | `licenses` |
 | オンボーディング（web に無い） | `onboarding/intro` / `onboarding/notifications` | 同左 |
 

@@ -8,6 +8,7 @@ import 'package:tonsoku/features/coupon/presentation/coupon_page.dart';
 import 'package:tonsoku/features/ranking/presentation/ranking_page.dart';
 import 'package:tonsoku/features/home/presentation/article_list_page.dart';
 import 'package:tonsoku/features/home/presentation/home_page.dart';
+import 'package:tonsoku/features/map/domain/map_link_filter.dart';
 import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/notifications/presentation/notification_settings_page.dart';
 import 'package:tonsoku/features/shell/presentation/app_shell.dart';
@@ -19,9 +20,12 @@ import 'package:tonsoku/features/shell/presentation/app_shell.dart';
 /// 書き直さずに済ませるため。ただし**ロケールのパスプレフィックスは持たない**——
 /// アプリの表示言語は設定であって URL ではない（gyumesy-frontend-app と同じ）。
 ///
-/// **`/map` は web に無い。** アプリにしか無い面で、URL としても web に存在しない。
+/// **`/map` の web の面はアプリへ誘導する LP**（中身の地図はアプリにしか無い）。
 abstract final class AppRoutes {
   static const home = '/';
+
+  /// マップのタブ。**絞り込みを入れて開く時は `?menu=…&brand=…&include=1`**
+  /// （組み立てと読み取りは [MapLinkFilter]。`MapLinkFilter.location`）。
   static const map = '/map';
   static const coupon = '/coupon';
 
@@ -177,6 +181,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.map,
                 builder: (context, state) => MapPage(
+                  // **リンクで渡された絞り込み**（`/map?menu=…`。外から来た
+                  // URL は `deepLinkTarget` がハッシュからこの形へ読み替える）。
+                  // 積んだ画面（`/map/articles/…`）の間はクエリが無く null
+                  link: MapLinkFilter.fromQuery(state.uri),
                   // **品の記事はマップのタブの上に積む**（戻るとマップへ帰る。
                   // 見ていた位置と絞り込みはそのまま残る）
                   onOpenArticle: (slug) =>

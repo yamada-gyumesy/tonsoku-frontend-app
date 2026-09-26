@@ -21,6 +21,7 @@
 library;
 
 import 'package:tonsoku/core/router/app_router.dart';
+import 'package:tonsoku/features/map/domain/map_link_filter.dart';
 
 /// 開く先。**開けなければ null**（呼び手が外部ブラウザへ回す）。
 ///
@@ -60,16 +61,25 @@ final class RouteTarget extends DeepLinkTarget {
 /// **比較できるよう、関数ではなく種類とクエリで持つ。** 関数を持たせると
 /// テストで同じ行き先かを確かめられない。
 final class MenuScreenTarget extends DeepLinkTarget {
-  const MenuScreenTarget(this.screen, {this.category});
+  const MenuScreenTarget(this.screen, {this.category, this.month});
 
   final MenuScreen screen;
 
   /// カレンダーを絞るカテゴリ（web の `/calendar/#category=campaign`）。
   final String? category;
 
+  /// カレンダーで開く月（`YYYY-MM`。web の `/calendar/#month=2026-09`）。
+  /// **ここでは確かめない。** 形と範囲はカレンダーの画面が見て、外れていれば
+  /// 既定の月で開く（`CalendarPage` の `_openingMonth`）。
+  final String? month;
+
   /// 積む先の行き先。[prefix] は [AppRoutes.branchPrefixes] の 1 つ。
   String location(String prefix) => switch (screen) {
-    MenuScreen.calendar => AppRoutes.calendar(prefix, category: category),
+    MenuScreen.calendar => AppRoutes.calendar(
+      prefix,
+      category: category,
+      month: month,
+    ),
     MenuScreen.ranking => AppRoutes.ranking(prefix),
     MenuScreen.notifications => AppRoutes.notifications(prefix),
   };
@@ -78,13 +88,15 @@ final class MenuScreenTarget extends DeepLinkTarget {
   bool operator ==(Object other) =>
       other is MenuScreenTarget &&
       other.screen == screen &&
-      other.category == category;
+      other.category == category &&
+      other.month == month;
 
   @override
-  int get hashCode => Object.hash(screen, category);
+  int get hashCode => Object.hash(screen, category, month);
 
   @override
-  String toString() => 'MenuScreenTarget($screen, category: $category)';
+  String toString() =>
+      'MenuScreenTarget($screen, category: $category, month: $month)';
 }
 
 /// メニューから開く画面の種類。
@@ -125,12 +137,20 @@ DeepLinkTarget? deepLinkTarget(String? url, {required String siteHost}) {
     // 記事一覧（web の `/articles/`。ホームの「過去の記事を見る」の先）
     ['articles'] => const RouteTarget(AppRoutes.articles),
     ['coupon'] => const RouteTarget(AppRoutes.coupon),
-    // **カレンダーの絞り込みは web ではハッシュで渡る**（`#category=campaign`。
-    // クエリだと別 URL としてクロールされるのを避けた web の都合）。
-    // アプリはクエリで持つので読み替える（[AppRoutes.calendar]）
+    // **マップのタブ。絞り込みは web ではハッシュで渡る**（`#menu=…&brand=…`。
+    // カレンダーと同じ形。web の `/map/` はアプリへ誘導する LP で、そこの
+    // リンクがこの形で来る）。アプリはクエリで持つので読み替える
+    // （[MapLinkFilter]）。**読めなければ素の `/map`**（今の絞り込みに触らない）
+    ['map'] => RouteTarget(
+      MapLinkFilter.fromFragment(uri.fragment)?.location ?? AppRoutes.map,
+    ),
+    // **カレンダーの絞り込みは web ではハッシュで渡る**（`#category=campaign`・
+    // `#month=2026-09`。クエリだと別 URL としてクロールされるのを避けた web の
+    // 都合）。アプリはクエリで持つので読み替える（[AppRoutes.calendar]）
     ['calendar'] => MenuScreenTarget(
       MenuScreen.calendar,
       category: _hashParam(uri.fragment, 'category'),
+      month: _hashParam(uri.fragment, 'month'),
     ),
     ['ranking'] => const MenuScreenTarget(MenuScreen.ranking),
     ['notifications'] => const MenuScreenTarget(MenuScreen.notifications),

@@ -20,6 +20,7 @@ web（`https://ton-soku.com`）のリンクを踏んだ時に、ブラウザで�
 | 面 | 名乗る | 理由 |
 |---|---|---|
 | `/`・`/articles`・`/articles/{slug}` | ✅ | ホーム・記事一覧・記事 |
+| `/map` | ✅ | マップのタブ。**web の `/map/` はアプリへ誘導する LP**（Issue #30。絞り込みは下の「マップの絞り込み」） |
 | `/coupon`・`/calendar`・`/ranking`・`/notifications` | ✅ | クーポンはタブ、残りはメニューから開く画面 |
 | `/category/{slug}` | ❌ | **とん速のホームにはカテゴリのタブが無い**（gyumesy は名乗っている） |
 | `/about`・`/legal/*` | ❌ | アプリは web で表示する方針（メニューから web を開く） |
@@ -28,9 +29,36 @@ web（`https://ton-soku.com`）のリンクを踏んだ時に、ブラウザで�
 ロケール（`/en`・`/zh`）も同じ規則。**末尾スラッシュの有無で 2 本ずつ**並べる
 （web は常に末尾スラッシュ付きで出すが、スラッシュ無しで貼られた URL も拾う）。
 
-**面を増やす時は 3 か所を一緒に直す**: `deepLinkTarget`・`AndroidManifest.xml`・web の AASA。
-Android 側のずれは `test/features/notifications/deep_link_test.dart` が止めるが、
-**web の AASA はこのリポジトリのテストでは見られない。**
+**面を増やす時は 3 か所を一緒に直す**: `deepLinkTarget`・`AndroidManifest.xml`・下の AASA
+（web に置くものの写し）。3 つのずれは `test/features/notifications/deep_link_test.dart` が
+止める（名乗る面が全部開けること・マニフェストと下の AASA が同じ面を名乗っていること）。
+**ただし web に実際に置かれた AASA はこのリポジトリのテストでは見られない**（下の JSON を
+直したら web のセッションに同じ変更を頼む）。
+
+## マップの絞り込み
+
+**web の `/map/` はアプリへ誘導する LP で、そこのリンクがアプリのマップを開く**（Issue #30）。
+絞り込みは**ハッシュ**で渡す（web のカレンダーの `/calendar/#category=…&month=…` と同じ形）:
+
+```
+https://ton-soku.com/map/#menu=177979,174161&brand=standalone,matsuya&include=1
+```
+
+| 鍵 | 値 | 意味 |
+|---|---|---|
+| `menu` | `campaign_id`（カンマ区切り） | 店舗限定の品で絞る |
+| `brand` | `standalone`・`matsuya`・`mycurry`（カンマ区切り） | 松のや専門店・松屋併設・マイカリー食堂併設で絞る |
+| `include` | `1` | 売り切れ・終売の店も含める |
+
+- **知らない値は黙って捨てる**（配信から消えた品・知らないブランド）。読める値が 1 つも
+  無ければ、絞り込みには触らずにマップを開く
+- **マップが既に開いていても、今の絞り込みを丸ごと置き換える**
+- **店舗限定の表示が閉じている時**（リワード動画を見ていない）は品の印は出ない。いつもの
+  流れで開放すると、リンクの品で絞られた状態になる
+- `brand` があれば、普段は畳んでいる併設の段を開いて見せる
+- 読み書きは `lib/features/map/domain/map_link_filter.dart`（`MapLinkFilter`）1 か所。
+  アプリの中の行き先は**クエリ**（`/map?menu=…`。`AppRoutes.calendar` と同じ理由）で、
+  ハッシュからの読み替えは `deepLinkTarget` がする
 
 ## web に置くもの
 
@@ -96,6 +124,14 @@ AASA を `scripts/prepare-locale-assets.mts` で `ROUTES` とロケール表か�
             "comment": "notifications (ja)"
           },
           {
+            "/": "/map",
+            "comment": "map (ja)"
+          },
+          {
+            "/": "/map/",
+            "comment": "map (ja)"
+          },
+          {
             "/": "/articles",
             "comment": "articleBase (ja)"
           },
@@ -144,6 +180,14 @@ AASA を `scripts/prepare-locale-assets.mts` で `ROUTES` とロケール表か�
             "comment": "notifications (en)"
           },
           {
+            "/": "/en/map",
+            "comment": "map (en)"
+          },
+          {
+            "/": "/en/map/",
+            "comment": "map (en)"
+          },
+          {
             "/": "/en/articles",
             "comment": "articleBase (en)"
           },
@@ -190,6 +234,14 @@ AASA を `scripts/prepare-locale-assets.mts` で `ROUTES` とロケール表か�
           {
             "/": "/zh/notifications/",
             "comment": "notifications (zh)"
+          },
+          {
+            "/": "/zh/map",
+            "comment": "map (zh)"
+          },
+          {
+            "/": "/zh/map/",
+            "comment": "map (zh)"
           },
           {
             "/": "/zh/articles",
@@ -256,6 +308,8 @@ xcrun simctl openurl booted "https://ton-soku.com/articles/<slug>/"
 - **iOS は AASA を Apple の CDN 越しに取る**（`https://app-site-association.cdn-apple.com/a/v1/ton-soku.com`）。
   web に置いてから反映まで時間がかかる
 - 確かめる面: 記事・`/en/` 付きの記事・カレンダー（`#category=campaign` 付き）・通知設定・
+  マップ（`#menu=<campaign_id>&brand=standalone` 付き。**マップを開いたまま別の絞り込みの
+  リンクを踏み、置き換わること**も）・
   **名乗っていない面（`/about/`・`/category/<slug>/`）がブラウザで開くこと**
 - **背面から踏む**: 記事 A を開いて背面へ → 記事 B のリンクを踏む → **B が開くこと**
   （gyumesy で A が開いていた不具合。`_syncLatestLink` が直している）

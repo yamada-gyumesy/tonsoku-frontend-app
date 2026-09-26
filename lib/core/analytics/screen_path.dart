@@ -119,19 +119,25 @@ class ScreenPath {
         title: _suffixed(t.notificationsTitle, t),
       );
 
-  /// マップ。**web に無い面**なので [ScreenPath.appOnly]（スクリーン名・
-  /// スクリーン クラスとも `map`）。
+  /// マップ。**web の `/map/`（アプリへ誘導する LP）と同じ行に並べる**
+  /// （Issue #30）。
   ///
-  /// **`/map/` を名乗らない。** スクリーン クラスは web のページパスと同じ列に
-  /// 落ちるので、`/map/` と送ると**web に存在する URL のような行**ができる。
-  /// web にいつか `/map/` ができた時、中身の違う 2 つが黙って 1 行に混ざる。
-  /// スラッシュの無い `map` なら、パスの列でもアプリだけの行だと一目で分かる
-  /// （gyumesy のオンボーディングと同じ扱い）。
+  /// web の LP とアプリのマップは中身が違う（LP は地図を持たない）が、
+  /// **同じ面の入口と本体**なので 1 行に並ぶほうが読める（LP から何人が
+  /// アプリへ来たかを同じ行で比べられる）。**web の LP の `<title>` はこの題と
+  /// 1 文字違わず同じにする**（`マップ | とん速`・`Map | Tonsoku`・
+  /// `地图 | 豚速`。web に頼む時は `screen_path_test.dart` の期待値を渡す）。
   factory ScreenPath.map(AppLocale locale, AppMessages t) =>
-      ScreenPath.appOnly(locale, t, name: 'map', title: t.navMap);
+      ScreenPath(path: _p(locale, '/map/'), title: _suffixed(t.navMap, t));
 
-  /// ライセンス表記（メニューの「ライセンス」）。**web に無い面**
-  /// （[ScreenPath.map] と同じ扱い）。
+  /// ライセンス表記（メニューの「ライセンス」）。**web に無い面**なので
+  /// [ScreenPath.appOnly]（スクリーン名・スクリーン クラスとも `licenses`）。
+  ///
+  /// **`/licenses/` を名乗らない。** スクリーン クラスは web のページパスと
+  /// 同じ列に落ちるので、`/licenses/` と送ると**web に存在する URL のような行**
+  /// ができ、web にいつか同名のページができた時に中身の違う 2 つが黙って 1 行に
+  /// 混ざる。スラッシュの無い名前なら、パスの列でもアプリだけの行だと一目で
+  /// 分かる（gyumesy のオンボーディングと同じ扱い）。
   factory ScreenPath.licenses(AppLocale locale, AppMessages t) =>
       ScreenPath.appOnly(locale, t, name: 'licenses', title: t.menuLicenses);
 

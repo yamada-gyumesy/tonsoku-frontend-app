@@ -6,6 +6,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
@@ -16,6 +17,7 @@ import 'package:tonsoku/core/analytics/track_screen.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/lifecycle/app_resume.dart';
+import 'package:tonsoku/core/router/app_router.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
@@ -27,6 +29,7 @@ import 'package:tonsoku/features/map/data/map_unlock.dart';
 import 'package:tonsoku/features/map/data/map_repository.dart';
 import 'package:tonsoku/features/map/data/stations.dart';
 import 'package:tonsoku/features/map/domain/limited_status.dart';
+import 'package:tonsoku/features/map/domain/map_link_filter.dart';
 import 'package:tonsoku/features/map/domain/next_change.dart';
 import 'package:tonsoku/features/map/domain/shop_filter.dart';
 import 'package:tonsoku/features/map/domain/shop_state.dart';
@@ -65,10 +68,19 @@ final bundledTilesProvider = FutureProvider<BundledTileProvider>(
 /// 並びは上から ロゴのヘッダー → 絞り込みの帯 → 地図。**ヘッダーは退かない**
 /// （地図はスクロールしないので、他のタブのように払って隠す動きが無い）。
 class MapPage extends ConsumerStatefulWidget {
-  const MapPage({required this.onOpenArticle, super.key});
+  const MapPage({required this.onOpenArticle, this.link, super.key});
 
   /// 品の記事を開く（マップのタブの中に積む）。
   final ValueChanged<String> onOpenArticle;
+
+  /// リンクで渡された絞り込み（`/map?menu=…`。Issue #30）。**null は
+  /// 「指定なし」で、今の絞り込みに触らない**（下タブの再タップも素の `/map`
+  /// で来る。[MapLinkFilter.fromQuery] の doc）。
+  ///
+  /// **渡されたら今の絞り込みを丸ごと置き換える**（足し合わせない。リンクを
+  /// 踏んだ人が見たいのはリンクの絞り込み）。マップのタブが既に開いていても
+  /// 同じ（`didUpdateWidget`）。
+  final MapLinkFilter? link;
 
   /// 最初に日本全体を収める範囲（沖縄〜北海道）。**全店がここに入る。**
   static final japan = LatLngBounds(
@@ -102,6 +114,15 @@ class MapPage extends ConsumerStatefulWidget {
 class _MapPageState extends ConsumerState<MapPage> {
   final _controller = MapController();
   ShopFilter _filter = const ShopFilter();
+
+  /// リンクで渡された品のうち、**まだ絞り込みに入れていないもの**
+  /// （[_applyLink]）。null なら無い。
+  ///
+  /// **品は店舗限定の表示が開いていて、品の配信が届いてから入れる。**
+  /// それまでに入れると、build の `retainMenus` が「今は無い品」として捨てる
+  /// （閉じている間の品は無いものとして組むため）。リワード動画を見ていない
+  /// 人がリンクから来ても、いつもの流れで開放すればリンクの品で絞られる。
+  Set<String>? _pendingMenuIds;
 
   /// 引いた倍率か（[ShopsLayer.smallBelow]）。**段が変わった時だけ作り直す。**
   bool _small = true;
@@ -144,6 +165,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.link case final link?) _applyLink(link);
     _small = (_saved?.zoom ?? MapPage.minZoom) < ShopsLayer.smallBelow;
     // **開いたらまず現在地へ寄せる**（ユーザーの判断。まだ聞いていなければここで
     // 許可を求める）。取れるまでは最後に見ていた位置（無ければ日本全体）を出しておき、
@@ -153,6 +175,56 @@ class _MapPageState extends ConsumerState<MapPage> {
       // **動画は現在地の許可が片付いてから出す。** 同時に出すと、OS の許可の
       // ダイアログが動画の上に重なる（シミュレータで確かめた）
       if (mounted) setState(() => _located = true);
+    });
+  }
+
+  @override
+  void didUpdateWidget(MapPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // **マップのタブが既に開いていても入れ直す。** タブは indexedStack で、
+    // `go` で来ても State は作り直されない（gyumesy のカレンダーが踏んだ
+    // 「2 回目以降の導線が効かない」と同じ）
+    final link = widget.link;
+    if (link != null && link != oldWidget.link) {
+      setState(() => _applyLink(link));
+    }
+  }
+
+  /// リンクの絞り込みで今の絞り込みを置き換える（[MapPage.link]）。
+  void _applyLink(MapLinkFilter link) {
+    // 品は後で入れる（[_pendingMenuIds]）。**今選んでいる品はここで外す**
+    // （置き換えなので、リンクに無い品が残らないように）
+    _filter = link.toShopFilter().copyWith(menuIds: const {});
+    _pendingMenuIds = link.menuIds.isEmpty ? null : link.menuIds;
+    // **併設の段は普段は畳んでいる**（フィルタのボタンの奥）。リンクが併設で
+    // 絞っている時は開いて見せる（何で絞られているのか分からないまま、店が
+    // 減った地図だけが出るのを避ける）
+    if (link.standalone || link.brands.isNotEmpty) _brandsOpen = true;
+    _clearLinkFromUrl();
+  }
+
+  /// 入れ終えたリンクの絞り込みを URL から消す（`/map?menu=…` → `/map`）。
+  ///
+  /// **同じリンクをもう一度踏んだ時のために要る。** 絞り込みは「今の URL と
+  /// 違う URL へ `go` する」ことでしか届かない（[didUpdateWidget] は値が
+  /// 変わった時しか動けない）。URL に残したまま利用者が絞り込みを変えると、
+  /// 同じリンクを踏んでも go_router から見れば同じ場所への移動で、何も
+  /// 起きない。gyumesy のカレンダーは画面の状態を URL に写し続けて解いて
+  /// いるが、マップの絞り込みは URL から来る値ではないので、消すほうが単純。
+  ///
+  /// **`replace` で書き換える**（gyumesy のカレンダーの `_syncUrl` と同じ。
+  /// 同じ画面のまま行き先だけが変わる）。
+  void _clearLinkFromUrl() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // **ルータの外に置かれても落とさない**（ウィジェットテストは
+      // `MaterialApp` に直接載せる）
+      final router = GoRouter.maybeOf(context);
+      if (router == null) return;
+      final uri = router.state.uri;
+      // マップの上に積んだ画面へ移っていたら触らない（そこはクエリを持たない）
+      if (uri.path != AppRoutes.map || uri.query.isEmpty) return;
+      router.replace(AppRoutes.map);
     });
   }
 
@@ -462,6 +534,15 @@ class _MapPageState extends ConsumerState<MapPage> {
     final menus = open
         ? (menusValue ?? const <LimitedMenu>[])
         : <LimitedMenu>[];
+    // リンクで渡された品を入れる（[_pendingMenuIds]）。開いていて品が届いて
+    // からで、入れた品もすぐ下で配信にあるものだけに絞る（**知らない品は
+    // 黙って捨てる**。Issue #30）
+    if (open && menusValue != null) {
+      if (_pendingMenuIds case final pending?) {
+        _filter = _filter.copyWith(menuIds: pending);
+        _pendingMenuIds = null;
+      }
+    }
     // 配信から消えた品の選択を外す（`ShopFilter.retainMenus`）。取れる前は触らない。
     // **閉じた時も外す**（期限が切れた時に選んだ品が残ると、見えない品で絞られて
     // 地図が 0 店になる）。同じ build の中で使うだけなので setState は要らない

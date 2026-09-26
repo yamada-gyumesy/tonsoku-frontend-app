@@ -45,8 +45,9 @@ void main() {
       'coupon': ('/coupon/', '松のやのクーポン | とん速'),
       'ranking': ('/ranking/', 'ランキング | とん速'),
       'notifications': ('/notifications/', '通知設定 | とん速'),
+      // **マップは web の LP（`/map/`）と同じ行に並べる**（Issue #30）
+      'map': ('/map/', 'マップ | とん速'),
       // web に無い面は、スラッシュの無い識別子（`ScreenPath.appOnly`）
-      'map': ('map', 'map'),
       'licenses': ('licenses', 'licenses'),
     },
     AppLocale.en: {
@@ -57,7 +58,7 @@ void main() {
       'coupon': ('/en/coupon/', 'Matsunoya coupons | Tonsoku'),
       'ranking': ('/en/ranking/', 'Ranking | Tonsoku'),
       'notifications': ('/en/notifications/', 'Notifications | Tonsoku'),
-      'map': ('map', 'map'),
+      'map': ('/en/map/', 'Map | Tonsoku'),
       'licenses': ('licenses', 'licenses'),
     },
     AppLocale.zh: {
@@ -69,7 +70,7 @@ void main() {
       'coupon': ('/zh/coupon/', '松乃家的优惠券 | 豚速'),
       'ranking': ('/zh/ranking/', '排行榜 | 豚速'),
       'notifications': ('/zh/notifications/', '通知设置 | 豚速'),
-      'map': ('map', 'map'),
+      'map': ('/zh/map/', '地图 | 豚速'),
       'licenses': ('licenses', 'licenses'),
     },
   };
@@ -91,15 +92,15 @@ void main() {
     });
   }
 
-  /// **マップは `/map/` を名乗らない。** web に無い URL の形で送ると、web に
-  /// いつか `/map/` ができた時に中身の違う 2 つが 1 行に混ざる
+  /// **web に無い面は web のパスを名乗らない。** web に無い URL の形で送ると、
+  /// web にいつか同名のページができた時に中身の違う 2 つが 1 行に混ざる
   test('web に無い面は /app/ の下に置き、GA4 にはスラッシュの無い名前で送る', () {
     for (final locale in AppLocale.values) {
       final t = AppMessages.of(locale);
-      final map = ScreenPath.map(locale, t);
-      expect(map.path, '${locale.pathPrefix}/app/map/');
-      expect(map.screenClass, isNot(startsWith('/')));
-      expect(map.screenName, isNot(startsWith('/')));
+      final licenses = ScreenPath.licenses(locale, t);
+      expect(licenses.path, '${locale.pathPrefix}/app/licenses/');
+      expect(licenses.screenClass, isNot(startsWith('/')));
+      expect(licenses.screenName, isNot(startsWith('/')));
     }
   });
 

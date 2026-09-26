@@ -245,7 +245,11 @@ class AppMessages {
 
   final String navHome;
 
-  /// **web に無い面。** 訳はこちらで決めた（en は `Map`、zh は `地图`）。
+  /// **web に無い語。** 訳はこちらで決めた（en は `Map`、zh は `地图`）。
+  ///
+  /// **GA4 の題にも使う**（`ScreenPath.map` の `マップ | とん速`）。web の
+  /// `/map/`（アプリへ誘導する LP）の `<title>` はこれと同じ語で作ってもらう
+  /// ので、**変えるなら web の LP も一緒に直す**（ずれると GA4 で別の行になる）。
   final String navMap;
   final String navCoupon;
   final String navMenu;
