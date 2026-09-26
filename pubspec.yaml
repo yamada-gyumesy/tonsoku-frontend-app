@@ -108,6 +108,19 @@ dependencies:
   google_mobile_ads: ^9.1.0
   # iOS の App Tracking Transparency の確認（広告の SDK を始める時に 1 度だけ）
   app_tracking_transparency: ^2.0.7
+  # 広告を外すアプリ内課金（買い切り）。**ストアに触るのは
+  # `lib/core/purchase/purchase_gateway.dart` だけ**（テストはそこを偽物に差し替え、
+  # 本物のストアに触れない）。商品の定義は `iap_products.yaml`。
+  # **版は three-frontend-flutter と揃える**（あちらで審査まで通った組）
+  in_app_purchase: ^3.3.0
+  # 持っている購入の問い合わせ（`queryPastPurchases`）で Android の実装を直接
+  # 使うため明示依存に置く（three と同じ）。**`restorePurchases` は使えない** ――
+  # Android の実装は保留中（pending）の購入まで `restored` に書き換えて流すので、
+  # 払っていない人の広告が消える（`purchase_gateway.dart`）。
+  # この制約は本体とは独立なので、in_app_purchase 本体が android 実装の要求を
+  # ^0.6 以降へ上げたときはここも合わせて上げる（放置すると pub upgrade が
+  # ここで止まる。three の注記）
+  in_app_purchase_android: ^0.5.2
 
   # ユニバーサルリンク / App Links（web の `ton-soku.com` のリンクからアプリを開く）。
   # **版は gyumesy-frontend-app と揃える。** 受け口は通知と同じ `deepLinkTarget`

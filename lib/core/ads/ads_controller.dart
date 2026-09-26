@@ -2,12 +2,22 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:tonsoku/core/ads/ad_gateway.dart';
 import 'package:tonsoku/core/config/ad_config.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
 
-final adConfigProvider = Provider<AdConfig>((ref) => AdConfig.resolve());
+/// 広告の設定。**広告を外す課金を買ってあれば全部の枠が空になる**（[AdConfig.adsRemoved]）。
+///
+/// 買った瞬間にここが組み直され、[AdsController] が [AdsStatus.off] に、
+/// [adUnitProvider] が null になる ―― 出ていたバナーはその場で消える（枠が
+/// ID を失うと持っている広告を捨てる。`ad_banner.dart`）。**SDK は初期化済みの
+/// まま残るが、以後は何も要求しない**（初期化を取り消す口は SDK に無い）。
+final adConfigProvider = Provider<AdConfig>(
+  (ref) => AdConfig.resolve(adsRemoved: ref.watch(adsRemovedProvider)),
+);
 
 /// 広告の SDK の状態。
 enum AdsStatus {
-  /// 出す枠が 1 つも無い（本番の ID が空・広告を外す課金）。**SDK に一切触れない。**
+  /// 出す枠が 1 つも無い（本番の ID が空・広告を外す課金を買ってある）。
+  /// **SDK に一切触れない。**
   off,
 
   /// まだ始めていない（[AdsController.start] 待ち）。
@@ -35,23 +45,44 @@ enum AdsStatus {
 /// **テストでは誰も [start] を呼ばない**ので、既存の画面のテストは SDK に触れない
 /// （広告の枠は [AdsStatus.ready] になるまで何も描かない）。
 class AdsController extends Notifier<AdsStatus> {
+  /// [build] のたびに進める。[start] の途中で組み直されたことを見分ける
+  /// （**`ref.mounted` では見分けられない** ―― 組み直しても Notifier は同じものが
+  /// 使い回され、`ref.mounted` は真のまま。テストで確かめた）。
+  int _generation = 0;
+
   @override
-  AdsStatus build() =>
-      ref.watch(adConfigProvider).enabled ? AdsStatus.idle : AdsStatus.off;
+  AdsStatus build() {
+    _generation++;
+    return ref.watch(adConfigProvider).enabled ? AdsStatus.idle : AdsStatus.off;
+  }
 
   Future<void> start() async {
     if (state != AdsStatus.idle) return;
     state = AdsStatus.starting;
+    final generation = _generation;
+    // **設定そのものも読み直す。** 組み直しは次に読まれるまで遅れることがあり
+    // （誰も読んでいない間は走らない）、世代だけでは買った直後に気づけない
+    bool stale() =>
+        !ref.mounted ||
+        generation != _generation ||
+        !ref.read(adConfigProvider).enabled;
     final gateway = ref.read(adGatewayProvider);
     var ok = false;
     try {
+      // **途中で広告を外す課金を買ったら、そこで止める。** 同意のフォームの
+      // 後に ATT を重ねない・初期化もしない。**状態も書かない** ―― 書くと
+      // 組み直した後の [AdsStatus.off] を上書きして、広告が戻る
       await gateway.gatherConsent();
+      if (stale()) return;
       await gateway.requestTracking();
+      if (stale()) return;
       ok = await gateway.canRequestAds();
+      if (stale()) return;
       if (ok) await gateway.initialize();
     } on Object {
       ok = false;
     }
+    if (stale()) return;
     state = ok ? AdsStatus.ready : AdsStatus.unavailable;
   }
 }

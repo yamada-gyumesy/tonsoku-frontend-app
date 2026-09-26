@@ -200,13 +200,21 @@ class _InlineAdSlotState extends ConsumerState<InlineAdSlot>
 /// 下タブ（[nav]）の上に [AnchoredAdBanner] を積む。`AppShell` の
 /// `bottomNavigationBar` に渡す。
 class WithAnchoredAd extends StatelessWidget {
-  const WithAnchoredAd({required this.nav, super.key});
+  const WithAnchoredAd({required this.nav, this.hidden = false, super.key});
 
   final Widget nav;
+
+  /// 広告を一時的に隠す（メニューのシートを開いている間。ユーザーの指定 ――
+  /// シートの下端の行と広告が近く、押し間違えて使いづらい）。**捨てずに隠す**
+  /// （`Offstage`）: 閉じるたびに読み込み直すと、広告の要求が無駄に増える。
+  final bool hidden;
 
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
-    children: [const AnchoredAdBanner(), nav],
+    children: [
+      Offstage(offstage: hidden, child: const AnchoredAdBanner()),
+      nav,
+    ],
   );
 }

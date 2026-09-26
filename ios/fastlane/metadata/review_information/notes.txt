@@ -15,6 +15,8 @@ Push notifications are optional. The app asks for permission from the notificati
 
 The app shows ads provided by Google AdMob.
 
+In-app purchase: "Remove ads" (non-consumable). It removes all ads (the banner above the tab bar, the ad after an article, and the rewarded video on the Map tab), and the store-exclusive menus on the Map tab are always shown to buyers instead of being unlocked by the video. It can be bought from the Menu tab (the "広告を非表示にする" / "Remove ads" row) or from the prompt shown under the video button on the Map tab. "Restore purchase" ("購入を復元") is always available in the Menu tab. No account is involved; the purchase is checked against the App Store's purchase history on the device.
+
 External links (for example a coupon issuer's page) open in SFSafariViewController. The app does not embed a general-purpose browser with an address bar.
 
 The store listing is Japanese only. The app itself follows the device language and is also usable in English and Simplified Chinese.

@@ -13,6 +13,8 @@ import 'package:tonsoku/core/ads/ad_gateway.dart';
 import 'package:tonsoku/core/ads/ads_controller.dart';
 import 'package:tonsoku/core/config/ad_config.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
+import 'package:tonsoku/core/purchase/purchase_gateway.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/core/theme/app_theme.dart';
 import 'package:tonsoku/features/map/data/bundled_tile_provider.dart';
@@ -25,8 +27,10 @@ import 'package:tonsoku/features/map/presentation/map_page.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_filter_band.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_search.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_marker.dart';
+import 'package:tonsoku/features/shell/presentation/menu_screen_request.dart';
 
 import '../../core/ads/fake_ad_gateway.dart';
+import '../../core/purchase/fake_purchase_gateway.dart';
 
 class _NoLocation implements LocationRepository {
   @override
@@ -150,6 +154,32 @@ void main() {
       });
     });
 
+    test('動画の読み込み中に広告を外す課金を買ったら、動画を出さずに終える', () async {
+      // **設定は本物を使う**（購入で枠の ID が空になる流れごと確かめる）
+      SharedPreferences.setMockInitialValues({});
+      final store = await SharedPreferences.getInstance();
+      final gateway = FakeAdGateway()..rewardGate = Completer<void>();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(store),
+          adGatewayProvider.overrideWithValue(gateway),
+          purchaseGatewayProvider.overrideWithValue(FakePurchaseGateway()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(removeAdsProvider.notifier).start();
+      await container.read(adsControllerProvider.notifier).start();
+
+      final watching = container.read(mapUnlockProvider.notifier).watchVideo();
+      await container.read(removeAdsProvider.notifier).buy();
+      gateway.rewardGate!.complete();
+
+      expect(await watching, isNull);
+      expect(gateway.calls, isNot(contains('showRewarded')));
+      expect(container.read(mapUnlockProvider).busy, isFalse);
+      expect(container.read(mapLimitedGateProvider), MapLimitedGate.open);
+    });
+
     test('本番の ID が空・同意が得られない時は開放扱い', () async {
       final empty = await containerFor(
         FakeAdGateway(),
@@ -181,6 +211,7 @@ void main() {
       FakeAdGateway gateway, {
       Map<String, Object> prefs = const {},
       MapLinkFilter? link,
+      FakePurchaseGateway? purchase,
     }) async {
       SharedPreferences.setMockInitialValues({'app_locale': 'ja', ...prefs});
       final store = await SharedPreferences.getInstance();
@@ -202,6 +233,10 @@ void main() {
             locationRepositoryProvider.overrideWithValue(_NoLocation()),
             adConfigProvider.overrideWithValue(testUnits),
             adGatewayProvider.overrideWithValue(gateway),
+            // **本物のストアに触れない**（動画の案内に添える課金）
+            purchaseGatewayProvider.overrideWithValue(
+              purchase ?? FakePurchaseGateway(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.light(AppLocale.ja),
@@ -214,7 +249,9 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(MapPage)),
       );
-      // 広告の SDK を始める（本番は main.dart が最初のフレームの後に呼ぶ）
+      // 課金の突き合わせと広告の SDK を始める（本番は main.dart が最初の
+      // フレームの後に呼ぶ）
+      await container.read(removeAdsProvider.notifier).start();
       await container.read(adsControllerProvider.notifier).start();
       await tester.pump();
       await tester.pump();
@@ -225,7 +262,16 @@ void main() {
     /// 店舗限定に関わる表示（印・品のチップ）が出ているか。
     void expectLimitedShown(bool shown) {
       expect(find.byType(MenuChip), shown ? findsWidgets : findsNothing);
-      expect(find.byType(LimitedMark), shown ? findsWidgets : findsNothing);
+      // **案内の赤星は数えない**（動画の案内の記号も店舗限定の印と同じ絵）
+      expect(
+        find
+            .byWidgetPredicate((w) => w is LimitedMark)
+            .evaluate()
+            .where(
+              (e) => e.findAncestorWidgetOfExactType<MapUnlockNotice>() == null,
+            ),
+        shown ? isNotEmpty : isEmpty,
+      );
       // 普通の店の地図としては常に使える
       expect(find.text('681店舗'), findsOneWidget);
       expect(find.text('© OpenStreetMap'), findsOneWidget);
@@ -339,6 +385,83 @@ void main() {
       );
       expectLimitedShown(true);
       expect(gateway.calls.where((c) => c.startsWith('rewarded:')), isEmpty);
+    });
+
+    group('広告を外す課金（Issue #42）', () {
+      const removeAds = '広告を非表示';
+
+      testWidgets('動画の案内の下に小さく置き、ここでは価格を出さない', (tester) async {
+        final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
+        await pumpMap(tester, gateway);
+        expect(find.text(_notice), findsOneWidget);
+        final notice = find.byType(MapUnlockNotice);
+        expect(
+          find.descendant(of: notice, matching: find.text(removeAds)),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: notice, matching: find.text('¥550')),
+          findsNothing,
+        );
+        // 動画の案内の下に置く
+        expect(
+          tester.getTopLeft(find.text(removeAds)).dy,
+          greaterThan(tester.getBottomLeft(find.text(_notice)).dy),
+        );
+      });
+
+      testWidgets('押すとメニューの購入の画面を開く要求を出し、動画も購入も始めない', (tester) async {
+        final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
+        final purchase = FakePurchaseGateway();
+        await pumpMap(tester, gateway, purchase: purchase);
+        final before = removeAdsSheetRequest.value;
+        final videos = gateway.calls
+            .where((c) => c.startsWith('rewarded:'))
+            .length;
+
+        await tester.tap(find.text(removeAds));
+        await tester.pump();
+
+        expect(removeAdsSheetRequest.value, before + 1);
+        expect(purchase.calls.where((c) => c == 'buy'), isEmpty);
+        expect(
+          gateway.calls.where((c) => c.startsWith('rewarded:')),
+          hasLength(videos),
+        );
+      });
+
+      testWidgets('買ったらその場で店舗限定を出し、案内を消す', (tester) async {
+        final gateway = FakeAdGateway(rewardOutcome: RewardOutcome.dismissed);
+        final purchase = FakePurchaseGateway();
+        final container = await pumpMap(tester, gateway, purchase: purchase);
+        expectLimitedShown(false);
+
+        // 買うのはメニューの購入の画面（ここでは状態だけを動かす）
+        await container.read(removeAdsProvider.notifier).buy();
+        await tester.pump();
+        await tester.pump();
+
+        expectLimitedShown(true);
+        expect(find.text(_notice), findsNothing);
+        // 動画は開いた時の 1 回だけ（買った後に出し直さない）
+        expect(
+          gateway.calls.where((c) => c.startsWith('rewarded:')),
+          hasLength(1),
+        );
+      });
+
+      testWidgets('買ってある端末は開いてすぐ出し、動画は出さない', (tester) async {
+        final gateway = FakeAdGateway();
+        await pumpMap(
+          tester,
+          gateway,
+          prefs: {RemoveAdsController.prefsKey: true},
+          purchase: FakePurchaseGateway(ownership: Ownership.owned),
+        );
+        expectLimitedShown(true);
+        expect(find.byType(MapUnlockNotice), findsNothing);
+        expect(gateway.calls.where((c) => c.startsWith('rewarded:')), isEmpty);
+      });
     });
   });
 }

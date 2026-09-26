@@ -64,7 +64,7 @@ class FakeAdGateway implements AdGateway {
     await rewardGate?.future;
     return rewardOutcome == RewardOutcome.failed
         ? null
-        : _FakeRewarded(rewardOutcome);
+        : _FakeRewarded(rewardOutcome, () => calls.add('showRewarded'));
   }
 }
 
@@ -86,12 +86,16 @@ class FakeBanner implements BannerHandle {
 }
 
 class _FakeRewarded implements RewardedHandle {
-  _FakeRewarded(this.outcome);
+  _FakeRewarded(this.outcome, this.onShow);
 
   final RewardOutcome outcome;
+  final void Function() onShow;
 
   @override
-  Future<RewardOutcome> show() async => outcome;
+  Future<RewardOutcome> show() async {
+    onShow();
+    return outcome;
+  }
 
   @override
   void dispose() {}

@@ -42,6 +42,7 @@ import 'package:tonsoku/features/map/presentation/widgets/offscreen_counts.dart'
 import 'package:tonsoku/shared/models/limited_menu.dart';
 import 'package:tonsoku/features/map/presentation/widgets/map_attribution.dart';
 import 'package:tonsoku/features/map/presentation/widgets/shop_sheet.dart';
+import 'package:tonsoku/features/shell/presentation/menu_screen_request.dart';
 import 'package:tonsoku/features/shell/presentation/widgets/tonsoku_app_bar.dart';
 import 'package:tonsoku/shared/models/shop.dart';
 
@@ -483,6 +484,11 @@ class _MapPageState extends ConsumerState<MapPage> {
     );
   }
 
+  /// 広告を外す課金（Issue #42）。**ここでは買わせず、メニューの購入の画面を
+  /// 開く**（ユーザーの指定。説明を読んでから買う）。買えたら店舗限定がその場で
+  /// 開く（`mapLimitedGateProvider` が課金を見ている）。
+  void _removeAds() => requestOpenRemoveAds();
+
   void _openShop(Shop shop) {
     // **開く時点の時刻で求め直す**（印は最後に組んだ時のもの。
     // 印の組み直しを待たずに、押した時の状態を出す）
@@ -651,7 +657,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                 44 +
                 8 +
                 (_brandsOpen ? 40 : 0) +
-                (showNotice ? 42 : menus.length * 52) +
+                (showNotice ? MapUnlockNotice.height : menus.length * 52) +
                 (_filter.menuIds.isEmpty ? 0 : 42) +
                 16,
             44,
@@ -756,6 +762,9 @@ class _MapPageState extends ConsumerState<MapPage> {
                                     unlock.busy ||
                                     gate == MapLimitedGate.waiting,
                                 onTap: _watchVideo,
+                                // **広告の準備を待っている間も買える**（買うのに
+                                // 広告の SDK は要らない）
+                                onRemoveAds: _removeAds,
                               )
                             : null,
                       ),

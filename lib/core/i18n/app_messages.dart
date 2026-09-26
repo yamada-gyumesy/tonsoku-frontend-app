@@ -69,6 +69,20 @@ class AppMessages {
     required this.menuOther,
     required this.menuLicenses,
     required this.menuVersion,
+    required this.navSct,
+    required this.removeAds,
+    required this.removeAdsLead,
+    required this.removeAdsBuy,
+    required this.removeAdsRestoreNote,
+    required this.removeAdsPurchased,
+    required this.removeAdsPending,
+    required this.restorePurchase,
+    required this.removeAdsDone,
+    required this.restoreDone,
+    required this.restoreNotFound,
+    required this.purchasePendingNotice,
+    required this.purchaseFailed,
+    required this.storeUnavailable,
     required this.navNotifications,
     required this.notificationsTitle,
     required this.notificationChannelName,
@@ -188,6 +202,7 @@ class AppMessages {
     required this.mapLocationUnavailable,
     required this.mapUnlockLimited,
     required this.mapVideoUnavailable,
+    required this.mapRemoveAds,
     required this.mapOpenInGoogleMaps,
     required this.mapAddress,
     required this.mapHours,
@@ -315,7 +330,7 @@ class AppMessages {
   /// （web の `CmSourceChip` の注記）。
   final String commonOfficial;
 
-  /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` のうち特商法を除く 2 つ）。
+  /// メニューの行（web の `nav.*`。法務は web のフッターの `LEGAL_PAGES` の 3 つ。特商法は [navSct]）。
   final String navAbout;
   final String navTerms;
   final String navPrivacy;
@@ -331,6 +346,55 @@ class AppMessages {
   final String menuOther;
   final String menuLicenses;
   final String menuVersion;
+
+  /// 特商法（web の `nav.sct`）。**広告を外す課金を入れたので置く**（有償の
+  /// 取引ができた。web のフッターの `LEGAL_PAGES` の 3 つ目）。
+  final String navSct;
+
+  // ---- 広告を外す課金（Issue #42。アプリ独自で web に無い） ----
+  //
+  // **画面に書くのは状態だけ**（web の CLAUDE.md「画面に出す文言」）。
+  // 理由（ストアの仕組み・保留になる支払い方法）は書かない。
+
+  /// メニューの行と、ストアの商品の表示名（`iap_products.yaml`）。
+  final String removeAds;
+
+  /// 購入の画面（メニューの 1 段深い所）の説明。**買い切りであることを平易に書く**
+  /// （ユーザーの指定。画面に書くのは状態だけ、の例外として、買う前に知っておく
+  /// ことだけを置く）。
+  final String removeAdsLead;
+
+  /// 購入の画面の、買うボタン。後ろに表示価格を添える。
+  final String removeAdsBuy;
+
+  /// 購入の画面の、復元のボタンの上の小さな説明。**OS をまたいで引き継げない**
+  /// ことも書く（ユーザーの指定）。
+  final String removeAdsRestoreNote;
+
+  /// 買ってある（メニューの行の値）。
+  final String removeAdsPurchased;
+
+  /// 保留中の購入がある（メニューの行の値）。
+  final String removeAdsPending;
+  final String restorePurchase;
+
+  /// 買えた。
+  final String removeAdsDone;
+
+  /// 復元できた。
+  final String restoreDone;
+
+  /// 復元できる購入が無い。
+  final String restoreNotFound;
+
+  /// 保留になった。**支払いが済めば外れることだけ書く**（もう一度買わずに済む）。
+  final String purchasePendingNotice;
+
+  /// 買えなかった。
+  final String purchaseFailed;
+
+  /// ストアに繋がらない（圏外・ストアのアプリが無い・商品が取れない）。
+  final String storeUnavailable;
 
   // ---- 通知設定（web の `nav.notifications` と `notifications` 節） ----
 
@@ -584,6 +648,10 @@ class AppMessages {
 
   /// リワード動画を読み込めなかった。
   final String mapVideoUnavailable;
+
+  /// 動画の案内の右端に置く小さなボタン。押すとメニューの購入の画面を開く
+  /// （ユーザーの指定。案内の中で買わせない）。
+  final String mapRemoveAds;
   final String mapOpenInGoogleMaps;
   final String mapAddress;
   final String mapHours;
@@ -666,6 +734,23 @@ class AppMessages {
     menuOther: 'その他',
     menuLicenses: 'ライセンス表記',
     menuVersion: 'バージョン',
+    navSct: '特定商取引法に基づく表記',
+    removeAds: '広告を非表示にする',
+    removeAdsLead:
+        '購入すると、アプリの広告がすべて表示されなくなります。マップの店舗限定も、動画を見なくてもいつでも表示されます。\n\n'
+        '一度購入すれば永続的に適用されます。',
+    removeAdsBuy: '購入する',
+    removeAdsRestoreNote:
+        '機種を変えた時やアプリを入れ直した時は、購入した時と同じ Apple ID・Google アカウントで「購入を復元」を押すと戻せます。iPhone と Android の間では引き継げません。',
+    removeAdsPurchased: '購入済み',
+    removeAdsPending: '保留中',
+    restorePurchase: '購入を復元',
+    removeAdsDone: '広告を非表示にしました',
+    restoreDone: '購入を復元しました',
+    restoreNotFound: '復元できる購入はありません',
+    purchasePendingNotice: '支払いが済むと広告が非表示になります',
+    purchaseFailed: '購入できませんでした',
+    storeUnavailable: 'ストアに接続できませんでした',
     navNotifications: '通知設定',
     notificationsTitle: '通知設定',
     notificationChannelName: 'お知らせ',
@@ -815,6 +900,7 @@ class AppMessages {
     mapLocationUnavailable: '現在地を取得できません',
     mapUnlockLimited: '動画を見て店舗限定を表示',
     mapVideoUnavailable: '動画を読み込めませんでした',
+    mapRemoveAds: '広告を非表示',
     mapOpenInGoogleMaps: 'Google マップで開く',
     mapAddress: '住所',
     mapHours: '営業時間',
@@ -887,6 +973,23 @@ class AppMessages {
     menuOther: 'More',
     menuLicenses: 'Licenses',
     menuVersion: 'Version',
+    navSct: 'Commercial Transactions Act Notice',
+    removeAds: 'Remove ads',
+    removeAdsLead:
+        'After purchase, no ads will be shown anywhere in the app. Store Exclusives on the map are also shown anytime, without watching a video.\n\n'
+        'Once purchased, it applies permanently.',
+    removeAdsBuy: 'Buy',
+    removeAdsRestoreNote:
+        'If you switch devices or reinstall the app, tap "Restore purchase" while signed in with the same Apple ID or Google account you used to buy. Purchases can\'t be moved between iPhone and Android.',
+    removeAdsPurchased: 'Purchased',
+    removeAdsPending: 'Pending',
+    restorePurchase: 'Restore purchase',
+    removeAdsDone: 'Ads removed',
+    restoreDone: 'Purchase restored',
+    restoreNotFound: 'No purchase to restore',
+    purchasePendingNotice: 'Ads will be removed once payment is complete',
+    purchaseFailed: "Couldn't complete the purchase",
+    storeUnavailable: "Couldn't connect to the store",
     navNotifications: 'Notifications',
     notificationsTitle: 'Notifications',
     notificationChannelName: 'Notifications',
@@ -1049,6 +1152,7 @@ class AppMessages {
     mapLocationUnavailable: 'Your location is unavailable',
     mapUnlockLimited: 'Watch a video to show Store Exclusives',
     mapVideoUnavailable: "Couldn't load the video",
+    mapRemoveAds: 'Remove ads',
     mapOpenInGoogleMaps: 'Open in Google Maps',
     mapAddress: 'Address',
     mapHours: 'Hours',
@@ -1118,6 +1222,23 @@ class AppMessages {
     menuOther: '其他',
     menuLicenses: '许可信息',
     menuVersion: '版本',
+    navSct: '特定商业交易法标示',
+    removeAds: '移除广告',
+    removeAdsLead:
+        '购买后，应用内的所有广告都将不再显示。地图上的店铺限定也无需观看视频，随时都会显示。\n\n'
+        '一次购买，永久有效。',
+    removeAdsBuy: '购买',
+    removeAdsRestoreNote:
+        '更换设备或重新安装应用后，请使用购买时的 Apple ID 或 Google 账号，点按“恢复购买”即可找回。iPhone 与 Android 之间无法互通。',
+    removeAdsPurchased: '已购买',
+    removeAdsPending: '待付款',
+    restorePurchase: '恢复购买',
+    removeAdsDone: '已移除广告',
+    restoreDone: '已恢复购买',
+    restoreNotFound: '没有可恢复的购买',
+    purchasePendingNotice: '付款完成后将移除广告',
+    purchaseFailed: '无法完成购买',
+    storeUnavailable: '无法连接到商店',
     navNotifications: '通知设置',
     notificationsTitle: '通知设置',
     notificationChannelName: '通知',
@@ -1267,6 +1388,7 @@ class AppMessages {
     mapLocationUnavailable: '无法获取当前位置',
     mapUnlockLimited: '观看视频以显示店铺限定',
     mapVideoUnavailable: '无法加载视频',
+    mapRemoveAds: '移除广告',
     mapOpenInGoogleMaps: '在 Google 地图中打开',
     mapAddress: '地址',
     mapHours: '营业时间',

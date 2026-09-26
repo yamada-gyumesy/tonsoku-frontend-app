@@ -9,6 +9,7 @@ import 'package:tonsoku/app.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
 import 'package:tonsoku/core/licenses/font_licenses.dart';
 import 'package:tonsoku/core/licenses/map_data_license.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
 import 'package:tonsoku/core/storage/json_cache.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 import 'package:tonsoku/features/notifications/data/push_bootstrap.dart';
@@ -58,6 +59,15 @@ Future<void> main() async {
 
   runApp(
     UncontrolledProviderScope(container: container, child: const TonsokuApp()),
+  );
+
+  // **広告を外す課金: 購入の知らせの購読と、ストアの購入記録との突き合わせ**
+  // （`RemoveAdsController.start`）。ダイアログは出さないので、オンボーディングを
+  // 待たずに最初のフレームの後で始める。**買ってあるかどうかは保存から読んで
+  // あるので、広告の SDK・同意・ATT はこれを待たずに正しく止まる**
+  // （`adConfigProvider`）。**呼び出しはここ 1 か所だけ**
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => unawaited(container.read(removeAdsProvider.notifier).start()),
   );
 
   // **広告の SDK は最初のフレームの後、オンボーディングが終わってから始める**

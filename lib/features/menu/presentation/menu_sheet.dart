@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -6,6 +8,8 @@ import 'package:tonsoku/core/config/app_config_provider.dart';
 import 'package:tonsoku/core/i18n/app_locale.dart';
 import 'package:tonsoku/core/i18n/app_messages.dart';
 import 'package:tonsoku/core/i18n/locale_controller.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
+import 'package:tonsoku/core/purchase/remove_ads_result_text.dart';
 import 'package:tonsoku/core/theme/app_colors.dart';
 import 'package:tonsoku/core/utils/article_date.dart';
 import 'package:tonsoku/features/calendar/data/calendar_repository.dart';
@@ -16,6 +20,7 @@ import 'package:tonsoku/features/menu/presentation/widgets/menu_list_row.dart';
 import 'package:tonsoku/features/menu/presentation/widgets/theme_switch.dart';
 import 'package:tonsoku/features/ranking/data/ranking_repository.dart';
 import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
+import 'package:tonsoku/shared/widgets/app_toast.dart';
 
 /// 画面下のナビ「メニュー」から開くボトムシート。web の `CoMenuSheet`
 /// （gyumesy-frontend-app の `MenuSheet` を写した）。
@@ -38,14 +43,27 @@ import 'package:tonsoku/features/ranking/domain/ranking_entries.dart';
 ///   （ユーザーの指定）。web のメニューとも gyumesy とも違う
 /// - **通知設定の行は常に出す**（web と同じ。配信の有無に依らない面なので、
 ///   カレンダー・ランキングのように中身で閉じる対象ではない）
+/// - **広告を外す課金の 2 行（「広告を非表示にする」「購入を復元」）を末尾に
+///   常に置く**（アプリ独自。Issue #42。導線はこことマップの動画の案内の 2 か所
+///   だけで、**下の広告バナーの近くには置かない**（ユーザーの判断））
 class MenuSheet extends ConsumerStatefulWidget {
   const MenuSheet({
     required this.onClose,
     required this.onOpenCalendar,
     required this.onOpenRanking,
     required this.onOpenNotifications,
+    this.initialView = rootView,
     super.key,
   });
+
+  /// 開いた時に見せるビュー。
+  static const rootView = 0;
+
+  /// 広告を外す課金の画面。**マップの動画の案内の「広告を非表示」から直に開く**
+  /// （ユーザーの指定。案内の中では買わせず、ここへ連れてくる）。
+  static const removeAdsView = 3;
+
+  final int initialView;
 
   final VoidCallback onClose;
 
@@ -78,8 +96,8 @@ class MenuSheetState extends ConsumerState<MenuSheet>
     duration: _anim,
   );
 
-  /// 0 = メニュー / 1 = 言語 / 2 = その他。
-  int _view = 0;
+  /// 0 = メニュー / 1 = 言語 / 2 = その他 / 3 = 広告を外す課金。
+  late int _view = widget.initialView;
 
   /// 掴んで下げている量（px）。
   double _drag = 0;
@@ -88,6 +106,13 @@ class MenuSheetState extends ConsumerState<MenuSheet>
   void initState() {
     super.initState();
     _controller.forward();
+    // 起動時に価格を取れなかった時（圏外など）のために、開くたびに取り直す
+    // （取れていれば何もしない）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(ref.read(removeAdsProvider.notifier).refreshProduct());
+      }
+    });
   }
 
   @override
@@ -101,6 +126,9 @@ class MenuSheetState extends ConsumerState<MenuSheet>
     await _controller.reverse();
     if (mounted) widget.onClose();
   }
+
+  /// [view] へ送る（開いたまま別の入口から呼ばれた時。`AppShell`）。
+  void showView(int view) => setState(() => _view = view);
 
   /// 戻る操作を受けた。**2 階層目・3 階層目を開いていたらメニューへ戻すだけ**
   /// （web が履歴を 2 段積んでいるのと同じ考え方）。畳んだ時は true を返す。
@@ -216,6 +244,7 @@ class MenuSheetState extends ConsumerState<MenuSheet>
                   _rootView(colors, t),
                   _langView(colors, t),
                   _otherView(colors, t),
+                  _removeAdsView(colors, t),
                 ].indexed)
                   Transform.translate(
                     offset: Offset((index - shift) * width, 0),
@@ -329,6 +358,11 @@ class MenuSheetState extends ConsumerState<MenuSheet>
           tooltip: t.menuOther,
         ),
       ),
+      // **広告を外す課金は一番上に置く**（ユーザーの指定。下の方だと、送り切った
+      // 先の行を押し間違える）。**ここでは買わせない** ―― 1 段深い画面で説明を
+      // 読んでから買う・復元する（`_removeAdsView`）
+      _removeAdsEntry(colors, t),
+      _divider(colors),
       MenuListRow(
         label: t.navAbout,
         // web の `CmListRow icon="info"`
@@ -397,14 +431,150 @@ class MenuSheetState extends ConsumerState<MenuSheet>
     ],
   );
 
+  /// メニューの一番上の「広告を非表示にする」。押すと購入の画面へ送る。
+  /// 買ってある・保留中なら、それを値に出す（価格は購入の画面で出す）。
+  Widget _removeAdsEntry(AppColors colors, AppMessages t) {
+    final state = ref.watch(removeAdsProvider);
+    return MenuListRow(
+      label: t.removeAds,
+      icon: Icons.block,
+      value: state.purchased
+          ? t.removeAdsPurchased
+          : state.pending
+          ? t.removeAdsPending
+          : null,
+      onTap: () => setState(() => _view = MenuSheet.removeAdsView),
+    );
+  }
+
+  /// 広告を外す課金の画面（Issue #42）。**メニューの行の形にしない**（ユーザーの
+  /// 指定）: 説明と購入のボタン、その下に小さな説明と復元のボタン。
+  ///
+  /// - **説明は買い切りであることを平易に書く**（ユーザーの指定）
+  /// - **買ってある時は、押せないボタンに「購入済み」を出す**（もう一度買わせない）
+  /// - **保留中は「保留中」を出して押せなくする**（二重に買わせない）
+  /// - **価格はストアが返した表示価格**（取れるまでは出さない。アプリで金額を
+  ///   持たない）。取れなくても押せる ―― 押せばもう一度ストアに聞き、繋がら
+  ///   なければそう知らせる（押しても何も起きない形にしない）
+  /// - **復元は常に置く**（App Store の審査でも必須）。**OS をまたいで引き継げない
+  ///   ことも添える**（ユーザーの指定）
+  /// - 購入・復元の途中は、押したボタンに回る印を出して両方とも押せなくする
+  Widget _removeAdsView(AppColors colors, AppMessages t) {
+    final state = ref.watch(removeAdsProvider);
+    // **書体はテーマから引き継ぐ**（オンボーディングのボタンと同じ理由。素の
+    // `TextStyle` を渡すと書体が落ちる）
+    final label = Theme.of(context).textTheme.labelLarge;
+    Widget spinner(Color color) => SizedBox.square(
+      dimension: 18,
+      child: CircularProgressIndicator(strokeWidth: 2, color: color),
+    );
+    final price = state.price;
+    final buyLabel = state.purchased
+        ? t.removeAdsPurchased
+        : state.pending
+        ? t.removeAdsPending
+        : price == null
+        ? t.removeAdsBuy
+        : '${t.removeAdsBuy}（$price）';
+    final canBuy = !state.purchased && !state.pending && !state.busy;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _heading(colors, t.removeAds, leading: _backButton(colors, t)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                t.removeAdsLead,
+                style: TextStyle(fontSize: 14, height: 1.8, color: colors.text),
+              ),
+              const SizedBox(height: 20),
+              // **塗りの `primary` に白文字**（地の上の文字ではないので塗りのほう）
+              FilledButton(
+                onPressed: canBuy ? _buy : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.onPrimary,
+                  disabledBackgroundColor: colors.border,
+                  disabledForegroundColor: colors.textSub,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: label?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  shape: const StadiumBorder(),
+                ),
+                child: state.busy && _action == _RemoveAdsAction.buy
+                    ? spinner(colors.onPrimary)
+                    : Text(buyLabel),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                t.removeAdsRestoreNote,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.7,
+                  color: colors.textSub,
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: state.busy ? null : _restore,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colors.text,
+                  side: BorderSide(color: colors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  textStyle: label?.copyWith(fontSize: 14),
+                  shape: const StadiumBorder(),
+                ),
+                child: state.busy && _action == _RemoveAdsAction.restore
+                    ? spinner(colors.textSub)
+                    : Text(t.restorePurchase),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// いま走っている操作（回る印をどちらの行に出すか）。
+  _RemoveAdsAction? _action;
+
+  Future<void> _buy() async {
+    setState(() => _action = _RemoveAdsAction.buy);
+    final result = await ref.read(removeAdsProvider.notifier).buy();
+    _notify(result);
+  }
+
+  Future<void> _restore() async {
+    setState(() => _action = _RemoveAdsAction.restore);
+    final result = await ref.read(removeAdsProvider.notifier).restore();
+    _notify(result);
+  }
+
+  /// 結果を画面の上端に短く出す（`AppToast`。通知設定の画面と同じ）。
+  /// **メニューを閉じた後に返ってきた時は出さない**（結果は行の状態と、消えた
+  /// 広告そのものに出ている）。
+  void _notify(RemoveAdsResult result) {
+    if (!mounted) return;
+    setState(() => _action = null);
+    final text = removeAdsResultText(ref.read(messagesProvider), result);
+    if (text == null) return;
+    AppToast.show(context, text.text, isError: text.isError);
+  }
+
   /// 「その他」。**読む頻度が最も低いものだけを置く。**
   Widget _otherView(AppColors colors, AppMessages t) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       _heading(colors, t.menuOther, leading: _backButton(colors, t)),
-      // 並びは web のフッターと同じ（`LEGAL_PAGES`）。**特商法は置かない**
-      // （アプリ内に有償の取引が無いので対象にならない。gyumesy と同じ判断）。
-      // **広告を消す課金を入れる時に足すこと**（web には `/legal/sct/` がある）
+      // 並びは web のフッターと同じ（`LEGAL_PAGES`）。**特商法も置く** ――
+      // 広告を外す課金（Issue #42）でアプリ内に有償の取引ができた（gyumesy は
+      // 課金が無いので置いていない）
       MenuListRow(
         label: t.navTerms,
         icon: Icons.description_outlined,
@@ -417,6 +587,13 @@ class MenuSheetState extends ConsumerState<MenuSheet>
         icon: Icons.lock_outline,
         external: true,
         onTap: () => _openOnWeb('/legal/privacy/'),
+      ),
+      _divider(colors),
+      MenuListRow(
+        label: t.navSct,
+        icon: Icons.storefront_outlined,
+        external: true,
+        onTap: () => _openOnWeb('/legal/sct/'),
       ),
       _divider(colors),
       MenuListRow(
@@ -487,3 +664,5 @@ class MenuSheetState extends ConsumerState<MenuSheet>
   Widget _divider(AppColors colors) =>
       Divider(height: 1, thickness: 1, color: colors.border);
 }
+
+enum _RemoveAdsAction { buy, restore }

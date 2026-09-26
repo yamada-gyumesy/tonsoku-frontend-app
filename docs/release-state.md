@@ -19,6 +19,7 @@
 | リリース署名の設定 | `android/app/build.gradle.kts`。**鍵が無い環境では debug 鍵のまま**（鍵を持たない人でもビルドできるように）。配信の lane は鍵が無いと止まる |
 | 鍵の同期 | `scripts/sync-secrets.sh`（`gdrive:gyumesy-secrets/repo/tonsoku-frontend-app/`） |
 | ユニバーサルリンク / App Links（アプリ側） | entitlement（`applinks:ton-soku.com`）・intent-filter（`autoVerify`）・受け口（`_listenAppLinks`） |
+| 広告を外す課金（アプリ側。Issue #42） | 購入・復元・起動時の突き合わせ・導線（メニュー / マップ）。商品の定義は `iap_products.yaml`、登録の lane は `register_iap`（iOS / Android）。審査メモにも書いた |
 
 **掲載は日本語だけ**（gyumesy と同じ。en / zh の掲載情報は置かない）。App Store Connect は
 **掲載言語ごとにスクリーンショットを 1 枚以上**要求するので、増やすならスクショもセットで要る。
@@ -52,7 +53,18 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
    - 同意（UMP）の GDPR メッセージを AdMob の「プライバシーとメッセージ」で公開する（ユーザー）
    - 発行者 ID を web の `app-ads.txt` に載せる（web の作業）
    - ストアに公開した後、AdMob の各アプリを「ストアに追加」で紐づける（ユーザー）
-9. **初回のテスト配信**: `release-1.0.0` を切って
+9. **広告を外す課金**（`docs/setup-app.md` の「アプリ内課金の商品」。**lane で済むことと
+   Web UI でしかできないことを分けてある**）:
+   - Web UI（先に）: **ASC の有料 App 契約**（契約・銀行口座・税務。Account Holder）／
+     **Play のお支払いプロファイルの連携**（管理者）
+   - lane: `cd ios && mise exec -- bundle exec fastlane ios register_iap`（dry-run）→ `apply:true`
+     （ASC のアプリ枠＝上の 3 が先）
+   - lane: `cd android && mise exec -- bundle exec fastlane android register_iap`（dry-run）→
+     `apply:true`（**課金の入ったビルドを Play に 1 度上げてから**＝下の 10 の alpha の後）
+   - Web UI（後で）: **ASC で価格 ¥550 を付ける**・**審査用のスクリーンショット**／
+     **Play で商品を有効にする**・**ライセンステスターの登録**
+   - 最初の審査は、アプリの版と一緒に商品を審査に加える（Web UI。`docs/release.md` の「提出前の確認」）
+10. **初回のテスト配信**: `release-1.0.0` を切って
    `cd android && mise exec -- bundle exec fastlane android alpha draft:true`（**初回だけ draft**）→
    `cd ios && mise exec -- bundle exec fastlane ios beta`
 
@@ -60,15 +72,12 @@ lane を叩くものは「叩いてよい」と言ってもらえれば手順ど
 
 | 相手 | 頼むこと | いつ |
 |---|---|---|
-| tonsoku-frontend-web | `/.well-known/apple-app-site-association` を置く（中身は `docs/deep-links.md`。`_headers` で `application/json`） | **いつでも**（appID は確定している） |
+| tonsoku-frontend-web | `/.well-known/apple-app-site-association` を置く（中身は `docs/deep-links.md`。`_headers` で `application/json`） | **済み**（web #144・#148。本番に出ている） |
 | tonsoku-frontend-web | `/.well-known/assetlinks.json` を置く | 上の 7 の指紋が出てから |
-| tonsoku-frontend-web | `app-ads.txt` | 上の 8 の後 |
+| tonsoku-frontend-web | `app-ads.txt` | **済み**（web #156。本番に出ている） |
 | tonsoku-infra-terraform | App Store ID・Android の指紋 | 上の 4・7 の後 |
 
 ## まだ作っていないもの
 
-- **広告の本番 ID（上の 8）。** 実装（Issue #5）は入っているが、本番の ID が空なので release は
-  広告を出さない。審査メモ・`rating_config.json`・App Privacy は広告が出る前提で書いてある。
-  **ID を入れずに出すなら、3 つとも「広告なし」に直す**（申告と中身を食い違わせない）
 - **iOS の ATT（トラッキングの許可）。** Issue #5 で入れた（`NSUserTrackingUsageDescription` は
   `Info.plist` にある）。App Privacy で「トラッキング」を申告する

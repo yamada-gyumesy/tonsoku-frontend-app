@@ -8,6 +8,7 @@ import 'package:tonsoku/core/ads/ad_gateway.dart';
 import 'package:tonsoku/core/ads/ads_controller.dart';
 import 'package:tonsoku/core/config/ad_config.dart';
 import 'package:tonsoku/core/lifecycle/app_resume.dart';
+import 'package:tonsoku/core/purchase/remove_ads_controller.dart';
 import 'package:tonsoku/core/storage/preferences_provider.dart';
 
 /// マップの店舗限定の表示の開放（リワード動画。ユーザーの決定）。
@@ -107,6 +108,15 @@ class MapUnlockController extends Notifier<MapUnlockState> {
     RewardOutcome outcome;
     try {
       final ad = await ref.read(adGatewayProvider).loadRewarded(unitId);
+      // **読み込みの間に広告を外す課金を買われたら、出さずに終える。** 読み込み中も
+      // 「広告なしで…」は押せるので、読み直さないと払った直後に動画広告が出る
+      if (ad != null &&
+          ref.mounted &&
+          ref.read(adUnitProvider(AdSlot.mapRewarded)) == null) {
+        ad.dispose();
+        state = _evaluate(state.until, busy: false, declined: state.declined);
+        return null;
+      }
       outcome = ad == null ? RewardOutcome.failed : await ad.show();
       ad?.dispose();
     } on Object {
@@ -137,7 +147,7 @@ final mapUnlockProvider = NotifierProvider<MapUnlockController, MapUnlockState>(
 
 /// マップの店舗限定の表示の状態。
 enum MapLimitedGate {
-  /// 出す（開放中、または動画を出せない）。
+  /// 出す（開放中・広告を外す課金を買ってある・動画を出せない）。
   open,
 
   /// 出さない。動画を見れば開放できる。
@@ -147,9 +157,12 @@ enum MapLimitedGate {
   waiting,
 }
 
-/// **動画を出せない時は開放扱い**（ユーザーの指定）:
+/// **広告を外す課金を買った人は常に開放**（ユーザーの決定。動画は広告の対価
+/// なので、広告を外した人には求めない。Issue #42）。
 ///
-/// - **本番の ID が空・広告を外す課金** … 開放。見せる動画が無いのに閉じたままだと、
+/// **動画を出せない時も開放扱い**（ユーザーの指定）:
+///
+/// - **本番の ID が空** … 開放。見せる動画が無いのに閉じたままだと、
 ///   店舗限定の機能が誰にも使えなくなる
 /// - **同意が得られない・SDK が始められない**（[AdsStatus.unavailable]）… 開放。
 ///   同じく、見る手段が無い
@@ -159,6 +172,10 @@ enum MapLimitedGate {
 /// 「動画を読み込めませんでした」と出す（ユーザーの指定。押しても何も起きない
 /// 形にしない）。
 final mapLimitedGateProvider = Provider<MapLimitedGate>((ref) {
+  // **課金を先に見る。** 広告の設定（`adConfigProvider`）も買った人には枠を
+  // 出さないので下の判定でも開くが、それは「動画を出せない」の扱いに乗っている
+  // だけ。買った人を開く理由は別なので、別に書く
+  if (ref.watch(adsRemovedProvider)) return MapLimitedGate.open;
   if (ref.watch(adConfigProvider).unitId(AdSlot.mapRewarded) == null) {
     return MapLimitedGate.open;
   }

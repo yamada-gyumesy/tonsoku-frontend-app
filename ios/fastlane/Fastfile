@@ -14,6 +14,11 @@
 #   （ASC の App Review に返信を貼る —— API では投稿できない）
 #   bundle exec fastlane ios rejected_submit    # 却下項目を解決して再提出
 #
+# アプリ内課金の商品の登録（アプリに 1 回。`iap_products.yaml` を読む）:
+#
+#   bundle exec fastlane ios register_iap              # dry-run
+#   bundle exec fastlane ios register_iap apply:true   # 実登録（不可逆）
+#
 # **ストアアカウントは gyumesy-frontend-app・gyumeshi-rader-app と同じ運営者の
 # アカウント**（Team ID `29LP73942P`）。`three-frontend-flutter` は職場の別
 # アカウントなので値を流用しない。
@@ -444,6 +449,165 @@ platform :ios do
       platforms: ["IOS"],
     )
     UI.success("ASC のアプリ枠 #{APP_NAME}（#{APP_ID}）を作りました。")
+  end
+
+  desc "アプリ内課金の商品を ASC に登録する（iap_products.yaml が単一の出どころ）"
+  desc "※ 既定は dry-run（API に一切書き込まない）。実登録は apply:true を明示する"
+  desc "※ product_id は登録した後に変えられない・消せない・使い回せない。叩く前に iap_products.yaml を確かめる"
+  desc "※ 価格は付けない（ASC の Web UI で手動。理由は lane の中のコメント）"
+  desc "例: mise exec -- bundle exec fastlane ios register_iap             （dry-run）"
+  desc "例: mise exec -- bundle exec fastlane ios register_iap apply:true  （実登録・不可逆）"
+  lane :register_iap do |options|
+    # **three-frontend-flutter の `register_iap` を写した**（dry-run が既定・
+    # 既存の商品は作り直さず足りないものだけ補う・REST を直に叩く）。
+    # あちらは自動更新サブスク（subscriptionGroups / subscriptions）なので、
+    # **買い切り（非消耗型）の API（inAppPurchasesV2）に置き換えた**。
+    # dev / prod の分けも無い（とん速は flavor を持たない）。
+    apply = options[:apply].to_s == "true"
+
+    require "net/http"
+    require "json"
+
+    # **トークンは Spaceship の API 鍵のもの**（他の lane と同じ鍵。`asc_auth`）。
+    # Spaceship には買い切りの商品を作るモデルが無いので、REST を直に叩く
+    token = Spaceship::ConnectAPI::Token.create(
+      key_id: ASC_KEY_ID,
+      issuer_id: ASC_ISSUER_ID,
+      filepath: ASC_KEY_PATH,
+    )
+    Spaceship::ConnectAPI.token = token
+
+    # allow_404: true なら 404 を失敗にせず nil を返す（有無の確認用）
+    api = lambda do |method, path, body = nil, allow_404: false|
+      uri = URI("https://api.appstoreconnect.apple.com#{path}")
+      req = method == :post ? Net::HTTP::Post.new(uri) : Net::HTTP::Get.new(uri)
+      req["Authorization"] = "Bearer #{token.text}"
+      req["Content-Type"] = "application/json"
+      req.body = JSON.dump(body) if body
+      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |h| h.request(req) }
+      return nil if allow_404 && res.code.to_i == 404
+      UI.user_error!("ASC API #{method.upcase} #{path} 失敗: #{res.code} #{res.body}") unless res.code.to_i.between?(200, 299)
+      res.body.to_s.empty? ? {} : JSON.parse(res.body)
+    end
+
+    # ページを全部たどって data を連結する
+    api_all = lambda do |path|
+      acc = []
+      while path
+        res = api.call(:get, path)
+        acc.concat(res["data"] || [])
+        path = res.dig("links", "next")&.sub("https://api.appstoreconnect.apple.com", "")
+      end
+      acc
+    end
+
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    UI.user_error!("ASC のアプリ枠がありません: #{APP_ID}（先に `create_app`）") unless app
+    UI.message("対象: #{app.name}（#{APP_ID}）/ apply=#{apply}")
+
+    items = iap_non_consumables
+    existing = api_all.call("/v1/apps/#{app.id}/inAppPurchasesV2?limit=200")
+
+    items.each do |item|
+      pid = item.fetch("product_id")
+      found = existing.find { |i| i.dig("attributes", "productId") == pid }
+
+      unless apply
+        if found
+          UI.message("[DRY-RUN] 既存: #{pid}（id=#{found['id']} / #{found.dig('attributes', 'state')}）。apply では足りない表示名・販売地域だけ補う")
+        else
+          names = item.fetch("localizations").map { |lang, l| "#{lang}=#{l['display_name']}" }.join(" ")
+          UI.message("[DRY-RUN] 登録予定: #{pid} NON_CONSUMABLE #{names} ※価格 ¥#{item['price_jpy']} は Web UI で手動")
+        end
+        next
+      end
+
+      # ---- ここから先は apply:true の時だけ（不可逆） ----
+      if found
+        iap_id = found["id"]
+        UI.success("既存: #{pid}（id=#{iap_id}）")
+      else
+        iap_id = api.call(:post, "/v2/inAppPurchases", {
+          data: {
+            type: "inAppPurchases",
+            attributes: {
+              name: item.fetch("reference_name"),
+              productId: pid,
+              inAppPurchaseType: "NON_CONSUMABLE",
+              # **ファミリー共有は入れない。** 一度有効にすると戻せない
+              # （Apple の仕様）。入れるならユーザーが決めて Web UI で
+              familySharable: false,
+            },
+            relationships: { app: { data: { type: "apps", id: app.id } } },
+          },
+        })["data"]["id"]
+        UI.success("商品を作りました: #{pid}（id=#{iap_id}）")
+      end
+
+      # 表示名と説明（言語ごと）。**既にある言語は触らない**（途中で落ちた時に
+      # 同じコマンドで続きから直せるように。three と同じ）
+      locs = api_all.call("/v2/inAppPurchases/#{iap_id}/inAppPurchaseLocalizations?limit=200")
+      have = locs.map { |l| l.dig("attributes", "locale") }
+      item.fetch("localizations").each do |lang, loc|
+        locale = IAP_LOCALES.fetch(lang)[:asc]
+        if have.include?(locale)
+          UI.message("表示名（#{locale}）は既にある")
+          next
+        end
+        api.call(:post, "/v1/inAppPurchaseLocalizations", {
+          data: {
+            type: "inAppPurchaseLocalizations",
+            attributes: { locale: locale, name: loc.fetch("display_name"), description: loc.fetch("description") },
+            relationships: { inAppPurchaseV2: { data: { type: "inAppPurchases", id: iap_id } } },
+          },
+        })
+        UI.success("表示名（#{locale}）: #{loc['display_name']}")
+      end
+
+      # 販売地域。**全部の地域にする**（新しい地域も含める）。**アプリが出て
+      # いない地域では商品も買えない**ので、商品の側で絞る意味が無い
+      # （絞ると、アプリの配信地域を広げた時に商品だけ買えない地域が残る）。
+      # three は JPN だけにしているが、あちらはアプリの販売地域が日本だけで、
+      # 価格も JPN しか付けないため（サブスクで全地域にすると価格の無い地域が
+      # 不足扱いになった。three の troubleshooting ③）。とん速の価格は Web UI で
+      # 付け、Web UI は全地域の等価の価格を一緒に作る
+      availability = api.call(:get, "/v2/inAppPurchases/#{iap_id}/inAppPurchaseAvailability", nil, allow_404: true)
+      if availability.nil? || availability["data"].nil?
+        territories = api_all.call("/v1/territories?limit=200").map { |t| { type: "territories", id: t["id"] } }
+        api.call(:post, "/v1/inAppPurchaseAvailabilities", {
+          data: {
+            type: "inAppPurchaseAvailabilities",
+            attributes: { availableInNewTerritories: true },
+            relationships: {
+              inAppPurchase: { data: { type: "inAppPurchases", id: iap_id } },
+              availableTerritories: { data: territories },
+            },
+          },
+        })
+        UI.success("販売地域: 全地域（#{territories.size}）")
+      else
+        UI.message("販売地域は既にある")
+      end
+
+      # ⛔ **価格は lane で付けない**（three と同じ判断）。three はサブスクの価格を
+      # API で JPN 1 か所だけ付け、**他の地域の価格が作られず state が
+      # MISSING_METADATA から抜けなくなった**（ASC の画面にも足りない所が出ない。
+      # 2026-07 の実測）。Web UI の価格の設定だけが全地域の等価の価格を作り、
+      # そこで直った。買い切りの価格の API（inAppPurchasePriceSchedules）は
+      # 基準の地域から他を自動で作る作りだが、**このアカウントで確かめていない**。
+      # 抜けられない状態に落ちると product_id ごと使えなくなる（作り直せない）
+      # ので、1 回きりの手作業のほうを採る
+      schedule = api.call(:get, "/v2/inAppPurchases/#{iap_id}/iapPriceSchedule?include=manualPrices", nil, allow_404: true)
+      priced = (schedule&.dig("included") || []).any? { |i| i["type"] == "inAppPurchasePrices" }
+      if priced
+        UI.message("価格は付いている（付けるのは Web UI）")
+      else
+        UI.important("価格が未設定: ASC の Web UI（アプリ内課金 > #{item['reference_name']} > 価格）で ¥#{item['price_jpy']} を付けること")
+      end
+      UI.important("審査用のスクリーンショット（購入の画面）は Web UI で付けること（無いと審査に出せない）")
+    end
+
+    UI.success(apply ? "登録しました（価格と審査用のスクリーンショットは Web UI で）" : "DRY-RUN 完了（実登録は apply:true）")
   end
 
   desc "ipa を作るだけ（アップロードしない）"

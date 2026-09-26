@@ -21,6 +21,7 @@ void main() {
     required AdConfig config,
     required FakeAdGateway gateway,
     bool start = true,
+    bool hidden = false,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -32,8 +33,9 @@ void main() {
           theme: AppTheme.light(AppLocale.ja),
           home: Scaffold(
             body: const SizedBox.expand(key: _bodyKey),
-            bottomNavigationBar: const WithAnchoredAd(
-              nav: SizedBox(key: _navKey, height: 56),
+            bottomNavigationBar: WithAnchoredAd(
+              hidden: hidden,
+              nav: const SizedBox(key: _navKey, height: 56),
             ),
           ),
         ),
@@ -94,6 +96,32 @@ void main() {
       final body = tester.getRect(find.byKey(_bodyKey));
       expect(ad.bottom, lessThanOrEqualTo(nav.top));
       expect(body.bottom, lessThanOrEqualTo(ad.top));
+    });
+
+    testWidgets('メニューを開いている間は隠し、高さも取らない（読み込み直さない）', (tester) async {
+      final gateway = FakeAdGateway(bannerSize: const Size(320, 62));
+      await pump(
+        tester,
+        config: const AdConfig(units: AdConfig.testAndroid),
+        gateway: gateway,
+      );
+      expect(find.byKey(FakeBanner.viewKey), findsOneWidget);
+
+      await pump(
+        tester,
+        config: const AdConfig(units: AdConfig.testAndroid),
+        gateway: gateway,
+        hidden: true,
+      );
+      final nav = tester.getRect(find.byKey(_navKey));
+      final body = tester.getRect(find.byKey(_bodyKey));
+      expect(body.bottom, nav.top);
+      expect(find.byKey(FakeBanner.viewKey).hitTestable(), findsNothing);
+      // 捨てずに隠している（閉じても読み込み直さない）
+      expect(
+        gateway.calls.where((c) => c.startsWith('anchored:')),
+        hasLength(1),
+      );
     });
 
     testWidgets('入らなければ高さを取らない', (tester) async {
