@@ -54,12 +54,13 @@
 | 8 | **App Privacy**（広告・位置情報・通知・計測・トラッキング） | **ユーザー** | ASC の UI のみ（中身は `docs/setup-app.md` の「App Privacy」） |
 | 9 | **有料 App 契約**（契約・銀行口座・税務） | **ユーザー** | ASC の UI のみ（Account Holder） |
 | 10 | **Play のアプリを作る**（`com.gyumesy.tonsoku`。変更不可）・**サービスアカウントに権限** | **ユーザー** | Play Console の UI のみ |
-| 11 | **Play の「アプリのコンテンツ」**: 広告あり・広告 ID は使う・対象年齢・コンテンツレーティング（IARC）・プライバシーポリシー URL・販売地域 | **ユーザー** | Play Console の UI のみ |
+| 11 | **Play の「アプリのコンテンツ」**（広告あり・広告 ID は使う・対象年齢・コンテンツレーティング（IARC）・プライバシーポリシー URL）と、**トラックの販売国** | **ユーザー** | Play Console の UI のみ（販売国はアプリのコンテンツではなく各トラックの設定） |
 | 12 | Play のデータ セーフティ | Claude | API（`dataSafety`。three と同じ） |
 | 13 | **Play のお支払いプロファイルの連携** | **ユーザー** | Play Console の UI のみ（管理者） |
-| 14 | 署名の指紋を infra（Firebase）と web（`assetlinks.json`）へ | Claude | 各セッションへ連絡（Play のアプリ署名鍵の指紋は 10 の後に Play から取る） |
+| 14 | **アップロード鍵**の指紋を infra（Firebase）と web（`assetlinks.json`）へ | Claude | 各セッションへ連絡（指紋は `docs/setup-app.md` の「済んだもの（とん速）」。今すぐ渡せる） |
 | 15 | **AdMob の同意メッセージ（UMP）を公開** | **ユーザー** | AdMob の UI のみ |
 | 16 | 初回のテスト配信: `release-1.0.0` → `android alpha draft:true`（初回だけ draft）→ `ios beta` | Claude | lane |
+| 16b | **アプリ署名鍵**の指紋を infra と web へ | Claude | **最初の AAB を上げた後**（16 の後）に Play App Signing へ自動で登録されて出る。Play Console の「アプリの完全性」か API（`generatedapks`）で取り、各セッションへ連絡。**これが入らないと、ストアから入れた端末で App Links が通らない** |
 | 17 | 課金の商品を登録 | Claude | `register_iap`（iOS は 3・9 の後、Android は 13・16 の後。dry-run を見せてから apply） |
 | 18 | **課金の価格 ¥550・審査用スクショ（iOS）／商品の有効化・ライセンステスター（Play）** | **ユーザー** | UI のみ（`docs/setup-app.md` の「アプリ内課金の商品」） |
 | 19 | 公開後に AdMob の各アプリを「ストアに追加」で紐づける | **ユーザー** | AdMob の UI のみ |
@@ -68,5 +69,5 @@
 
 | 相手 | 頼むこと | いつ |
 |---|---|---|
-| tonsoku-infra-terraform | App Store ID（上の 4）・Android の指紋（上の 14） | 3 の後・10 の後 |
-| tonsoku-frontend-web | `/.well-known/assetlinks.json`（上の 14） | 10 の後 |
+| tonsoku-infra-terraform | App Store ID（上の 4）・Android の指紋（上の 14・16b） | 3 の後・今すぐ（アップロード鍵）・16 の後（アプリ署名鍵） |
+| tonsoku-frontend-web | `/.well-known/assetlinks.json`（上の 14・16b。**両方の指紋が要る**） | 今すぐ（アップロード鍵）・16 の後（アプリ署名鍵） |

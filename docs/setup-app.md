@@ -173,8 +173,9 @@ keytool -list -v -keystore android/keystore/upload.jks -alias upload | grep -E "
 - **web の `assetlinks.json` へ**（App Links。`docs/deep-links.md`）
 
 **Play App Signing を使うと、配布される APK は Google が持つ「アプリ署名鍵」で
-署名し直される。** そちらの指紋は Play Console でアプリを作った後に
-「アプリの完全性」に出る。**`assetlinks.json` には両方要る**（ストアから入れた端末は
+署名し直される。** そちらの指紋は**最初の AAB を上げた後**（アプリを作っただけでは
+出ない。上げた時に Play App Signing へ自動で登録される）に、Play Console の
+「アプリの完全性」か API（`generatedapks`）で取れる。**`assetlinks.json` には両方要る**（ストアから入れた端末は
 アプリ署名鍵、手元で入れた端末はアップロード鍵で署名されている）。
 
 ### 済んだもの（とん速）
@@ -198,8 +199,10 @@ UI でしか入れられない申告（gyumesy と違うところだけ）:
 
 - **広告: 「含まれている」**（AdMob）。**`AD_ID` 権限を消さない**（gyumesy は広告を持たないので
   消しているが、AdMob は広告 ID を使う。消すと広告の配信が制限される）
-- データ セーフティ: 位置情報（端末内のみ）・デバイス ID（FCM）・広告 SDK が集めるもの
 - 対象年齢・コンテンツレーティング（IARC）
+
+**データ セーフティは API で入れる**（`dataSafety`。three と同じ。上の表）。中身は位置情報（端末内のみ）・
+デバイス ID（FCM）・広告 SDK が集めるもの・計測（GA4）
 
 ---
 
