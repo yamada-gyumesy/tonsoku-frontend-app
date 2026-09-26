@@ -121,7 +121,7 @@ function shot(img, name) {
 
 if (n === '1' || n === '2') {
   if (n === '2') document.body.classList.add('b');
-  document.querySelector('.catch.a').textContent = '店舗限定の\n裏メニューが、';
+  document.querySelector('.catch.a').innerHTML = '店舗限定の\n<span class="thin">㊙</span>メニューが、';
   document.querySelector('.catch.b').innerHTML =
     '地図で見つかる<span class="hang">。</span>';
   var imgs = document.querySelectorAll('.device img');
@@ -144,7 +144,7 @@ if (n === '1' || n === '2') {
     place(blobs[1], 943, 696, 571, -73, .08, 'red');
     place(blobs[2], 1290, 952, 1290, 1740, .10, 'brown');
   } else {
-    a.textContent = '㊙クーポンも\nすぐに使える。';
+    a.innerHTML = '<span class="thin">㊙</span>クーポンも\nすぐに使える。';
     shot(img, 'coupon');
     place(blobs[0], 943, 696, -1029, -73, .08, 'red');
     place(blobs[1], 1290, 952, -310, 1740, .10, 'brown');
@@ -152,5 +152,6 @@ if (n === '1' || n === '2') {
   }
 }
 </script>
+<script src="../_stamps.js"></script>
 <script src="../_fit.js"></script>
 </body></html>

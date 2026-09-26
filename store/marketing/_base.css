@@ -37,16 +37,12 @@ html, body { overflow: hidden; background: var(--bg); }
   color: var(--ink);
 }
 
-/* 背景の円。**ぼかした大きな円を隅に置いて余白を作る**（gyumesy と同じ作り）。
+/* 背景の飾り。**のや子のスタンプを隅に大きく置いて余白を作る**（中身は `_stamps.js` が
+ * web の OGP のスタンプと同じ作りで描く。置き方は gyumesy の円と同じ）。
  * **色は赤と茶の 2 色だけ。** 緑は使わない ―― web はカテゴリの意味に使っている
  * 差し色で、OGP の枠にも混ぜていない（`ogp-template.ts` の「枠は赤の1色」）。
  * 彩度を上げず、生成りの地を壊さない。 */
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(2px);
-  pointer-events: none;
-}
+.blob { position: absolute; pointer-events: none; }
 .blob.red { background: var(--primary); }
 .blob.brown { background: var(--brown); }
 
@@ -66,6 +62,10 @@ html, body { overflow: hidden; background: var(--bg); }
  * 箱の幅（中身の幅）がそのぶん縮み、**最後の 1 字が次の行へ落ちる**（「地図でわか／る。」）。
  * ぶら下げる行は 1 行なので、折り返させない */
 .catch:has(.hang) { white-space: nowrap; }
+/* **Klee One に無い字（㊙）は細く描く。** 無い字は端末の書体（ヒラギノ）に落ち、
+ * 見出しの縁取り（`-webkit-text-stroke`）が掛かると潰れて太って見える（ユーザーの指摘）。
+ * 縁取りを外し、細いウェイトにする */
+.catch .thin { -webkit-text-stroke: 0; font-family: 'Hiragino Sans', sans-serif; font-weight: 300; }
 /* **コピーは全部墨。** 赤は背景の円だけに使う */
 .catch .em { color: inherit; }
 

@@ -114,7 +114,7 @@ function place(el, w, x, y, op, color) {
 if (n === '1' || n === '2') {
   // 1・2 枚目は同じ世界。#b で右半分へ送る
   if (n === '2') document.body.classList.add('b');
-  document.querySelector('.catch.a').textContent = '店舗限定の\n裏メニューが、';
+  document.querySelector('.catch.a').innerHTML = '店舗限定の\n<span class="thin">㊙</span>メニューが、';
   document.querySelector('.catch.b').innerHTML =
     '地図で見つかる<span class="hang">。</span>';
   document.querySelectorAll('.device img')[0].src = '../source/map_ipad.png';
@@ -136,7 +136,7 @@ if (n === '1' || n === '2') {
     place(blobs[1], 1207, 730, -78, .08, 'red');
     place(blobs[2], 1651, 1651, 1856, .10, 'brown');
   } else {
-    a.textContent = '㊙クーポンも\nすぐに使える。';
+    a.innerHTML = '<span class="thin">㊙</span>クーポンも\nすぐに使える。';
     img.src = '../source/coupon_ipad.png';
     place(blobs[0], 1207, -1318, -78, .08, 'red');
     place(blobs[1], 1651, -397, 1856, .10, 'brown');
@@ -144,5 +144,6 @@ if (n === '1' || n === '2') {
   }
 }
 </script>
+<script src="_stamps.js"></script>
 <script src="_fit.js"></script>
 </body></html>

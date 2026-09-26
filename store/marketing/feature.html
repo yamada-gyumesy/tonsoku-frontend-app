@@ -24,7 +24,16 @@ html,body{width:1024px;height:500px}
    「提出前の確認」）。App Store の画像には使わない */
 .tag{margin-top:30px;margin-left:4px;font-size:28px;color:var(--sub);line-height:1;
   -webkit-text-stroke:0.024em currentColor}
-.lead{margin-top:18px;margin-left:4px;font-size:22px;color:var(--sub);line-height:1.5}
+
+/* **のや子のスタンプ。** web の OGP（`ogp-template.ts` の `STAMP`）と同じ作りで、
+   **左下**に傾けて紙面からはみ出すほど大きく押す（ユーザーの指定。OGP は右下）。
+   寸法は OGP（1200×630）を 0.82 倍にしたもの。傾きは左右を返して反時計回り */
+.stamp{position:absolute;left:-50px;bottom:-82px;width:377px;height:377px;border-radius:50%;
+  border:11px solid var(--primary);padding:66px;transform:rotate(-14deg);opacity:.07}
+.stamp::before{content:'';position:absolute;inset:10px;border-radius:50%;border:6px solid var(--primary)}
+.stamp div{width:100%;height:100%;background:var(--primary);
+  -webkit-mask:url("assets/noyako-normal.svg") center/contain no-repeat;
+  mask:url("assets/noyako-normal.svg") center/contain no-repeat}
 
 /* 右: 端末。**下にブリード**（スクショ側と同じ作り）。画面は 1 枚目と同じマップ */
 .device{position:absolute;left:660px;top:62px;transform:rotate(-11deg)}
@@ -34,10 +43,11 @@ html,body{width:1024px;height:500px}
 <body>
 <div class="stage">
 
+  <div class="stamp"><div></div></div>
+
   <div class="left">
     <div class="brand"><img src="assets/icon.svg"><span>とん速</span></div>
     <div class="tag">松のや速報</div>
-    <div class="lead">店舗限定メニューを扱う店を、地図で探せる</div>
   </div>
 
   <div class="device"><div class="frame">
